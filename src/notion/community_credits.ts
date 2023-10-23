@@ -5,10 +5,12 @@ export async function queryCommunityCredits(userId: string): Promise<number> {
   const dbResponse = await notion.databases.query({
     database_id: creditsDatabaseId,
     filter: {
-      property: 'Name',
-      title: {
+      property: 'Email',
+      rollup: {
+        "any": {
+          "rich_text": {
         equals: userId,
-      }
+      }}}
     },
   });
 

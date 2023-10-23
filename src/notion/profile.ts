@@ -51,10 +51,16 @@ declare var _r: PageObjectResponse;
 type Property = typeof _r.properties[string];
 
 function toPlainText(prop: Property): string {
-  if (prop.type == 'title') {
+  if (prop == null) {
+    return 'Unknown'
+  } else if (prop.type == 'title') {
    return prop.title[0].plain_text
   } else if (prop.type == 'rich_text') {
     return prop.rich_text[0].plain_text
+  } else if (prop.type == 'select') {
+    return prop.select?.name ?? '/'
+  } else if (prop.type == 'number') {
+    return prop.number?.toString() ?? 'Unknown'
   } else {
     return 'Unknown'
   }

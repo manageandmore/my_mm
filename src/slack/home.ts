@@ -30,31 +30,31 @@ export function getHomeView(options: HomeOptions): HomeTabView {
         "fields": [
           {
             "type": "mrkdwn",
-            "text": `*:büste_silhouette: Status :*\n${options.status}\n`
+            "text": `*👤 Status :*\n${options.status}\n`
           },
           {
             "type": "mrkdwn",
-            "text": `*:sanduhr: Generation:*\n${options.generation}`
+            "text": `*⏳ Generation:*\n${options.generation}`
           },
           {
             "type": "mrkdwn",
-            "text": `*:register: Internal Project:*\n${options.ip}`
+            "text": `*📒 Internal Project:*\n${options.ip}`
           },
           {
             "type": "mrkdwn",
-            "text": `*:rakete: External Project:*\n${options.ep}`
+            "text": `*🚀 External Project:*\n${options.ep}`
           },
           {
             "type": "mrkdwn",
-            "text": `*:stern: Community Credits:*\n${options.communityCredits}/6`
+            "text": `*⭐️ Community Credits:*\n${options.communityCredits}/6`
           },
           {
             "type": "mrkdwn",
-            "text": "*:trophäe: Liga:*\n HP Warrior"
+            "text": "*🏆 Liga:*\n Credit Warrior"
           },
           {
             "type": "mrkdwn",
-            "text": "*:sonnenbrille: Skills:*"
+            "text": "*🕶️ Skills:*"
           }
         ],
         "accessory": {
@@ -120,11 +120,11 @@ export function getHomeView(options: HomeOptions): HomeTabView {
         "fields": [
           {
             "type": "mrkdwn",
-            "text": ":krone: *Name*"
+            "text": "👑 *Name*"
           },
           {
             "type": "mrkdwn",
-            "text": ":stern: *Points*"
+            "text": "⭐️ *Points*"
           },
           {
             "type": "mrkdwn",
