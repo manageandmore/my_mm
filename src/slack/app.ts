@@ -3,6 +3,8 @@ import { SlackApp } from "slack-edge";
 import { slackSigningSecret, slackToken } from "../constants";
 import { notion, pointsDatabaseId } from "../notion/client";
 
+//this is a comment by sam
+
 export const app = new SlackApp({
   env: {
     SLACK_SIGNING_SECRET: slackSigningSecret,
