@@ -6,4 +6,5 @@ export const notion = new Client({
   fetch: fetch,
 })
 
-export const pointsDatabaseId = '1d617de2cf7c42c8bb78c1efaf1b2b3f'
+export const scholarsDatabaseId = '9fd93456efb34c6f9fe1ca63fa376899'
+export const creditsDatabaseId = '1d617de2cf7c42c8bb78c1efaf1b2b3f'

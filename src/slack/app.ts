@@ -1,11 +1,9 @@
-import { DatabaseObjectResponse, PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-
 import { SlackApp } from "slack-edge";
 import { slackSigningSecret, slackToken } from "../constants";
-import { notion, pointsDatabaseId } from "../notion/client";
+import { queryCommunityCredits } from "../notion/community_credits";
+import { queryUserProfile } from "../notion/profile";
 import { openai, systemMessage } from "../openai/openai";
-
-//this is a comment by sam
+import { getHomeView } from "./home";
 
 export const app = new SlackApp({
   env: {
@@ -36,60 +34,27 @@ app.event('app_home_opened', async (request) => {
   const userResponse = await app.client.users.info({
     user: event.user
   })
+  const user = userResponse.user
+  const userId = user.profile.email
 
-  const user = userResponse.user;
-
-  const name = user.real_name || user.name
-
-  const dbResponse = await notion.databases.query({
-    database_id: pointsDatabaseId,
-    filter: {
-      property: 'Name',
-      title: {
-        equals: user.profile.email,
-      }
-    },
-  });
-
-  console.log('notion', dbResponse);
-
-  let points = 0
-
-  if (dbResponse.results.length > 0) {
-    const row = dbResponse.results[0] as PageObjectResponse;
-    var prop = row.properties.Points
-    if (prop.type == "number") {
-      points = prop.number
-    }
-  }
+  const [
+    profile, 
+    communityCredits
+  ] = await Promise.all([
+    queryUserProfile(userId),
+    queryCommunityCredits(userId)
+  ]);
   
   await app.client.views.publish({
     user_id: event.user,
-    view: {
-      type: 'home',
-      blocks: [
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": `Hello ${name}`
-          },
-        },
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": `Your helper points: *${points}*`
-          },
-        },
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": `You are beautiful!`
-          },
-        }
-      ]
-    }
+    view: getHomeView({
+      name: profile.name,
+      generation: profile.generation,
+      status: profile.status,
+      ip: profile.ip,
+      ep: profile.ep,
+      communityCredits: communityCredits,
+      skills: []
+    })
   })
 })
