@@ -16,7 +16,7 @@ app.event('app_mention', async (request) => {
 
   await app.client.chat.postMessage({
     channel: event.channel,
-    text: `Hi there! Thanks for mentioning me, <@${event.user}>! :D`
+    text: `Hi there! Thanks for mentioning me, <@${event.user}>!`
   })
 })
 
