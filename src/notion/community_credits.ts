@@ -20,7 +20,7 @@ export async function queryCommunityCredits(userId: string): Promise<number> {
     const row = dbResponse.results[0] as PageObjectResponse;
     var prop = row.properties.Points
     if (prop.type == "number") {
-      points = prop.number
+      points = prop.number ?? points
     }
   }
 

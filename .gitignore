@@ -2,3 +2,4 @@
 .bruno
 node_modules
 .env.*
+dist/
