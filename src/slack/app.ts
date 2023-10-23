@@ -1,7 +1,9 @@
 import { DatabaseObjectResponse, PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
+
 import { SlackApp } from "slack-edge";
 import { slackSigningSecret, slackToken } from "../constants";
 import { notion, pointsDatabaseId } from "../notion/client";
+import { openai, systemMessage } from "../openai/openai";
 
 //this is a comment by sam
 
@@ -16,9 +18,15 @@ export const app = new SlackApp({
 app.event('app_mention', async (request) => {
   const event = request.payload
 
+  const response = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    max_tokens: 200,
+    messages: [systemMessage, { role: 'user', content: await event.text }],
+  });
+
   await app.client.chat.postMessage({
     channel: event.channel,
-    text: `Hi there! Thanks for mentioning me, <@${event.user}>!`
+    text: response.choices[0].message.content,
   })
 })
 
@@ -73,7 +81,7 @@ app.event('app_home_opened', async (request) => {
             "type": "mrkdwn",
             "text": `Your helper points: *${points}*`
           },
-        }
+        },
         {
           "type": "section",
           "text": {

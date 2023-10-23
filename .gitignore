@@ -1,3 +1,4 @@
 .vercel
 .bruno
 node_modules
+.env.*

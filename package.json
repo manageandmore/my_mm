@@ -4,6 +4,7 @@
   "dependencies": {
     "@notionhq/client": "^2.2.13",
     "@vercel/edge": "^1.1.0",
+    "openai": "^4.12.4",
     "slack-edge": "^0.5.0",
     "vercel": "^24.0.0"
   }
