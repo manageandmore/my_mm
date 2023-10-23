@@ -72,6 +72,13 @@ app.event('app_home_opened', async (request) => {
             "text": `Your helper points: *${points}*`
           },
         }
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": `You are beautiful!`
+          },
+        }
       ]
     }
   })
