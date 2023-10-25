@@ -1,6 +1,7 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 import { notion, scholarsDatabaseId } from "./notion";
 
+/** The interface for a user profile in the scholars database. */
 export interface Profile {
   name: string
   email: string
@@ -10,6 +11,11 @@ export interface Profile {
   status: string
 }
 
+/**
+ * Queries the scholars database for a given user.
+ * @param userId The id of the requested user.
+ * @returns The profile of the requested user.
+ */
 export async function queryUserProfile(userId: string): Promise<Profile> {
   const response = await notion.databases.query({
     database_id: scholarsDatabaseId,
@@ -50,6 +56,9 @@ export async function queryUserProfile(userId: string): Promise<Profile> {
 declare var _r: PageObjectResponse;
 type Property = typeof _r.properties[string];
 
+/** 
+ * Helper function to transform a notion database property to plaintext.
+ */
 function toPlainText(prop: Property): string {
   if (prop == null) {
     return 'Unknown'

@@ -1,9 +1,15 @@
 import OpenAI from 'openai';
 
+/** 
+ * The api client to access the openai api.
+ */
 export const openai = new OpenAI({
   apiKey: process.env.OPENAI_TOKEN,
 });
 
+/**
+ * The system message that should be used for all chatgpt queries.
+ */
 export const systemMessage: OpenAI.Chat.Completions.ChatCompletionMessageParam = {
   role: 'system',
   content: 'You are a successful startup founder and coach. '+

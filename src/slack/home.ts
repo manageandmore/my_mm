@@ -1,5 +1,6 @@
 import { HomeTabView } from "slack-edge";
 
+/** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
   name: string
   status: string
@@ -10,6 +11,11 @@ export interface HomeOptions {
   skills: string[]
 }
 
+/**
+ * Constructs the home view with the current user data.
+ * @param options The user data needed to fill out the view.
+ * @returns The home view as a set of structured blocks.
+ */
 export function getHomeView(options: HomeOptions): HomeTabView {
   return {
     type: 'home',

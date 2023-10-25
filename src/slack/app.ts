@@ -6,15 +6,23 @@ import { openai, systemMessage } from "../openai/openai";
 
 import { getHomeView } from "./home";
 
+/**
+ * The api client used to access the slack api and handle events.
+ */
 export const app = new SlackApp({
   env: {
     SLACK_SIGNING_SECRET: slackSigningSecret,
     SLACK_BOT_TOKEN: slackToken,
-    SLACK_APP_TOKEN: "",
     SLACK_LOGGING_LEVEL: "DEBUG",
   },
 });
 
+/**
+ * Handle the app_mention event by prompting chatgpt to respond to the users message.
+ * 
+ * The event fires each time a user mentions the slack app in a message.
+ * The handler will prompt chatgpt with the users message and post its response as a new message in the same channel.
+ */
 app.event("app_mention", async (request) => {
   const event = request.payload;
 
@@ -30,15 +38,29 @@ app.event("app_mention", async (request) => {
   });
 });
 
+/**
+ * Handle the app_home_opened event by updating the users home view with the current data.
+ * 
+ * The event fires each time a user opens the apps home page in slack.
+ * The handler will query notion for the current user data and update the slack view accordingly.
+ */
 app.event("app_home_opened", async (request) => {
   const event = request.payload;
-
-  const userResponse = await app.client.users.info({
+  console.log("REQUEST USER")
+  let userResponse
+  try {
+  userResponse = await app.client.users.info({
     user: event.user
   })
+  console.log("USER", userResponse)
+} catch (e) {
+  console.log("ERROR", e)
+  return
+}
   const user = userResponse.user!
   const userId = user.profile!.email!
 
+  console.log("USER", user)
   const [
     profile, 
     communityCredits
@@ -47,6 +69,7 @@ app.event("app_home_opened", async (request) => {
     queryCommunityCredits(userId)
   ]);
   
+  console.log("PROFILE USER", profile, communityCredits)
   await app.client.views.publish({
     user_id: event.user,
     view: getHomeView({

@@ -1,6 +1,11 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 import { creditsDatabaseId, notion } from "./notion";
 
+/**
+ * Queries notion for the community credits of a given user.
+ * @param userId The id of the requested user.
+ * @returns The community credits of the user, or 0 if not found.
+ */
 export async function queryCommunityCredits(userId: string): Promise<number> {
   const dbResponse = await notion.databases.query({
     database_id: creditsDatabaseId,
