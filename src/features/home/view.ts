@@ -168,7 +168,21 @@ export function getHomeView(options: HomeOptions): HomeTabView {
       },
       {
         "type": "divider"
-      }
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "Open Wishlist",
+              "emoji": true
+            },
+            "action_id": "open_wishlist"
+          }
+        ]
+      },
     ]
   };
 }

@@ -21,6 +21,11 @@ features:
   bot_user:
     display_name: My MM
     always_online: false
+  shortcuts:
+    - name: Create an event
+      type: global
+      callback_id: create_event
+      description: Creates an event entry in notion
 oauth_config:
   scopes:
     user:
@@ -39,6 +44,9 @@ settings:
     bot_events:
       - app_home_opened
       - app_mention
+  interactivity:
+    is_enabled: true
+    request_url: https://manageandmore.vercel.app/api/events
   org_deploy_enabled: false
   socket_mode_enabled: false
   token_rotation_enabled: false

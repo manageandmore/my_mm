@@ -1,10 +1,11 @@
 import OpenAI from 'openai';
+import { openaiToken } from './constants';
 
 /** 
  * The api client to access the openai api.
  */
 export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_TOKEN,
+  apiKey: openaiToken,
 });
 
 /**

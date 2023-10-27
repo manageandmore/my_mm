@@ -1,4 +1,4 @@
-import { app } from '../src/slack/app';
+import { slack } from '../src/slack';
 import { RequestContext } from '@vercel/edge';
 
 /**
@@ -14,5 +14,5 @@ export const config = {
  * This route is called by slack when any event happens.
  *  */
 export default async function events(request: Request, context: RequestContext) {
-  return await app.run(request, context);
+  return await slack.run(request, context);
 }

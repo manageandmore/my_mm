@@ -1,5 +1,5 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { creditsDatabaseId, notion } from "./notion";
+import { creditsDatabaseId, notion } from "../../notion";
 
 /**
  * Queries notion for the community credits of a given user.

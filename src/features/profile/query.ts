@@ -1,5 +1,5 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { notion, scholarsDatabaseId } from "./notion";
+import { notion, scholarsDatabaseId, toPlainText } from "../../notion";
 
 /** The interface for a user profile in the scholars database. */
 export interface Profile {
@@ -50,27 +50,5 @@ export async function queryUserProfile(userId: string): Promise<Profile> {
     ep: toPlainText(props.EP),
     generation: toPlainText(props.Generation),
     status: toPlainText(props.Status)
-  }
-}
-
-declare var _r: PageObjectResponse;
-type Property = typeof _r.properties[string];
-
-/** 
- * Helper function to transform a notion database property to plaintext.
- */
-function toPlainText(prop: Property): string {
-  if (prop == null) {
-    return 'Unknown'
-  } else if (prop.type == 'title') {
-   return prop.title[0].plain_text
-  } else if (prop.type == 'rich_text') {
-    return prop.rich_text[0].plain_text
-  } else if (prop.type == 'select') {
-    return prop.select?.name ?? '/'
-  } else if (prop.type == 'number') {
-    return prop.number?.toString() ?? 'Unknown'
-  } else {
-    return 'Unknown'
   }
 }
