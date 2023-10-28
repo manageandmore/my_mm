@@ -3,6 +3,7 @@ import { notion, scholarsDatabaseId, toPlainText } from "../../notion";
 
 /** The interface for a user profile in the scholars database. */
 export interface Profile {
+  id?: string
   name: string
   email: string
   ip: string
@@ -13,16 +14,16 @@ export interface Profile {
 
 /**
  * Queries the scholars database for a given user.
- * @param userId The id of the requested user.
+ * @param email The email of the requested user.
  * @returns The profile of the requested user.
  */
-export async function queryUserProfile(userId: string): Promise<Profile> {
+export async function queryUserProfile(email: string): Promise<Profile> {
   const response = await notion.databases.query({
     database_id: scholarsDatabaseId,
     filter: {
       property: 'Email',
       title: {
-        equals: userId,
+        equals: email,
       }
     },
   });
@@ -32,7 +33,7 @@ export async function queryUserProfile(userId: string): Promise<Profile> {
   if (response.results.length == 0) {
     return {
       name: 'Unknown',
-      email: userId,
+      email: email,
       ip: 'Unknown',
       ep: 'Unknown',
       generation: 'Unknown',
@@ -44,8 +45,9 @@ export async function queryUserProfile(userId: string): Promise<Profile> {
   const props = row.properties;
 
   return {
+    id: row.id,
     name: toPlainText(props.Name),
-    email: userId,
+    email: email,
     ip: toPlainText(props.IP),
     ep: toPlainText(props.EP),
     generation: toPlainText(props.Generation),

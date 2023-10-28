@@ -11,3 +11,5 @@ export const slack = new SlackApp({
     SLACK_LOGGING_LEVEL: "DEBUG",
   },
 });
+
+export const scholarIdField = 'Xf063XD67XC0'

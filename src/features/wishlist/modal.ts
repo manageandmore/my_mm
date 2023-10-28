@@ -1,4 +1,4 @@
-import { AnyModalBlock, ModalView } from "slack-edge";
+import { AnyModalBlock, Button, ImageElement, ModalView } from "slack-edge";
 import { WishlistItem } from "./query";
 
 export interface WishlistOptions {
@@ -11,53 +11,107 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
   if (options.items == null) {
     blocks = [
       {
-        "type": "section",
-        "text": {
-          "type": "plain_text",
-          "text": "Loading...",
-          "emoji": true
-        }
-      }
+        type: "context",
+        elements: [
+          {
+            type: "plain_text",
+            emoji: true,
+            text: "⏳ Loading all your awesome suggestions..."
+          }
+        ]
+      },
     ]
   } else {
-    blocks = []
+    blocks = [
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "Vote on suggestions for *My MM* made by the community, or add your own suggestion. This helps us to prioritize new features and improve *My MM*."
+          }
+        ]
+      },
+      {
+        "type": "divider"
+      },
+    ]
     for (let item of options.items) {
-      blocks.push({
-        "type": "section",
-        "text": {
-          "type": "mrkdwn",
-          "text": `*${item.title}*`
-        }
-      }
-      )
-      blocks.push({
+      blocks = blocks.concat(getWishlistItem(item))
+    }
+    blocks = blocks.concat([
+      {
         "type": "actions",
         "elements": [
           {
             "type": "button",
             "text": {
               "type": "plain_text",
-              "text": `Upvote (${item.votes})`,
+              "text": "Add Suggestion",
               "emoji": true
             },
-            "action_id": "upvote_wishlist_item",
-            "value": item.id
+            "style": "primary",
+            "action_id": "new_wishlist_item",
           }
         ]
-      })
-      blocks.push({
-        "type": "divider"
-      })
-    }
+      }
+    ])
   }
 
   return {
     "type": "modal",
     "title": {
       "type": "plain_text",
-      "text": "Wishlist",
+      "text": "🎁 Wishlist",
       "emoji": true
     },
-    "blocks": blocks
+    "blocks": blocks,
+    "private_metadata": JSON.stringify(options.items ?? [])
+  }
+}
+
+export function getWishlistItem(item: WishlistItem): AnyModalBlock[] {
+  return [
+    {
+      "type": "section",
+      "block_id": item.id,
+      "text": {
+        "type": "mrkdwn",
+        "text": `*${item.title}*\n${item.description}`
+      },
+      "accessory": getVoteButton(item.votedByUser)
+    },
+    {
+			"type": "context",
+			"elements": [
+        ...item.voters.map((voter) => ({
+          "type": "image",
+					"image_url": voter.imageUrl,
+					"alt_text": voter.name
+        } as ImageElement)),
+				{
+					"type": "plain_text",
+					"emoji": true,
+					"text": `${item.voters.length} vote${item.voters.length > 1 ? 's' : ''}`
+				}
+			]
+		},
+    {
+      "type": "divider"
+    }
+  ]
+}
+
+export function getVoteButton(voted: boolean): Button {
+  return {
+    "type": "button",
+    "text": {
+      "type": "plain_text",
+      "emoji": true,
+      "text": voted ? "✅ You Voted" : "🗳️ Vote"
+    },
+    "style": voted ? "primary" : undefined,
+    "action_id": "vote_wishlist_item",
+    "value": `${voted}`
   }
 }

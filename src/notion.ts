@@ -19,13 +19,13 @@ export type Property<T extends PropertyType> = Extract<typeof _r.properties[stri
 declare var _rr: Property<'rollup'>
 
 export type RollupType = typeof _rr.rollup.type
-export type RollupProperty<T extends RollupType> = Property<'rollup'> & {rollup: {type: T}}
+export type RollupProperty<T extends RollupType> = Property<'rollup'> & {rollup: Extract<typeof _rr.rollup, {type: T}>}
 
 declare var _ra: RollupProperty<'array'>
 declare var __ra: typeof _ra.rollup.array[number]
 
 export type RollupArrayType = typeof __ra.type
-export type ArrayRollupProperty<T extends RollupArrayType> = RollupProperty<'array'> & {rollup: {array: {type: T}[]}}
+export type ArrayRollupProperty<T extends RollupArrayType> = /*RollupProperty<'array'> & */{rollup: {array: Extract<typeof __ra, {type: T}>[]}}
 
 /** The id of the scholars database in notion. */
 export const scholarsDatabaseId = '9fd93456efb34c6f9fe1ca63fa376899'
