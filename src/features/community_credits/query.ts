@@ -1,35 +1,36 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { creditsDatabaseId, notion } from "../../notion";
+import { creditsDatabaseId, notion, Property, RollupProperty } from "../../notion";
+
+
+type CommunityCreditsRow = PageObjectResponse & {
+  properties: {
+    Scholar: Property<'relation'>
+    "Total Credits": RollupProperty<"number">
+  }
+}
 
 /**
  * Queries notion for the community credits of a given user.
- * @param userId The id of the requested user.
- * @returns The community credits of the user, or 0 if not found.
+ * @param scholarId The id of the requested scholar.
+ * @returns The community credits of the scholar, or 0 if not found.
  */
-export async function queryCommunityCredits(userId: string): Promise<number> {
-  const dbResponse = await notion.databases.query({
+export async function queryCommunityCredits(scholarId: string): Promise<number> {
+  const response = await notion.databases.query({
     database_id: creditsDatabaseId,
     filter: {
-      property: 'Email',
-      rollup: {
-        "any": {
-          "rich_text": {
-        equals: userId,
-      }}}
+      property: 'Scholar',
+      relation: {
+        contains: scholarId
+      },
     },
   });
 
-  console.log('notion', dbResponse);
-
-  let points = 0
-
-  if (dbResponse.results.length > 0) {
-    const row = dbResponse.results[0] as PageObjectResponse;
-    var prop = row.properties.Points
-    if (prop.type == "number") {
-      points = prop.number ?? points
-    }
+  if (response.results.length == 0) {
+    return 0
+  } else if (response.results.length > 1) {
+    throw Error(`Non-Unique entry in credits database for scholar ${scholarId}`)
+  } else {
+    const row = response.results[0] as CommunityCreditsRow
+    return row.properties["Total Credits"].rollup.number ?? 0
   }
-
-  return points
 }

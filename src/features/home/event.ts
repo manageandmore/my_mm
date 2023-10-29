@@ -1,8 +1,8 @@
 import { queryCommunityCredits } from "../community_credits/query";
-import { queryUserProfile } from "../profile/query";
+import { queryScholarProfile } from "../profile/query";
 import { slack } from "../../slack";
 import { getHomeView } from "./view";
-import { getEmailForUser } from "../profile/user";
+import { getScholarIdFromUserId } from "../common/id_utils";
 
 /**
  * Handle the app_home_opened event by updating the users home view with the current data.
@@ -13,30 +13,33 @@ import { getEmailForUser } from "../profile/user";
  slack.event("app_home_opened", async (request) => {
   const event = request.payload;
 
-  const email = await getEmailForUser(event.user)
+  try {
+    const scholarId = await getScholarIdFromUserId(event.user)
 
-  if (email == null) {
+    const [
+      profile, 
+      communityCredits
+    ] = await Promise.all([
+      queryScholarProfile(scholarId),
+      queryCommunityCredits(scholarId)
+    ]);
+    
+    await slack.client.views.publish({
+      user_id: event.user,
+      view: getHomeView({
+        name: profile.name,
+        generation: profile.generation,
+        status: profile.status,
+        ip: profile.ip,
+        ep: profile.ep,
+        communityCredits: communityCredits,
+        skills: []
+      })
+    })
+  } catch (e) {
+    console.log(e)
+    // TODO Show error view to user
     return
   }
 
-  const [
-    profile, 
-    communityCredits
-  ] = await Promise.all([
-    queryUserProfile(email),
-    queryCommunityCredits(email)
-  ]);
-  
-  await slack.client.views.publish({
-    user_id: event.user,
-    view: getHomeView({
-      name: profile.name,
-      generation: profile.generation,
-      status: profile.status,
-      ip: profile.ip,
-      ep: profile.ep,
-      communityCredits: communityCredits,
-      skills: []
-    })
-  })
 })

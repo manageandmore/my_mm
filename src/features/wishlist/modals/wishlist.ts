@@ -1,5 +1,5 @@
 import { AnyModalBlock, Button, ImageElement, ModalView } from "slack-edge";
-import { WishlistItem } from "./query";
+import { WishlistItem } from "../query";
 
 export interface WishlistOptions {
   items?: WishlistItem[]
@@ -92,7 +92,7 @@ export function getWishlistItem(item: WishlistItem): AnyModalBlock[] {
 				{
 					"type": "plain_text",
 					"emoji": true,
-					"text": `${item.voters.length} vote${item.voters.length > 1 ? 's' : ''}`
+					"text": `${item.voters.length} vote${item.voters.length != 1 ? 's' : ''}`
 				}
 			]
 		},

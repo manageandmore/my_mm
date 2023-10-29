@@ -1,8 +1,6 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { User, UsersLookupByEmailResponse } from "slack-web-api-client/dist/client/generated-response/UsersLookupByEmailResponse";
-import { ArrayRollupProperty, notion, Property, RollupProperty } from "../../notion";
-import { slack } from "../../slack";
-import { getVoterByEmail, Voter } from "./voter";
+import { notion, Property, RollupProperty } from "../../notion";
+import { getVoterByScholarId, Voter } from "./voter";
 
 /** The id of the wishlist database in notion. */
 export const wishlistDatabaseId = 'a18536c8d58f4cfe97419700fd5c2d82'
@@ -13,7 +11,6 @@ type WishlistRow = PageObjectResponse & {
     Description: Property<'rich_text'>
     Votes: RollupProperty<'number'>
     Voted: Property<'relation'>
-    Emails: ArrayRollupProperty<'email'>
   }
 }
 
@@ -32,36 +29,30 @@ export async function queryWishlistItems(currentUserId: string): Promise<Wishlis
   });
 
   let items: WishlistItem[] = []
-  let currentUserEmail: string | undefined
-  let users: Record<string, Voter> = {}
+  let currentScholarId: string | undefined
+  let allVoters: Record<string, Voter> = {}
 
   for (let row of response.results as WishlistRow[]) {
 
     var voters: Voter[] = []
     var votedByUser = false
 
-    for (var i in row.properties.Emails.rollup.array) {
-      var prop = row.properties.Emails.rollup.array[i]
-      var relation = row.properties.Voted.relation[i]
+    for (var voted of row.properties.Voted.relation) {
+      
+      var scholarId = voted.id
 
-      var email = prop.email;
+      if (allVoters[scholarId] == null) {
+        let voter = await getVoterByScholarId(scholarId)
+        allVoters[scholarId] = voter
 
-      if (email == null) {
-        continue;
-      }
-
-      if (users[email] == null) {
-        let voter = await getVoterByEmail(email);
-        voter.notionId = relation.id
-        users[email] = voter
         if (voter.id == currentUserId) {
-          currentUserEmail = email
+          currentScholarId = scholarId
         }
       }
 
-      voters.push(users[email])
+      voters.push(allVoters[scholarId])
 
-      if (email == currentUserEmail) {
+      if (scholarId == currentScholarId) {
         votedByUser = true
       }
     }

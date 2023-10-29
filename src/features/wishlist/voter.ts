@@ -1,52 +1,54 @@
 import { User } from "slack-web-api-client/dist/client/generated-response/UsersLookupByEmailResponse";
 import { slack } from "../../slack";
+import { getScholarIdFromUserId, getUserById, getUserFromScholarId } from "../common/id_utils";
 
 export interface Voter {
   id?: string
-  notionId: string
+  scholarId: string
   name: string
   imageUrl: string
 }
 
-export async function getVoterByEmail(email: string): Promise<Voter> {
-  let user: User | undefined
+export async function getVoterByScholarId(scholarId: string): Promise<Voter> {
   try {
-    let response = await slack.client.users.lookupByEmail({ email: email })
-    user = response.user
+    const user = await getUserFromScholarId(scholarId);
+    return getVoterForUser(user, scholarId);
   } catch (e) {
-    // noop
-  }
-
-  return getVoterForUser(user);
-}
-
-export async function getVoterById(id: string): Promise<Voter> {
-  let user: User | undefined
-  try {
-    let response = await slack.client.users.info({ user: id })
-    user = response.user
-  } catch (e) {
-    // noop
-  }
-
-  return getVoterForUser(user);
-}
-
-function getVoterForUser(user: User | undefined): Voter {
-  if (user != null) {
-    var imageUrl = getImageUrlForUser(user)
     return {
-      id: user.id,
-      notionId: '',
-      name: user.real_name ?? user.name ?? 'Unknown',
-      imageUrl
-    }
-  } else {
-    return {
-      notionId: '',
+      scholarId: scholarId,
       name: 'Unknown',
       imageUrl: '_'
     }
+  }
+}
+
+export async function getVoterById(userId: string): Promise<Voter> {
+  const [
+    scholarId,
+    user
+  ] = await Promise.all([
+    getScholarIdFromUserId(userId),
+    getUserById(userId)
+  ])
+
+  if (user != null) {
+    return getVoterForUser(user, scholarId)
+  } else {
+    return {
+      scholarId: scholarId,
+      name: 'Unknown',
+      imageUrl: '_'
+    }
+  }
+}
+
+function getVoterForUser(user: User, scholarId: string): Voter {
+  var imageUrl = getImageUrlForUser(user)
+  return {
+    id: user.id,
+    scholarId: scholarId,
+    name: user.real_name ?? user.name ?? 'Unknown',
+    imageUrl: imageUrl,
   }
 }
 
