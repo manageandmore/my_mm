@@ -2,8 +2,8 @@ import { slack } from '../src/slack';
 import { RequestContext } from '@vercel/edge';
 
 // Import all features that register events, shortcuts or actions
+import '../src/features/wishlist/index';
 import '../src/features/chatbot/event';
-import '../src/features/wishlist/action';
 import '../src/features/events/shortcut';
 import '../src/features/home/event';
 

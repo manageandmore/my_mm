@@ -1,9 +1,15 @@
 import { ModalView } from "slack-edge"
+import { newWishlistItemCallback } from "../actions/new_suggestion"
 
-export function getNewItemModal(): ModalView {
+/**
+ * Constructs the modal for adding a new suggestion to the wishlist.
+ * 
+ * @returns The modal view.
+ */
+export function getNewSuggestionModal(): ModalView {
   return {
     "type": "modal",
-    "callback_id": "new_wishlist_item",
+    "callback_id": newWishlistItemCallback,
     "title": {
       "type": "plain_text",
       "text": "🎁 New Suggestion",

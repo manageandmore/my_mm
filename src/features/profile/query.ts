@@ -1,5 +1,5 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { notion, Property, scholarsDatabaseId, toPlainText } from "../../notion";
+import { notion, Property } from "../../notion";
 
 /** The interface for a user profile in the scholars database. */
 export interface ScholarProfile {
@@ -12,6 +12,9 @@ export interface ScholarProfile {
   status: string
 }
 
+/**
+ * Type definition for a row in the Scholars database.
+ */
 export type ScholarRow = PageObjectResponse & {
   properties: {
     Name: Property<'rich_text'>
@@ -24,7 +27,8 @@ export type ScholarRow = PageObjectResponse & {
 }
 
 /**
- * Queries the scholars database for a given scholar.
+ * Retrieves the profile for some scholar.
+ * 
  * @param scholarId The id of the requested scholar.
  * @returns The profile of the requested scholar.
  */
@@ -48,7 +52,7 @@ export async function queryScholarProfile(scholarId: string): Promise<ScholarPro
       status: props.Status.select?.name ?? 'Unknown'
     }
   } catch (e) {
-    // TODO Add empty profile to notion
+    // TODO Add a new empty profile to notion.
     return {
       id: scholarId,
       name: 'Unknown',

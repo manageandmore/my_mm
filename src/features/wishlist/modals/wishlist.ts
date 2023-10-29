@@ -1,10 +1,20 @@
 import { AnyModalBlock, Button, ImageElement, ModalView } from "slack-edge";
-import { WishlistItem } from "../query";
+import { newWishlistItemAction } from "../actions/new_suggestion";
+import { viewWishlistInNotionAction } from "../actions/open_wishlist";
+import { voteWishlistItemAction } from "../actions/vote_suggestion";
+import { wishlistDatabaseId, WishlistItem } from "../data/query_items";
 
+/** Interface for the data used to hydrate the wishlist modal. */
 export interface WishlistOptions {
   items?: WishlistItem[]
 }
 
+/**
+ * Constructs the modal view for the wishlist.
+ * 
+ * @param options The options for hydrating the modal.
+ * @returns The modal view.
+ */
 export function getWishlistModal(options: WishlistOptions): ModalView {
   let blocks: AnyModalBlock[]
 
@@ -51,7 +61,17 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
               "emoji": true
             },
             "style": "primary",
-            "action_id": "new_wishlist_item",
+            "action_id": newWishlistItemAction,
+          },
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "View in Notion",
+              "emoji": true
+            },
+            "url": `https://www.notion.so/${wishlistDatabaseId}`,
+            "action_id": viewWishlistInNotionAction,
           }
         ]
       }
@@ -70,7 +90,7 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
   }
 }
 
-export function getWishlistItem(item: WishlistItem): AnyModalBlock[] {
+function getWishlistItem(item: WishlistItem): AnyModalBlock[] {
   return [
     {
       "type": "section",
@@ -93,6 +113,16 @@ export function getWishlistItem(item: WishlistItem): AnyModalBlock[] {
 					"type": "plain_text",
 					"emoji": true,
 					"text": `${item.voters.length} vote${item.voters.length != 1 ? 's' : ''}`
+				},
+        {
+					"type": "plain_text",
+					"emoji": true,
+					"text": `∙`
+				},
+        {
+					"type": "plain_text",
+					"emoji": true,
+					"text": `Created ${item.timeSinceCreated} ago`
 				}
 			]
 		},
@@ -102,7 +132,7 @@ export function getWishlistItem(item: WishlistItem): AnyModalBlock[] {
   ]
 }
 
-export function getVoteButton(voted: boolean): Button {
+function getVoteButton(voted: boolean): Button {
   return {
     "type": "button",
     "text": {
@@ -111,7 +141,7 @@ export function getVoteButton(voted: boolean): Button {
       "text": voted ? "✅ You Voted" : "🗳️ Vote"
     },
     "style": voted ? "primary" : undefined,
-    "action_id": "vote_wishlist_item",
+    "action_id": voteWishlistItemAction,
     "value": `${voted}`
   }
 }

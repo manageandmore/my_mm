@@ -1,4 +1,5 @@
 import { HomeTabView } from "slack-edge";
+import { openWishlistAction } from "../wishlist/actions/open_wishlist";
 
 /** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
@@ -13,6 +14,7 @@ export interface HomeOptions {
 
 /**
  * Constructs the home view with the current user data.
+ * 
  * @param options The user data needed to fill out the view.
  * @returns The home view as a set of structured blocks.
  */
@@ -176,10 +178,10 @@ export function getHomeView(options: HomeOptions): HomeTabView {
             "type": "button",
             "text": {
               "type": "plain_text",
-              "text": "Open Wishlist",
+              "text": "🎁 Open Wishlist",
               "emoji": true
             },
-            "action_id": "open_wishlist"
+            "action_id": openWishlistAction
           }
         ]
       },

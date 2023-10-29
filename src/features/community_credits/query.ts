@@ -1,7 +1,12 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { creditsDatabaseId, notion, Property, RollupProperty } from "../../notion";
+import { notion, Property, RollupProperty } from "../../notion";
 
+/** The id of the community credits database in notion. */
+const creditsDatabaseId = '1d617de2cf7c42c8bb78c1efaf1b2b3f'
 
+/**
+ * Type definition for a row in the Community Credits database.
+ */
 type CommunityCreditsRow = PageObjectResponse & {
   properties: {
     Scholar: Property<'relation'>
@@ -28,9 +33,9 @@ export async function queryCommunityCredits(scholarId: string): Promise<number> 
   if (response.results.length == 0) {
     return 0
   } else if (response.results.length > 1) {
-    throw Error(`Non-Unique entry in credits database for scholar ${scholarId}`)
-  } else {
-    const row = response.results[0] as CommunityCreditsRow
-    return row.properties["Total Credits"].rollup.number ?? 0
+    console.error(`Non-Unique entry in credits database for scholar ${scholarId}`)
   }
+
+  const row = response.results[0] as CommunityCreditsRow
+  return row.properties["Total Credits"].rollup.number ?? 0
 }
