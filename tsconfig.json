@@ -9,12 +9,12 @@
       "strict": true,
       "sourceMap": true,
       "types": ["node"],
-      "jsx": "preserve",
       "module": "esnext",
       "incremental": true,
       "lib": ["dom", "dom.iterable", "esnext"],
+      "isolatedModules": true
     },
-    "include": ["src/**/*.ts", "api/**/*.ts", "api/**/*.tsx"],
-    "exclude": ["node_modules", ".vercel", ".git"]
+    "include": ["src/**/*.ts", "api/**/*.ts"],
+    "exclude": ["node_modules", ".git"]
   }
   
