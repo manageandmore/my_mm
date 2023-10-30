@@ -1,5 +1,6 @@
-import { openai, systemMessage } from "../../openai";
+import { AnyBlockElement, AnyMessageBlock, MessageAttachment } from "slack-edge";
 import { slack } from "../../slack";
+import { run } from "../assistant/assistant";
 
 /**
  * Handle the app_mention event by prompting chatgpt to respond to the users message.
@@ -7,17 +8,62 @@ import { slack } from "../../slack";
  * The event fires each time a user mentions the slack app in a message.
  * The handler will prompt chatgpt with the users message and post its response as a new message in the same channel.
  */
- slack.event("app_mention", async (request) => {
-  const event = request.payload;
+slack.event("app_mention", async (request) => {
+  const event = request.payload
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    max_tokens: 200,
-    messages: [systemMessage, { role: "user", content: event.text }],
-  });
+  const message = event.text
 
-  await slack.client.chat.postMessage({
+  const msg = await slack.client.chat.postMessage({
     channel: event.channel,
-    text: response.choices[0].message.content!,
+    text: '... (🧠 Initiating brain waves)',
   });
+
+  const results = await run(message)
+  let blocks: AnyMessageBlock[] = [
+    {
+      type: "section",
+      text: {
+        type: "plain_text",
+        text: results.text,
+      }
+    }
+  ]
+
+  if (results.sourceDocuments != null && results.sourceDocuments.length > 0) {
+    const doc = results.sourceDocuments[0]
+
+    const title = `${doc.metadata.icon != null ? doc.metadata.icon.emoji + ' ' : ''}${doc.metadata.properties._title}`
+    const url = `https://www.notion.so/${doc.metadata.notionId.replaceAll('-', '')}`
+
+    blocks.push({
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "Source:"
+        },
+        {
+          type: "mrkdwn",
+          text: `<${url}|${title}>`
+        }
+      ]
+    })
+
+    blocks.push({
+      type: "context",
+      elements: [
+        {
+          type: "plain_text",
+          text: doc.pageContent.substring(0, 100)+ '...',
+        }
+      ]
+    })
+  }
+
+  await slack.client.chat.update({
+    channel: msg.channel!,
+    ts: msg.ts!,
+    text: results.text,
+    blocks: blocks,
+  })
 });

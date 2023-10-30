@@ -8,9 +8,13 @@
       "rootDir": "./",
       "strict": true,
       "sourceMap": true,
-      "types": ["node"]
+      "types": ["node"],
+      "jsx": "preserve",
+      "module": "esnext",
+      "incremental": true,
+      "lib": ["dom", "dom.iterable", "esnext"],
     },
-    "include": ["src/**/*.ts", "api/**/*.ts"],
+    "include": ["src/**/*.ts", "api/**/*.ts", "api/**/*.tsx"],
     "exclude": ["node_modules", ".vercel", ".git"]
   }
   

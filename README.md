@@ -77,4 +77,8 @@ ngrok http 3000
 
 # Deployment
 
+```shell
+vercel deploy
+```
+
 To deploy a new version, commit and push your changes to the `main` branch.
