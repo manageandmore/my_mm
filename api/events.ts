@@ -6,6 +6,8 @@ import '../src/features/wishlist/index';
 import '../src/features/chatbot/event';
 import '../src/features/events/shortcut';
 import '../src/features/home/event';
+import '../src/features/post_generator/shortcut';
+import '../src/features/post_generator/message';
 
 /**
  * Configures the vercel deployment to use the edge runtime. 

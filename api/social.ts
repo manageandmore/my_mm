@@ -1,5 +1,9 @@
+import { search } from '@notionhq/client/build/src/api-endpoints';
 import { RequestContext } from '@vercel/edge';
+import { kv } from '@vercel/kv';
 import { ImageResponse } from '@vercel/og';
+import { slackBotToken } from '../src/constants';
+import { slack } from '../src/slack';
 
 /**
  * Configures the vercel deployment to use the edge runtime. 
@@ -17,12 +21,34 @@ export const runtime = 'edge'
 export default async function social(request: Request, context: RequestContext) {
   try {
     const { searchParams } = new URL(request.url);
+    let params = Object.fromEntries(searchParams.entries())
+
+    if (params["d"] != null) {
+      params = Object.assign(JSON.parse(atob(params["d"])), params)
+    }
  
-    const title = searchParams.get('title') ?? 'Some Title'
-    const subtitle = searchParams.get('subtitle') ?? 'Some Subtitle'
-    const logoPosition = searchParams.get('logoPosition') ?? 'top'
-    const titleColor = searchParams.get('titleColor') ?? 'white'
-    const titleAlignment = searchParams.get('titleAlignment') ?? 'left'
+    const size = Number(params['size'] ?? '800')
+    let image: string | ArrayBuffer = params['image'] ?? `https://placehold.co/${size}x${size}/19A5CE/4DB8D6/png?text=Background\\nImage`
+    const title = params['title'] ?? ''
+    const subtitle = params['subtitle'] ?? ''
+    const logoPosition = params['logoPosition'] ?? 'top'
+    const titleColor = params['titleColor'] ?? 'white'
+    const titleAlignment = params['titleAlignment'] ?? 'left'
+
+    const file = params['file']
+    if (file != null) {
+      const response = await slack.client.files.info({file: file})
+      const imageUrl = response.file?.url_private
+
+      if (imageUrl != null) {
+        image = await fetch(response.file!.url_private!, {headers: {'Authorization': `Bearer ${slackBotToken}`}}).then((res) => res.arrayBuffer())
+      }
+    }
+
+    const download = params['download'] != null
+    const headers: HeadersInit = download ?  {
+      'Content-Disposition': `attachment; filename="${title.replaceAll(' ', '_')}.png"`
+    } : {}
  
     const [
       mmLogo,
@@ -55,11 +81,10 @@ export default async function social(request: Request, context: RequestContext) 
               type: 'img',
               key: null,
               props: {
-                style: {position: 'absolute', top: 0, left: 0},
-                width: 1000,
-                height: 1000,
-                src: "https://media.canva.com/1/image-resize/1/800_800_92_JPG_F/czM6Ly9tZWRpYS1wcml2YXRlLmNhbnZhLmNvbS96aDkxZy9NQUVzeTJ6aDkxZy8xL3AuanBn?osig=AAAAAAAAAAAAAAAAAAAAAOFgTM2lQmdqIz8uP1RdqKMkzj9AJPLPijwrfmihuTIR&exp=1698687117&x-canva-quality=screen&csig=AAAAAAAAAAAAAAAAAAAAAO9yfE8v6A3NQ8sWPPLuEx_intF6p0WNIZYxOyR0HdlA",
-
+                style: {position: 'absolute', top: 0, left: 0, objectFit: 'cover'},
+                width: size,
+                height: size,
+                src: image,
               }
             },
             {
@@ -72,11 +97,11 @@ export default async function social(request: Request, context: RequestContext) 
                   flexWrap: 'nowrap',
                   justifyContent: 'space-between',
                   alignItems: logoPosition == 'top' ? 'flex-start' : 'flex-end',
-                  padding: 40,
+                  padding: size*0.04,
                 },
                 children: [
-                  {type: 'img', key: null, props: {height: 60, src: mmLogo}},
-                  {type: 'img', key: null, props: {height: 90, src: utumLogo}}
+                  {type: 'img', key: null, props: {height: size*0.06, src: mmLogo}},
+                  {type: 'img', key: null, props: {height: size*0.09, src: utumLogo}}
                 ]
               }
             },
@@ -92,7 +117,7 @@ export default async function social(request: Request, context: RequestContext) 
                   fontFamily: 'WorkSans',
                   color: 'white',
                   textAlign: titleAlignment,
-                  padding: 40,
+                  padding: size*0.04,
                 },
                 children: [
                   {
@@ -100,7 +125,7 @@ export default async function social(request: Request, context: RequestContext) 
                     key: null, 
                     props: {
                       style: {
-                        fontSize: 130,
+                        fontSize: size*0.13,
                         fontWeight: 800,
                         lineHeight: 0.9,
                         whiteSpace: 'pre-wrap',
@@ -114,8 +139,8 @@ export default async function social(request: Request, context: RequestContext) 
                     key: null, 
                     props: {
                       style: {
-                        marginTop: 10,
-                        fontSize: 50,
+                        marginTop: size*0.01,
+                        fontSize: size*0.05,
                         fontWeight: 500,
                         whiteSpace: 'nowrap',
                       }, 
@@ -129,8 +154,8 @@ export default async function social(request: Request, context: RequestContext) 
         }
       },
       {
-        width: 1000,
-        height: 1000,
+        width: size,
+        height: size,
         fonts: [
           {
             name: 'WorkSans',
@@ -145,6 +170,7 @@ export default async function social(request: Request, context: RequestContext) 
             style: 'normal',
           },
         ],
+        headers: headers,
       },
     );
   } catch (e: any) {

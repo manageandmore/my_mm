@@ -1,4 +1,4 @@
-import { AnyBlockElement, AnyMessageBlock, MessageAttachment } from "slack-edge";
+import { AnyBlockElement, AnyMessageBlock, AnyTextField, MessageAttachment } from "slack-edge";
 import { slack } from "../../slack";
 import { run } from "../assistant/assistant";
 
@@ -29,34 +29,31 @@ slack.event("app_mention", async (request) => {
     }
   ]
 
-  if (results.sourceDocuments != null && results.sourceDocuments.length > 0) {
-    const doc = results.sourceDocuments[0]
+  if (results.sourceDocuments != null) {
+    const sourceIds: string[] = []
+    const elements: AnyTextField[] = []
 
-    const title = `${doc.metadata.icon != null ? doc.metadata.icon.emoji + ' ' : ''}${doc.metadata.properties._title}`
-    const url = `https://www.notion.so/${doc.metadata.notionId.replaceAll('-', '')}`
+    for (var doc of results.sourceDocuments) {
+      if (sourceIds.includes(doc.metadata.notionId)) continue;
+      
+      const props = doc.metadata.properties
+      const icon = doc.metadata.icon
 
-    blocks.push({
-      type: "context",
-      elements: [
-        {
-          type: "mrkdwn",
-          text: "Source:"
-        },
+      const title = `${icon != null ? icon.emoji + ' ' : ''}${props?._title ?? props.title}`
+      const url = `https://www.notion.so/${doc.metadata.notionId.replaceAll('-', '')}`
+
+      sourceIds.push(doc.metadata.notionId)
+      elements.push(
         {
           type: "mrkdwn",
           text: `<${url}|${title}>`
         }
-      ]
-    })
+      )
+    }
 
     blocks.push({
       type: "context",
-      elements: [
-        {
-          type: "plain_text",
-          text: doc.pageContent.substring(0, 100)+ '...',
-        }
-      ]
+      elements: elements
     })
   }
 
