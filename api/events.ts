@@ -2,6 +2,7 @@ import { slack } from "../src/slack";
 import { RequestContext } from "@vercel/edge";
 
 // Import all features that register events, shortcuts or actions
+import "../src/features/community_credits/index";
 import "../src/features/assistant/index";
 import "../src/features/home/index";
 import "../src/features/post_generator/index";
