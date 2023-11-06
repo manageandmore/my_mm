@@ -34,5 +34,4 @@ import { getScholarIdFromUserId } from "../common/id_utils";
     // TODO Show error view to user
     return
   }
-
 })

@@ -55,6 +55,7 @@ export async function queryScholarProfile(scholarId: string): Promise<ScholarPro
       credits: props["Community Credits"].rollup.number ?? 0,
     }
   } catch (e) {
+    console.error('Error fetching scholar profile', e)
     // TODO Add a new empty profile to notion.
     return {
       id: scholarId,
