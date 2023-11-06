@@ -23,22 +23,17 @@ slack.message(communityCreditsRegexPattern, async (request) => {
 
   // find chanel id for community credits channel
   const communityCreditsChannelId = await getCommunityCreditsChannelId();
-
   const channel = communityCreditsChannelId
     ? `<#${communityCreditsChannelId}>`
     : "#community-credits";
-  const replyText = `Would you like to add this message to the ${channel} channel?`;
+
   const messageText = payload.text;
+  const replyText = `Would you like to add this message to the ${channel} channel?`;
+
   // check that the message is not already in the community credits channel
-  // if (communityCreditsChannelId) {
-  //   const messages = await slack.client.conversations.history({
-  //     channel: communityCreditsChannelId,
-  //     limit: 50,
-  //   });
-  //   if (payload.text in messages) {
-  //     return;
-  //   }
-  // }
+  if (payload.channel === communityCreditsChannelId) {
+    return;
+  }
 
   // reply to the message
   await slack.client.chat.postMessage({
@@ -70,12 +65,10 @@ slack.message(communityCreditsRegexPattern, async (request) => {
 
 export const createCommunityPostAction = "create_community_credits_post";
 
-/**
- * Opens the post creator modal when the user clicks the "Create Social Media Post" button.
- */
 slack.action(createCommunityPostAction, async (request) => {
   const payload = request.payload;
   const communityCreditsChannelId = await getCommunityCreditsChannelId();
+  const text = (payload.actions[0] as ButtonAction).value;
 
   if (!payload.message || !communityCreditsChannelId) {
     return;
@@ -83,6 +76,6 @@ slack.action(createCommunityPostAction, async (request) => {
 
   await slack.client.chat.postMessage({
     channel: communityCreditsChannelId,
-    text: payload.message.text || "",
+    text: text,
   });
 });

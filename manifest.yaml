@@ -47,6 +47,7 @@ oauth_config:
       - users:read
       - users:read.email
       - reactions:write
+      - channels:history
 settings:
   event_subscriptions:
     request_url: https://manageandmore.vercel.app/api/events
@@ -54,6 +55,7 @@ settings:
       - app_home_opened
       - app_mention
       - message.im
+      - message.channels
   interactivity:
     is_enabled: true
     request_url: https://manageandmore.vercel.app/api/events
