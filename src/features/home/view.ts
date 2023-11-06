@@ -1,6 +1,12 @@
 import { HomeTabView } from "slack-edge";
 import { openWishlistAction } from "../wishlist/actions/open_wishlist";
 
+/** Interface for one Item of Credits Leaderboard */
+export interface CreditsLeaderboardItem {
+  name: string;
+  credits: number;
+}
+
 /** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
   name: string;
@@ -10,6 +16,7 @@ export interface HomeOptions {
   ep: string;
   communityCredits: number;
   skills: string[];
+  creditsLeaderboard: CreditsLeaderboardItem[];
 }
 
 /**
@@ -133,39 +140,31 @@ export function getHomeView(options: HomeOptions): HomeTabView {
           },
           {
             type: "mrkdwn",
-            text: "⭐️ *Points*",
+            text: "⭐️ *Credits*",
           },
           {
             type: "mrkdwn",
-            text: "<fakeLink.toUserProfiles.com| Almo>",
+            text: `${options.creditsLeaderboard[0].name}`,
           },
           {
             type: "mrkdwn",
-            text: "13",
+            text: `${options.creditsLeaderboard[0].credits}`,
           },
           {
             type: "mrkdwn",
-            text: "<fakeLink.toUserProfiles.com| Kilian>",
+            text: `${options.creditsLeaderboard[1].name}`,
           },
           {
             type: "mrkdwn",
-            text: "3",
+            text: `${options.creditsLeaderboard[1].credits}`,
           },
           {
             type: "mrkdwn",
-            text: "<fakeLink.toUserProfiles.com| Samuel>",
+            text: `${options.creditsLeaderboard[2].name}`,
           },
           {
             type: "mrkdwn",
-            text: "0",
-          },
-          {
-            type: "mrkdwn",
-            text: "<fakeLink.toUserProfiles.com| Liana>",
-          },
-          {
-            type: "mrkdwn",
-            text: "-1",
+            text: `${options.creditsLeaderboard[2].credits}`,
           },
         ],
       },
