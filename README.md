@@ -62,8 +62,10 @@ Next create your own custom slack app like this:
 - Copy the content of `manifest.yaml` into the text area and adjust the following:
   - Change `display_information.name` to a custom name
   - Change `features.bot_user.display_name` to the same name
-  - Change `settings.event_subscriptions.request_url` to include your vercel project domain you noted down earlier.
+  - Change `settings.event_subscriptions.request_url` to `https://<your-domain.vercel.app>/api/events` using your vercel project domain you noted down earlier.
+  - Change `settings.interactivity.request_url` to the same url.
 - Click **Create**
+
 
 Then install the app to the workspace as prompted.
 
