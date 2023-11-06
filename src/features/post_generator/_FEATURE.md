@@ -20,6 +20,13 @@ The user interacts with this feature through both messaging with the app and a m
 6. User submits the modal.
 7. App sends a final message to the user with the full-resolution post image, which the user can then download.
 
+## Structure
+
+- `./action.ts` contains all event handlers for the shortcut, message, actions and modal submission.
+- `./generator.ts` contains the layout code for the image generation.
+- `./modal.ts` contains the layout code for the modal.
+- `/api/social.ts` contains the api entrypoint for the image generation.
+
 ## Roadmap
 
 In the future we want to expand this to directly add the created post to the content calendar in notion.
