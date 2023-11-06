@@ -4,12 +4,24 @@ This repository holds the code and resources for the custom slack integration fo
 
 # Structure
 
-- `/api` contains the api entry routes
-- `/src` contains the source code
-  - `/features` contains each feature in a separate directory
-- `manifest.yaml` stores the config for the slack app
+- `api/` contains the api entry routes
+  - `events.ts` is the entrypoint for slack events, messages and shortcuts
+  - `social.ts` is the entrypoint for the social media post generator
+  - `ai.ts` is the experimental assistant code
+- `src/` contains the source code
+  - `features/` contains each feature in a separate directory
+    - `_FEATURE.md` contains specific documentation for each feature
+    - `index.ts` is the entrypoint for a feature and should be imported in `/api/events.ts`
+- `manifest.yaml` stores the current config for the production slack app
 
-# Local Development Setup
+# Development Setup
+
+For development, you will create a personal slack app and api application. The slack app will be added
+to the **ManageAndMore Test** Workspace. For hosting the api, we use vercel (because its easy and free). For data storage, we use notion with the **ManageAndMore Test** notion workspace.
+
+Running the api locally is currently not supported, since the slack app, even your personal one, needs to access the api from the internet. You need to deploy your code to a personal vercel project in order to test it in slack. However deployments are rather quick. This does not affect the production or staging apps.
+
+---
 
 You need the following prerequisites:
 
@@ -25,7 +37,7 @@ Code linting (optional):
 
 ---
 
-## Project Setup
+## Project Init
 
 For starters clone the git repository into a new directory called `mm_app`:
 

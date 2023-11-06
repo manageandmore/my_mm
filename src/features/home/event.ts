@@ -1,4 +1,4 @@
-import { queryScholarProfile } from "../profile/query";
+import { queryCreditsLeaderboard, queryScholarProfile, querySkillList } from "../profile/query";
 import { slack } from "../../slack";
 import { getHomeView } from "./view";
 
@@ -13,6 +13,8 @@ slack.event("app_home_opened", async (request) => {
 
   try {
     const profile = await queryScholarProfile(event.user);
+    const leaderboard = await queryCreditsLeaderboard();
+    const skillList = await querySkillList(event.user);
 
     await slack.client.views.publish({
       user_id: event.user,
@@ -24,6 +26,8 @@ slack.event("app_home_opened", async (request) => {
         ep: profile.ep,
         communityCredits: profile.credits,
         skills: [],
+        creditsLeaderboard: leaderboard,
+        skillList: skillList,
       }),
     });
   } catch (e) {

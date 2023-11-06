@@ -6,6 +6,7 @@ import { kv } from "@vercel/kv";
 
 /** The id of the scholars database in notion. */
 export const scholarsDatabaseId = "9fd93456efb34c6f9fe1ca63fa376899";
+export const skillDatabaseId = "76dca6588e9544fbbc6a763159b8c1c9";
 
 /**
  * Retrieves the associated scholarId for a given userId.
