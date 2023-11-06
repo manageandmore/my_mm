@@ -18,7 +18,7 @@ export interface ScholarProfile {
  */
 export type ScholarRow = PageObjectResponse & {
   properties: {
-    Name: Property<'rich_text'>
+    Name: Property<'title'>
     Email: Property<'email'>
     IP: Property<'select'>
     EP: Property<'select'>
@@ -46,7 +46,7 @@ export async function queryScholarProfile(scholarId: string): Promise<ScholarPro
 
     return {
       id: response.id,
-      name: props.Name.rich_text[0].plain_text,
+      name: props.Name.title[0].plain_text,
       email: props.Email.email ?? undefined,
       ip: props.IP.select?.name ?? '/',
       ep: props.EP.select?.name ?? '/',
