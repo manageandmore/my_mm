@@ -1,5 +1,5 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { notion, Property } from "../../notion";
+import { notion, Property, RollupProperty } from "../../notion";
 
 /** The interface for a user profile in the scholars database. */
 export interface ScholarProfile {
@@ -10,6 +10,7 @@ export interface ScholarProfile {
   ep: string
   generation: string
   status: string
+  credits: number
 }
 
 /**
@@ -23,6 +24,7 @@ export type ScholarRow = PageObjectResponse & {
     EP: Property<'select'>
     Generation: Property<'number'>
     Status: Property<'select'>
+    'Community Credits': RollupProperty<'number'>
   }
 }
 
@@ -49,7 +51,8 @@ export async function queryScholarProfile(scholarId: string): Promise<ScholarPro
       ip: props.IP.select?.name ?? '/',
       ep: props.EP.select?.name ?? '/',
       generation: props.Generation.number?.toString() ?? 'Unknown',
-      status: props.Status.select?.name ?? 'Unknown'
+      status: props.Status.select?.name ?? 'Unknown',
+      credits: props["Community Credits"].rollup.number ?? 0,
     }
   } catch (e) {
     // TODO Add a new empty profile to notion.
@@ -60,6 +63,7 @@ export async function queryScholarProfile(scholarId: string): Promise<ScholarPro
       ep: '/',
       generation: 'Unknown',
       status: 'Unknown',
+      credits: 0,
     }
   }
 }

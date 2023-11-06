@@ -1,4 +1,3 @@
-import { queryCommunityCredits } from "../community_credits/query";
 import { queryScholarProfile } from "../profile/query";
 import { slack } from "../../slack";
 import { getHomeView } from "./view";
@@ -16,13 +15,7 @@ import { getScholarIdFromUserId } from "../common/id_utils";
   try {
     const scholarId = await getScholarIdFromUserId(event.user)
 
-    const [
-      profile, 
-      communityCredits
-    ] = await Promise.all([
-      queryScholarProfile(scholarId),
-      queryCommunityCredits(scholarId)
-    ]);
+    const profile = await queryScholarProfile(scholarId)
     
     await slack.client.views.publish({
       user_id: event.user,
@@ -32,7 +25,7 @@ import { getScholarIdFromUserId } from "../common/id_utils";
         status: profile.status,
         ip: profile.ip,
         ep: profile.ep,
-        communityCredits: communityCredits,
+        communityCredits: profile.credits,
         skills: []
       })
     })
