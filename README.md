@@ -14,25 +14,43 @@ This repository holds the code and resources for the custom slack integration fo
 You need the following prerequisites:
 
 - Installed **NodeJS** and **npm**
-- Installed and setup **vercel** cli
-- Installed and setup **ngrok**
+- Create a vercel account (https://vercel.com/signup)
+  - Select the Hobby plan for free projects
+- Installed and setup **vercel** cli (https://vercel.com/docs/cli)
 
-Add a `.env` file with the following content:
+---
 
-```env
-NOTION_INTEGRATION_TOKEN=""
-OPENAI_TOKEN=""
-SLACK_BOT_TOKEN=""
-SLACK_SIGNING_SECRET=""
-NGROK_DOMAIN=""
+## Project Setup
+
+For starters clone the git repository into a new directory called `mm_app`:
+
+```shell
+git clone https://github.com/schultek/mm_app mm_app
+cd mm_app
 ```
 
-We will edit these values as we do the setup.
+## Vercel Project Setup
 
-## Ngrok Setup
+Inside the `mm_app` folder, initialize a new vercel project through the vercel cli:
 
-Go to `https://dashboard.ngrok.com/cloud-edge/domains` and create a new domain.
-Copy the domain to the `.env` file as `NGROK_DOMAIN="<your-domain>.ngrok-free.app"`
+```shell
+vercel
+```
+
+Answer the prompts so that you setup your project for your private vercel account. 
+You might need to login to the cli when prompted.
+Select `N` when asked to link an existing project and enter the details for a new project.
+
+---
+
+Next go to `vercel.com` and open your project dashboard. Go to the `Storage` tab and add two databases:
+
+- **KV** for caching.
+- **Postgres** for vector embeddings.
+
+---
+
+Go to `Settings` -> `Domains` and note down your projects domain for production deployments. Create one if none exists. 
 
 ## Slack App Setup
 
@@ -44,42 +62,36 @@ Next create your own custom slack app like this:
 - Copy the content of `manifest.yaml` into the text area and adjust the following:
   - Change `display_information.name` to a custom name
   - Change `features.bot_user.display_name` to the same name
-  - Change `settings.event_subscriptions.request_url` to include your ngrok domain as `https://<your-domain>.ngrok-free.app/api/events`
+  - Change `settings.event_subscriptions.request_url` to include your vercel project domain you noted down earlier.
 - Click **Create**
 
 Then install the app to the workspace as prompted.
 
-Finally update the following variables in the `.env` file:
+---
+
+Open your vercel project dashboard and go to `Settings` -> `Environment Variables`
+
+Add the following variables:
 
 - `SLACK_SIGNING_SECRET` as found under **Basic Information** -> **App Credentials** -> **Signing Secret**
 - `SLACK_BOT_TOKEN` as found under **OAuth & Permissions** -> **Bot User OAuth Token**
 
 ## Notion Setup
 
-Update the `NOTION_INTEGRATION_TOKEN` variable in the `.env` file with the following:
+Add the `NOTION_INTEGRATION_TOKEN` variable in the vercel settings with the following:
 
 - Go to `https://www.notion.so/my-integrations`
 - Open the **MM App** integration
 - Copy the **Internal Integration Secret** to the env var.
 
-## Running Local Development
+## Deploy Development App
 
-Start the dev server: 
-
-```shell
-vercel dev
-````
-
-Start ngrok with the port of the dev server (usually 3000):
-
-```
-ngrok http 3000
-```
-
-# Deployment
+To deploy your personal development app run:
 
 ```shell
-vercel deploy
+vercel deploy --prod
 ```
 
-To deploy a new version, commit and push your changes to the `main` branch.
+# Production
+
+To deploy a new version to production (The real MM Workspace), commit and push your changes to the `main` branch.
