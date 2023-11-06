@@ -18,6 +18,11 @@ You need the following prerequisites:
   - Select the Hobby plan for free projects
 - Installed and setup **vercel** cli (https://vercel.com/docs/cli)
 
+Code linting (optional):
+
+- Install `Prettier` extension on VS Code: https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode
+- Enable `format on save` in VS Code: https://stackoverflow.com/questions/39494277/how-do-you-format-code-on-save-in-vs-code
+
 ---
 
 ## Project Setup
@@ -37,7 +42,7 @@ Inside the `mm_app` folder, initialize a new vercel project through the vercel c
 vercel
 ```
 
-Answer the prompts so that you setup your project for your private vercel account. 
+Answer the prompts so that you setup your project for your private vercel account.
 You might need to login to the cli when prompted.
 Select `N` when asked to link an existing project and enter the details for a new project.
 
@@ -50,7 +55,7 @@ Next go to `vercel.com` and open your project dashboard. Go to the `Storage` tab
 
 ---
 
-Go to `Settings` -> `Domains` and note down your projects domain for production deployments. Create one if none exists. 
+Go to `Settings` -> `Domains` and note down your projects domain for production deployments. Create one if none exists.
 
 ## Slack App Setup
 
@@ -65,7 +70,6 @@ Next create your own custom slack app like this:
   - Change `settings.event_subscriptions.request_url` to `https://<your-domain.vercel.app>/api/events` using your vercel project domain you noted down earlier.
   - Change `settings.interactivity.request_url` to the same url.
 - Click **Create**
-
 
 Then install the app to the workspace as prompted.
 
@@ -88,7 +92,7 @@ Add the `NOTION_INTEGRATION_TOKEN` environment variable in the vercel settings w
 
 ## OpenAI Setup
 
-Either get a real OpenAI Api token from a personal account, or make up a dummy token (e.g. 'DUMMY_TOKEN'). 
+Either get a real OpenAI Api token from a personal account, or make up a dummy token (e.g. 'DUMMY_TOKEN').
 Add your token as the `OPENAI_TOKEN` environment variable in the vercel settings.
 
 ## Deploy Development App
