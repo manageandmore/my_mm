@@ -1,11 +1,12 @@
-import { Files } from "openai/resources"
-import { BlockElementAction, ButtonAction, DataSubmissionView } from "slack-edge"
-import { slackUserToken } from "../../constants"
+import { ButtonAction, DataSubmissionView, FileItem } from "slack-edge"
 import { slack } from "../../slack"
 import { getPostCreatorModal, getPostImageUrl, PostCreatorModalOptions } from "./modal"
 
 const createSocialPostShortcut = 'create_social_post'
 
+/**
+ * Shows a helpful starting message when the user triggers the 'Create Social Post' shortcut.
+ */
 slack.globalShortcut(createSocialPostShortcut, async (request) => {
   const payload = request.payload
   
@@ -25,8 +26,56 @@ slack.globalShortcut(createSocialPostShortcut, async (request) => {
   })
 })
 
+/**
+ * Shows a "Create Social Media Post" button whenever the user sends an image to the app.
+ */
+slack.anyMessage(async (request) => {
+  const payload = request.payload;
+
+  // Guard for direct messages to the app.
+  if (payload.channel_type != 'im') {
+    return
+  }
+
+  // Guard for file messages.
+  if (payload.subtype != 'file_share' || payload.files == null || payload.files.length != 1) {
+    return
+  }
+  
+  const file = payload.files![0] as any as FileItem
+  
+  // Guard for image files.
+  if (!['jpg', 'jpeg', 'png'].includes(file.filetype)) {
+    return
+  }
+      
+  await slack.client.chat.postMessage({
+    channel: payload.channel,
+    text: 'What a nice image. Do you want to turn it into a social media post?',
+    blocks: [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "What a nice image. ✨\nDo you want to turn it into a social media post?"
+        },
+        "accessory": {
+          "type": "button",
+          "action_id": createSocialPostAction,
+          "text": {
+            "type": "plain_text",
+            "text": "Create Social Media Post",
+            "emoji": true
+          },
+          "style": "primary",
+          "value": file.id,
+        }
+      }
+    ]
+  })
+})
+
 export const createSocialPostAction = 'create_social_post'
-export const updateSocialPostAction = 'update_social_post'
 
 interface PostCreatorModalState {
   title?: {[updateSocialPostAction]: {value: string}}
@@ -37,6 +86,9 @@ interface PostCreatorModalState {
   title_color?: {[updateSocialPostAction]: {selected_option?: {value: string}}}
 }
 
+/** 
+ * Opens the post creator modal when the user clicks the "Create Social Media Post" button.
+ */
 slack.action(createSocialPostAction, async (request) => {
   const payload = request.payload
 
@@ -45,12 +97,17 @@ slack.action(createSocialPostAction, async (request) => {
   await slack.client.views.open({
     trigger_id: payload.trigger_id,
     view: getPostCreatorModal({
-      size: 300,
+      size: 300, // Generate a low-resolution preview.
       file: fileId,
     })
   })
 })
 
+export const updateSocialPostAction = 'update_social_post'
+
+/**
+ * Updates the post creator modal whenever the user changes some values inside the modal.
+ */
 slack.action(updateSocialPostAction, async (request) => {
   const payload = request.payload
 
@@ -65,7 +122,7 @@ slack.action(updateSocialPostAction, async (request) => {
     view: getPostCreatorModal(
       {
         ...options,
-        size: 300,
+        size: 300, // Generate a low-resolution preview.
       }
     )
   })
@@ -73,6 +130,9 @@ slack.action(updateSocialPostAction, async (request) => {
 
 export const createSocialPostCallback = 'create_social_post_callback'
 
+/**
+ * Sends back the created post image when the user submits the post creator modal.
+ */
 slack.viewSubmission(createSocialPostCallback, async (request) => {
   return {
     response_action: "clear",
@@ -85,7 +145,7 @@ slack.viewSubmission(createSocialPostCallback, async (request) => {
 
   const imageUrl = getPostImageUrl({
     ...options,
-    size: 1200,
+    size: 1200, // Generate a high resolution image.
   }, true) + '&download=1'
 
   await slack.client.chat.postMessage({

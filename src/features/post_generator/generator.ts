@@ -14,6 +14,11 @@ interface PostOptions {
   download: boolean
 }
 
+/**
+ * Generates a social post image using the @vercel/og package.
+ * @param options The input options for the post, like title, background and style.
+ * @returns The image as a response object.
+ */
 export async function generatePostImage(options: PostOptions): Promise<Response> {
 
   let image: ArrayBuffer | string = options.image

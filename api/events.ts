@@ -5,7 +5,7 @@ import { RequestContext } from '@vercel/edge';
 import '../src/features/assistant/event';
 import '../src/features/assistant/shortcut';
 import '../src/features/home/event';
-import '../src/features/post_generator/shortcut';
+import '../src/features/post_generator/action';
 import '../src/features/post_generator/message';
 import '../src/features/wishlist/index';
 

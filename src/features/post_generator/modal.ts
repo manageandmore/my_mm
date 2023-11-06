@@ -1,6 +1,6 @@
-import { AnyBlockElement, AnyModalBlock, ModalView } from "slack-edge";
+import { ModalView } from "slack-edge";
 import { currentUrl } from "../../constants";
-import { createSocialPostCallback, updateSocialPostAction } from "./shortcut";
+import { createSocialPostCallback, updateSocialPostAction } from "./action";
 
 export type PostCreatorModalOptions = {
   size?: number
@@ -14,7 +14,7 @@ export type PostCreatorModalOptions = {
 }
 
 /**
- * Constructs the modal view for the wishlist.
+ * Constructs the modal view for the social post creator.
  * 
  * @param options The options for hydrating the modal.
  * @returns The modal view.

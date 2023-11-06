@@ -4,8 +4,9 @@ This repository holds the code and resources for the custom slack integration fo
 
 # Structure
 
-- `/api` contains the api entry routes.
+- `/api` contains the api entry routes
 - `/src` contains the source code
+  - `/features` contains each feature in a separate directory
 - `manifest.yaml` stores the config for the slack app
 
 # Local Development Setup

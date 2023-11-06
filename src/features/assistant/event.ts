@@ -65,7 +65,7 @@ slack.event("app_mention", async (request) => {
         elements.push(
           {
             type: "mrkdwn",
-            text: `<${meta.link}|#${meta.title}>`
+            text: `<${meta.link}|${meta.title}>`
           }
         )
       }
