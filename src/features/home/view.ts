@@ -7,6 +7,14 @@ export interface CreditsLeaderboardItem {
   credits: number;
 }
 
+/** Interface for one Skill List of Lists for the Scholar */
+export interface SkillItem {
+  expertSkills: string[];
+  intermediateSkills: string[];
+  beginnerSkills: string[];
+}
+
+
 /** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
   name: string;
@@ -17,6 +25,7 @@ export interface HomeOptions {
   communityCredits: number;
   skills: string[];
   creditsLeaderboard: CreditsLeaderboardItem[];
+  skillList: SkillItem;
 }
 
 /**
@@ -67,10 +76,6 @@ export function getHomeView(options: HomeOptions): HomeTabView {
             type: "mrkdwn",
             text: "*🏆 Liga:*\n Credit Warrior",
           },
-          {
-            type: "mrkdwn",
-            text: "*🕶️ Skills:*",
-          },
         ],
         accessory: {
           type: "image",
@@ -80,45 +85,32 @@ export function getHomeView(options: HomeOptions): HomeTabView {
         },
       },
       {
-        type: "actions",
-        elements: [
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: "Skills",
+          emoji: true,
+        },
+      },
+      {
+        type: "divider",
+      },
+      {
+        type: "section",
+        fields: [
           {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Barking",
-              emoji: true,
-            },
-            value: "barking",
+            type: "mrkdwn",
+            text: `*Expert:*\n${options.skillList.expertSkills.join(", ")}`,
           },
           {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Sleeping",
-              emoji: true,
-            },
-            value: "sleep",
+            type: "mrkdwn",
+            text: `*Intermediate:*\n${options.skillList.intermediateSkills.join(", ")}`,
           },
           {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Being cute",
-              emoji: true,
-            },
-            value: "cute",
+            type: "mrkdwn",
+            text: `*Beginner:*\n${options.skillList.beginnerSkills.join(", ")}`,
           },
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Doing Nothing",
-              emoji: true,
-            },
-            value: "nothing",
-          },
-        ],
+        ]
       },
       {
         type: "header",
