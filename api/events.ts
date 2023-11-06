@@ -2,12 +2,12 @@ import { slack } from '../src/slack';
 import { RequestContext } from '@vercel/edge';
 
 // Import all features that register events, shortcuts or actions
-import '../src/features/wishlist/index';
-import '../src/features/chatbot/event';
-import '../src/features/events/shortcut';
+import '../src/features/assistant/event';
+import '../src/features/assistant/shortcut';
 import '../src/features/home/event';
 import '../src/features/post_generator/shortcut';
 import '../src/features/post_generator/message';
+import '../src/features/wishlist/index';
 
 /**
  * Configures the vercel deployment to use the edge runtime. 
