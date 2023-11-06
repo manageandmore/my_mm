@@ -1,9 +1,9 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 import { notion, Property, RollupProperty } from "../../notion";
+import { getScholarIdFromUserId } from "../common/id_utils";
 
 /** The interface for a user profile in the scholars database. */
 export interface ScholarProfile {
-  id: string
   name: string
   email?: string
   ip: string
@@ -34,8 +34,10 @@ export type ScholarRow = PageObjectResponse & {
  * @param scholarId The id of the requested scholar.
  * @returns The profile of the requested scholar.
  */
-export async function queryScholarProfile(scholarId: string): Promise<ScholarProfile> {
+export async function queryScholarProfile(userId: string): Promise<ScholarProfile> {
   try {
+    const scholarId = await getScholarIdFromUserId(userId)
+
     const response = await notion.pages.retrieve({
       page_id: scholarId
     }) as ScholarRow
@@ -45,7 +47,6 @@ export async function queryScholarProfile(scholarId: string): Promise<ScholarPro
     const props = response.properties;
 
     return {
-      id: response.id,
       name: props.Name.title[0].plain_text,
       email: props.Email.email ?? undefined,
       ip: props.IP.select?.name ?? '/',
@@ -58,7 +59,6 @@ export async function queryScholarProfile(scholarId: string): Promise<ScholarPro
     console.error('Error fetching scholar profile', e)
     // TODO Add a new empty profile to notion.
     return {
-      id: scholarId,
       name: 'Unknown',
       ip: '/',
       ep: '/',
