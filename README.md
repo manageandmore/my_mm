@@ -86,6 +86,11 @@ Add the `NOTION_INTEGRATION_TOKEN` environment variable in the vercel settings w
 - Open the **MM App** integration
 - Copy the **Internal Integration Secret** to the env var.
 
+## OpenAI Setup
+
+Either get a real OpenAI Api token from a personal account, or make up a dummy token (e.g. 'DUMMY_TOKEN'). 
+Add your token as the `OPENAI_TOKEN` environment variable in the vercel settings.
+
 ## Deploy Development App
 
 To deploy your personal development app run:
