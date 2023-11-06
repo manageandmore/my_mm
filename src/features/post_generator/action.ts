@@ -77,15 +77,6 @@ slack.anyMessage(async (request) => {
 
 export const createSocialPostAction = 'create_social_post'
 
-interface PostCreatorModalState {
-  title?: {[updateSocialPostAction]: {value: string}}
-  subtitle?: {[updateSocialPostAction]: {value: string}}
-  image_url?: {[updateSocialPostAction]: {value: string}}
-  logo_position?: {[updateSocialPostAction]: {selected_option?: {value: string}}}
-  title_alignment?: {[updateSocialPostAction]: {selected_option?: {value: string}}}
-  title_color?: {[updateSocialPostAction]: {selected_option?: {value: string}}}
-}
-
 /** 
  * Opens the post creator modal when the user clicks the "Create Social Media Post" button.
  */
@@ -168,6 +159,15 @@ slack.viewSubmission(createSocialPostCallback, async (request) => {
   })
 
 })
+
+interface PostCreatorModalState {
+  title?: {[updateSocialPostAction]: {value: string}}
+  subtitle?: {[updateSocialPostAction]: {value: string}}
+  image_url?: {[updateSocialPostAction]: {value: string}}
+  logo_position?: {[updateSocialPostAction]: {selected_option?: {value: string}}}
+  title_alignment?: {[updateSocialPostAction]: {selected_option?: {value: string}}}
+  title_color?: {[updateSocialPostAction]: {selected_option?: {value: string}}}
+}
 
 function getPostOptionsFromView(view: DataSubmissionView | undefined): PostCreatorModalOptions {
   if (view == null) return {}
