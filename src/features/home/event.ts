@@ -13,9 +13,7 @@ import { getScholarIdFromUserId } from "../common/id_utils";
   const event = request.payload;
 
   try {
-    const scholarId = await getScholarIdFromUserId(event.user)
-
-    const profile = await queryScholarProfile(scholarId)
+    const profile = await queryScholarProfile(event.user)
     
     await slack.client.views.publish({
       user_id: event.user,
