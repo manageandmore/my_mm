@@ -16,16 +16,20 @@ display_information:
 features:
   app_home:
     home_tab_enabled: true
-    messages_tab_enabled: false
-    messages_tab_read_only_enabled: true
+    messages_tab_enabled: true
+    messages_tab_read_only_enabled: false
   bot_user:
     display_name: My MM
     always_online: false
   shortcuts:
-    - name: Create an event
+    - name: Create Social Media Post
       type: global
-      callback_id: create_event
-      description: Creates an event entry in notion
+      callback_id: create_social_post
+      description: Adds a new social post to the content calendar.
+    - name: Add to assistant
+      type: message
+      callback_id: add_to_assistant
+      description: Adds this message to the knowledge index of the My MM assistant.
 oauth_config:
   scopes:
     user:
@@ -36,14 +40,20 @@ oauth_config:
       - channels:read
       - chat:write
       - commands
+      - files:read
+      - im:history
+      - remote_files:share
+      - remote_files:write
       - users:read
       - users:read.email
+      - reactions:write
 settings:
   event_subscriptions:
     request_url: https://manageandmore.vercel.app/api/events
     bot_events:
       - app_home_opened
       - app_mention
+      - message.im
   interactivity:
     is_enabled: true
     request_url: https://manageandmore.vercel.app/api/events

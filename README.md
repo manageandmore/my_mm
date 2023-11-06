@@ -78,7 +78,7 @@ Add the following variables:
 
 ## Notion Setup
 
-Add the `NOTION_INTEGRATION_TOKEN` variable in the vercel settings with the following:
+Add the `NOTION_INTEGRATION_TOKEN` environment variable in the vercel settings with the following:
 
 - Go to `https://www.notion.so/my-integrations`
 - Open the **MM App** integration
