@@ -1,37 +1,36 @@
-import { RequestContext } from '@vercel/edge';
-import { bootstrapAssistant } from '../src/features/assistant/bootstrap';
-import { promptAssistant } from '../src/features/assistant/prompt';
+import { RequestContext } from "@vercel/edge";
+import { bootstrapAssistant } from "../src/features/assistant/bootstrap";
+import { promptAssistant } from "../src/features/assistant/prompt";
 
 /**
- * Configures the vercel deployment to use the edge runtime. 
+ * Configures the vercel deployment to use the edge runtime.
  */
 export const config = {
-  runtime: 'edge',
+  runtime: "edge",
 };
 
-/** 
+/**
  * Handler for the /api/events route.
- * 
+ *
  * This route is called by slack when any event happens.
  *  */
 export default async function ai(request: Request, context: RequestContext) {
   try {
-    const shouldBootstrap = request.headers.get('AI-Bootstrap')
+    const shouldBootstrap = request.headers.get("AI-Bootstrap");
     if (shouldBootstrap != null) {
-  
-      await bootstrapAssistant()
-      return new Response('Bootstrapping...', {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      await bootstrapAssistant();
+      return new Response("Bootstrapping...", {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     }
-    const prompt = request.headers.get('AI-Prompt')
+    const prompt = request.headers.get("AI-Prompt");
     if (prompt == null) {
-      return new Response('No AI-Prompt header', {status: 400})
+      return new Response("No AI-Prompt header", { status: 400 });
     }
     const results = promptAssistant(prompt);
-    return new Response(JSON.stringify(results), {status: 200})
+    return new Response(JSON.stringify(results), { status: 200 });
   } catch (e) {
-    console.log(e, (e as any).error, (e as any).errors)
-    return new Response(JSON.stringify(e), {status: 500})
+    console.log(e, (e as any).error, (e as any).errors);
+    return new Response(JSON.stringify(e), { status: 500 });
   }
 }

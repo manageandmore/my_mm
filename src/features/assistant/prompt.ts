@@ -12,13 +12,13 @@ Prompt: {question}
 Helpful Response:`;
 
 export async function promptAssistant(prompt: string): Promise<ChainValues> {
-  const vectorStore = await getVectorStore()
+  const vectorStore = await getVectorStore();
 
   const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever(), {
     returnSourceDocuments: true,
     prompt: PromptTemplate.fromTemplate(template),
   });
 
-  const results = await chain.call({query: prompt});
-  return results
+  const results = await chain.call({ query: prompt });
+  return results;
 }

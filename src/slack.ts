@@ -13,4 +13,4 @@ export const slack = new SlackApp({
   },
 });
 
-export const scholarIdField = 'Xf063XD67XC0'
+export const scholarIdField = "Xf063XD67XC0";

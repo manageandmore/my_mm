@@ -10,11 +10,11 @@ const textSplitter = new RecursiveCharacterTextSplitter({
 });
 
 export async function bootstrapAssistant() {
-  const vectorStore = await getVectorStore()
-  await vectorStore.delete({deleteAll: true})
+  const vectorStore = await getVectorStore();
+  await vectorStore.delete({ deleteAll: true });
 
-  await vectorStore.addDocuments(await loadWishlistDocuments())
-  await vectorStore.addDocuments(await loadFellowshipPage())
+  await vectorStore.addDocuments(await loadWishlistDocuments());
+  await vectorStore.addDocuments(await loadFellowshipPage());
 }
 
 async function loadFellowshipPage(): Promise<Document[]> {
@@ -26,7 +26,7 @@ async function loadFellowshipPage(): Promise<Document[]> {
     type: "page",
   });
 
-  return pageLoader.loadAndSplit(textSplitter)
+  return pageLoader.loadAndSplit(textSplitter);
 }
 
 async function loadWishlistDocuments(): Promise<Document[]> {
@@ -34,27 +34,31 @@ async function loadWishlistDocuments(): Promise<Document[]> {
     clientOptions: {
       auth: notionToken,
     },
-    type: 'database',
-    id: 'a18536c8d58f4cfe97419700fd5c2d82',
+    type: "database",
+    id: "a18536c8d58f4cfe97419700fd5c2d82",
     propertiesAsHeader: true,
     callerOptions: {
       maxConcurrency: 64,
     },
-  })
+  });
 
-  var docs = await loader.load()
+  var docs = await loader.load();
   for (var doc of docs) {
-    let hasFrontmatter = doc.pageContent.startsWith('---\n')
+    let hasFrontmatter = doc.pageContent.startsWith("---\n");
 
-    if (hasFrontmatter) doc.pageContent = doc.pageContent.substring(4)
-    doc.pageContent = '---\nType: Database Entry\nDatabase: Wishlist\n' + (hasFrontmatter ? '' : '---\n\n') + doc.pageContent
+    if (hasFrontmatter) doc.pageContent = doc.pageContent.substring(4);
+    doc.pageContent =
+      "---\nType: Database Entry\nDatabase: Wishlist\n" +
+      (hasFrontmatter ? "" : "---\n\n") +
+      doc.pageContent;
   }
 
   return [
     new Document({
-      pageContent: 'The wishlist is a notion database that contains suggestions from the community on how'+
-      ' to improve the My MM app. Users can vote on suggestions or add your own suggestion.'
+      pageContent:
+        "The wishlist is a notion database that contains suggestions from the community on how" +
+        " to improve the My MM app. Users can vote on suggestions or add your own suggestion.",
     }),
-    ...docs
-  ]
+    ...docs,
+  ];
 }
