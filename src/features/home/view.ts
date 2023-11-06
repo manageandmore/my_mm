@@ -1,5 +1,5 @@
 import { HomeTabView } from "slack-edge";
-import { openWishlistAction } from "../wishlist/actions/open_wishlist";
+import { openWishlistAction } from "../wishlist/events/open_wishlist";
 
 /** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
