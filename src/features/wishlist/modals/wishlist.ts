@@ -1,7 +1,7 @@
 import { AnyModalBlock, Button, ImageElement, ModalView } from "slack-edge";
-import { newWishlistItemAction } from "../actions/new_suggestion";
-import { viewWishlistInNotionAction } from "../actions/open_wishlist";
-import { voteWishlistItemAction } from "../actions/vote_suggestion";
+import { newWishlistItemAction } from "../events/new_suggestion";
+import { viewWishlistInNotionAction } from "../events/open_wishlist";
+import { voteWishlistItemAction } from "../events/vote_suggestion";
 import { wishlistDatabaseId, WishlistItem } from "../data/query_items";
 
 /** Interface for the data used to hydrate the wishlist modal. */

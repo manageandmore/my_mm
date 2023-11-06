@@ -1,5 +1,5 @@
 import { HomeTabView } from "slack-edge";
-import { openWishlistAction } from "../wishlist/actions/open_wishlist";
+import { openWishlistAction } from "../wishlist/events/open_wishlist";
 
 /** Interface for one Item of Credits Leaderboard */
 export interface CreditsLeaderboardItem {

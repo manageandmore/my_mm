@@ -1,5 +1,5 @@
 import { ModalView } from "slack-edge";
-import { newWishlistItemCallback } from "../actions/new_suggestion";
+import { newWishlistItemCallback } from "../events/new_suggestion";
 
 /**
  * Constructs the modal for adding a new suggestion to the wishlist.
