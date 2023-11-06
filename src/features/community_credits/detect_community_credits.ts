@@ -1,3 +1,8 @@
+/**
+ * Detects messages containing keywords related to community credits and prompts the user to post them in the community credits channel.
+ * @param request - The Slack message request.
+ * @returns A Slack message with a button to create a post in the community credits channel.
+ */
 import { ButtonAction, DataSubmissionView, FileItem } from "slack-edge";
 import { slack } from "../../slack";
 
