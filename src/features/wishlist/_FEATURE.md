@@ -17,4 +17,10 @@ This feature provides a list of wishes and suggestions made by the users regardi
   - `actions/new_suggestion.ts` contains the action handler and modal submission handler for the `New Suggestion` modal.
   - `actions/open_wishlist.ts` contains the action hander for opening the wishlist.
   - `actions/vote_suggestion.ts` contains the action handler for voting a wishlist item.
-
+- `data/` contains logic for querying and updating data in notion.
+  - `data/add_item.ts` contains the logic for adding a new wishlist item to notion.
+  - `data/get_voter.ts` contains the logic for retrieving a voter entity for a scholar or user.
+  - `data/query_items.ts` contains the logic for querying the wishlist.
+- `modals/` contains layout code for the used modals.
+  - `modals/new_suggestion.ts` contains the modal code for adding a new wishlist item.
+  - `modals/wishlits.ts` contains the main wishlist modal code.
