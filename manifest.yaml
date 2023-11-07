@@ -30,6 +30,11 @@ features:
       type: message
       callback_id: add_to_assistant
       description: Adds this message to the knowledge index of the My MM assistant.
+  slash_commands:
+    - command: /sync
+      url: https://manageandmore.vercel.app/api/events
+      description: Sync the notion assistant index.
+      should_escape: true
 oauth_config:
   scopes:
     user:
@@ -54,8 +59,8 @@ settings:
     bot_events:
       - app_home_opened
       - app_mention
-      - message.im
       - message.channels
+      - message.im
   interactivity:
     is_enabled: true
     request_url: https://manageandmore.vercel.app/api/events

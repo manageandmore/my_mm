@@ -1,3 +1,8 @@
+/**
+ * Copied and adapted from langchain/document_loaders/notionapi
+ * https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/document_loaders/web/notionapi.ts
+ */
+
 import {
   APIResponseError,
   Client,
@@ -80,6 +85,14 @@ export type NotionAPILoaderOptions = {
   checkEditTimestamps?: Map<string, string>;
 };
 
+export type LoaderStats = {
+  existing: string[];
+  skipped: string[];
+  added: string[];
+  updated: string[];
+  removed: string[];
+};
+
 /**
  * A class that extends the BaseDocumentLoader class. It represents a
  * document loader for loading documents from Notion using the Notion API.
@@ -95,9 +108,9 @@ export class NotionAPILoader extends BaseDocumentLoader {
 
   private pageQueue: string[];
 
-  public pageCompleted: string[];
+  private pageCompleted: string[];
 
-  public pageQueueTotal: number;
+  private pageQueueTotal: number;
 
   private documents: Document[];
 
@@ -110,6 +123,11 @@ export class NotionAPILoader extends BaseDocumentLoader {
   private loadRowsAsPages: boolean;
 
   private checkEditTimestamps: Map<string, string>;
+
+  private loaderStats: LoaderStats;
+  public get stats(): LoaderStats {
+    return this.loaderStats;
+  }
 
   constructor(options: NotionAPILoaderOptions) {
     super();
@@ -140,6 +158,13 @@ export class NotionAPILoader extends BaseDocumentLoader {
     this.propertiesAsHeader = options.propertiesAsHeader || false;
     this.loadRowsAsPages = options.loadRowsAsPages ?? true;
     this.checkEditTimestamps = options.checkEditTimestamps ?? new Map();
+    this.loaderStats = {
+      existing: Array.from(this.checkEditTimestamps.keys()),
+      skipped: [],
+      added: [],
+      updated: [],
+      removed: [],
+    };
   }
 
   /**
@@ -271,12 +296,24 @@ export class NotionAPILoader extends BaseDocumentLoader {
    * @param page The Notion page to parse.
    * @returns An object containing the parsed details of the page.
    */
-  private parsePageDetails(page: PageObjectResponse | DatabaseObjectResponse) {
+  private parsePageDetails(page: PageObjectResponse, targetId: string) {
     const { id, ...rest } = page;
     return {
       ...rest,
+      title: this.getTitle(page),
       notionId: id,
+      targetId,
       properties: this.parsePageProperties(page),
+    };
+  }
+
+  private parseDatabaseDetails(database: DatabaseObjectResponse) {
+    const { id, ...rest } = database;
+    return {
+      ...rest,
+      title: this.getTitle(database),
+      notionId: id,
+      targetId: id,
     };
   }
 
@@ -333,7 +370,9 @@ export class NotionAPILoader extends BaseDocumentLoader {
     // Add child database pages to queue
     const childDatabases = blocks
       .filter((block) => block.type.includes("child_database"))
-      .map((block) => this.caller.call(() => this.loadDatabase(block.id)));
+      .map((block) =>
+        this.caller.call(() => this.loadDatabaseEntries(block.id))
+      );
 
     // Load this block and child blocks
     const loadingMdBlocks = blocks
@@ -346,6 +385,22 @@ export class NotionAPILoader extends BaseDocumentLoader {
     ]);
 
     return mdBlocks;
+  }
+
+  private checkNotEdited(pageId: string, lastEditedTime: string): boolean {
+    let lastEditTimestamp = this.checkEditTimestamps.get(pageId);
+    if (lastEditTimestamp != null) {
+      if (Date.parse(lastEditTimestamp) >= Date.parse(lastEditedTime)) {
+        this.loaderStats.skipped.push(pageId);
+        this.pageCompleted.push(pageId);
+        return true;
+      } else {
+        this.loaderStats.updated.push(pageId);
+      }
+    } else {
+      this.loaderStats.added.push(pageId);
+    }
+    return false;
   }
 
   /**
@@ -374,12 +429,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
       return;
     }
 
-    let lastEditTimestamp = this.checkEditTimestamps.get(pageId);
-    if (
-      lastEditTimestamp != null &&
-      Date.parse(lastEditTimestamp) >= Date.parse(pageDetails.last_edited_time)
-    ) {
-      this.pageCompleted.push(pageId);
+    if (this.checkNotEdited(pageId, pageDetails.last_edited_time)) {
       return;
     }
 
@@ -387,7 +437,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
     const mdStringObject = this.n2mClient.toMarkdownString(mdBlocks);
 
     let pageContent = mdStringObject.parent;
-    const metadata = this.parsePageDetails(pageDetails);
+    const metadata = this.parsePageDetails(pageDetails, pageId);
 
     if (this.propertiesAsHeader) {
       pageContent =
@@ -395,11 +445,6 @@ export class NotionAPILoader extends BaseDocumentLoader {
         `${yaml.dump(metadata.properties)}` +
         `---\n\n` +
         `${pageContent ?? ""}`;
-    }
-
-    if (!pageContent) {
-      this.pageCompleted.push(pageId);
-      return;
     }
 
     const pageDocument = new Document({ pageContent, metadata });
@@ -418,28 +463,18 @@ export class NotionAPILoader extends BaseDocumentLoader {
    * Loads a Notion database object, then adds it to the completed documents array.
    * @param page The Notion database object.
    */
-  private async loadDatabaseObject(page: PageObjectResponse) {
+  private async loadDatabaseEntry(page: PageObjectResponse) {
     const pageId = page.id;
 
-    let lastEditTimestamp = this.checkEditTimestamps.get(pageId);
-    if (
-      lastEditTimestamp != null &&
-      Date.parse(lastEditTimestamp) >= Date.parse(page.last_edited_time)
-    ) {
-      this.pageCompleted.push(pageId);
+    if (this.checkNotEdited(pageId, page.last_edited_time)) {
       return;
     }
 
     let pageContent = "";
-    const metadata = this.parsePageDetails(page);
+    const metadata = this.parsePageDetails(page, this.id);
 
     if (this.propertiesAsHeader) {
       pageContent = `---\n` + `${yaml.dump(metadata.properties)}` + `---`;
-    }
-
-    if (!pageContent) {
-      this.pageCompleted.push(pageId);
-      return;
     }
 
     const pageDocument = new Document({ pageContent, metadata });
@@ -458,7 +493,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
    * Loads a Notion database and adds it's pages to the queue.
    * @param id The ID of the Notion database to load.
    */
-  private async loadDatabase(id: string) {
+  private async loadDatabaseEntries(id: string) {
     try {
       for await (const page of iteratePaginatedAPI(
         this.notionClient.databases.query,
@@ -470,13 +505,41 @@ export class NotionAPILoader extends BaseDocumentLoader {
         if (this.loadRowsAsPages) {
           this.addToQueue(page.id);
         } else if (isPage(page)) {
-          await this.loadDatabaseObject(page);
+          await this.loadDatabaseEntry(page);
         }
       }
     } catch (e) {
       console.log(e);
       // TODO: Catch and report api request errors
     }
+  }
+
+  /**
+   * Loads a Notion database and adds it's pages to the queue.
+   * @param id The ID of the Notion database to load.
+   */
+  private async loadDatabase(database: DatabaseObjectResponse) {
+    const dbId = database.id;
+
+    if (this.checkNotEdited(dbId, database.last_edited_time)) {
+      return;
+    }
+
+    let pageContent = database.description
+      .map((v) => this.n2mClient.annotatePlainText(v.plain_text, v.annotations))
+      .join("");
+    const metadata = this.parseDatabaseDetails(database);
+
+    const dbDocument = new Document({ pageContent, metadata });
+
+    this.documents.push(dbDocument);
+    this.pageCompleted.push(dbId);
+    this.onDocumentLoaded(
+      this.documents.length,
+      this.pageQueueTotal,
+      this.getTitle(database) || undefined,
+      this.rootTitle
+    );
   }
 
   /**
@@ -495,7 +558,8 @@ export class NotionAPILoader extends BaseDocumentLoader {
     const resDatabasePromise = this.notionClient.databases
       .retrieve({ database_id: this.id })
       .then(async (res) => {
-        await this.loadDatabase(this.id);
+        await this.loadDatabase(res as DatabaseObjectResponse);
+        await this.loadDatabaseEntries(this.id);
         return res;
       })
       .catch((error: APIResponseError) => error);
@@ -519,9 +583,6 @@ export class NotionAPILoader extends BaseDocumentLoader {
       throw new AggregateError(errors);
     }
 
-    if (isDatabase(resDatabase)) {
-    }
-
     this.rootTitle =
       this.getTitle(resPage) || this.getTitle(resDatabase) || this.id;
 
@@ -530,6 +591,13 @@ export class NotionAPILoader extends BaseDocumentLoader {
       await this.loadPage(pageId);
       pageId = this.pageQueue.shift();
     }
+
+    this.loaderStats.removed = this.loaderStats.existing.filter(
+      (id) =>
+        !this.loaderStats.updated.includes(id) &&
+        !this.loaderStats.skipped.includes(id)
+    );
+
     return this.documents;
   }
 }

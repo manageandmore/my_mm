@@ -2,7 +2,6 @@ import { Document } from "langchain/dist/document";
 import { slack } from "../../../slack";
 import { getVectorStore } from "../ai/chain";
 import { getUserById } from "../../common/id_utils";
-import { SlackAPIError } from "slack-edge";
 
 const addToAssistantShortcut = "add_to_assistant";
 

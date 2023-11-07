@@ -50,21 +50,10 @@ slack.event("app_mention", async (request) => {
       if (meta.notionId != null) {
         if (sourceIds.includes(meta.notionId)) continue;
 
-        const props = meta.properties;
-        const icon = meta.icon;
-
-        const title = `${icon != null ? icon.emoji + " " : ""}${
-          props?._title ?? props.title
-        }`;
-        const url = `https://www.notion.so/${meta.notionId.replaceAll(
-          "-",
-          ""
-        )}`;
-
         sourceIds.push(meta.notionId);
         elements.push({
           type: "mrkdwn",
-          text: `<${url}|${title}>`,
+          text: `<${meta.url}|${meta.title}>`,
         });
       } else if (meta.type == "slack.message") {
         if (sourceIds.includes(meta.message_ts)) continue;
