@@ -82,6 +82,7 @@ export type NotionAPILoaderOptions = {
   onDocumentLoaded?: OnDocumentLoadedCallback;
   propertiesAsHeader?: boolean;
   loadRowsAsPages?: boolean;
+  loadRecursiveChildPages?: boolean;
   checkEditTimestamps?: Map<string, string>;
 };
 
@@ -122,6 +123,8 @@ export class NotionAPILoader extends BaseDocumentLoader {
 
   private loadRowsAsPages: boolean;
 
+  private loadRecursiveChildPages: boolean;
+
   private checkEditTimestamps: Map<string, string>;
 
   private loaderStats: LoaderStats;
@@ -157,6 +160,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
     this.onDocumentLoaded = options.onDocumentLoaded ?? ((_ti, _cu) => {});
     this.propertiesAsHeader = options.propertiesAsHeader || false;
     this.loadRowsAsPages = options.loadRowsAsPages ?? true;
+    this.loadRecursiveChildPages = options.loadRecursiveChildPages ?? false;
     this.checkEditTimestamps = options.checkEditTimestamps ?? new Map();
     this.loaderStats = {
       existing: Array.from(this.checkEditTimestamps.keys()),
@@ -362,17 +366,21 @@ export class NotionAPILoader extends BaseDocumentLoader {
     const blocks = blocksResponse.filter(isFullBlock);
 
     // Add child pages to queue
-    const childPages = blocks
-      .filter((block) => block.type.includes("child_page"))
-      .map((block) => block.id);
+    const childPages = this.loadRecursiveChildPages
+      ? blocks
+          .filter((block) => block.type.includes("child_page"))
+          .map((block) => block.id)
+      : [];
     if (childPages.length > 0) this.addToQueue(...childPages);
 
     // Add child database pages to queue
-    const childDatabases = blocks
-      .filter((block) => block.type.includes("child_database"))
-      .map((block) =>
-        this.caller.call(() => this.loadDatabaseEntries(block.id))
-      );
+    const childDatabases = this.loadRecursiveChildPages
+      ? blocks
+          .filter((block) => block.type.includes("child_database"))
+          .map((block) =>
+            this.caller.call(() => this.loadDatabaseEntries(block.id))
+          )
+      : [];
 
     // Load this block and child blocks
     const loadingMdBlocks = blocks
