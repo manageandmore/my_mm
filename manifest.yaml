@@ -43,16 +43,15 @@ oauth_config:
     bot:
       - app_mentions:read
       - channels:read
+      - channels:history
       - chat:write
+      - chat:write.customize
       - commands
       - files:read
       - im:history
-      - remote_files:share
-      - remote_files:write
       - users:read
       - users:read.email
       - reactions:write
-      - channels:history
 settings:
   event_subscriptions:
     request_url: https://manageandmore.vercel.app/api/events

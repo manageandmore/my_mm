@@ -5,6 +5,7 @@
  */
 import { ButtonAction, DataSubmissionView, FileItem } from "slack-edge";
 import { slack } from "../../slack";
+import { getUserById } from "../common/id_utils";
 
 const communityCreditsRegexPattern =
   /\b(?:community\s*[-]?credits?|community\s*[-]?points?|credits?|helper\s*points?|helferpunkte?)\b/i;
@@ -41,10 +42,10 @@ slack.message(communityCreditsRegexPattern, async (request) => {
   }
 
   // reply to the message
-  await slack.client.chat.postMessage({
+  await slack.client.chat.postEphemeral({
     channel: payload.channel,
+    user: payload.user!,
     text: replyText,
-    thread_ts: payload.event_ts,
     blocks: [
       {
         type: "section",
@@ -57,7 +58,7 @@ slack.message(communityCreditsRegexPattern, async (request) => {
           action_id: createCommunityPostAction,
           text: {
             type: "plain_text",
-            text: "Create Community Credits Post",
+            text: `Post in #community_credits`,
             emoji: true,
           },
           style: "primary",
@@ -75,12 +76,37 @@ slack.action(createCommunityPostAction, async (request) => {
   const communityCreditsChannelId = await getCommunityCreditsChannelId();
   const text = (payload.actions[0] as ButtonAction).value;
 
-  if (!payload.message || !communityCreditsChannelId) {
+  if (!communityCreditsChannelId) {
     return;
   }
 
+  const user = await getUserById(payload.user.id);
+
   await slack.client.chat.postMessage({
     channel: communityCreditsChannelId,
+    username: user?.profile?.display_name || user?.real_name || user?.name,
+    icon_url:
+      user?.profile?.image_192 ??
+      user?.profile?.image_512 ??
+      user?.profile?.image_original,
     text: text,
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: text,
+        },
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: `Originally posted in <#${payload.channel!.id}>`,
+          },
+        ],
+      },
+    ],
   });
 });
