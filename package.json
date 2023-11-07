@@ -18,6 +18,7 @@
     "vercel": "^32.5.0"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.8",
     "@types/react": "^18.2.33",
     "env-cmd": "^10.1.0"
   }

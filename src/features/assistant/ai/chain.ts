@@ -1,5 +1,5 @@
 import { VercelPostgres } from "langchain/vectorstores/vercel_postgres";
-import { openaiToken } from "../../constants";
+import { openaiToken } from "../../../constants";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 

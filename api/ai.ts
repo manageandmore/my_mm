@@ -1,6 +1,6 @@
 import { RequestContext } from "@vercel/edge";
-import { bootstrapAssistant } from "../src/features/assistant/bootstrap";
-import { promptAssistant } from "../src/features/assistant/prompt";
+import { promptAssistant } from "../src/features/assistant/ai/prompt";
+import { loadNotionPages } from "../src/features/assistant/data/load_pages";
 
 /**
  * Configures the vercel deployment to use the edge runtime.
@@ -18,7 +18,8 @@ export default async function ai(request: Request, context: RequestContext) {
   try {
     const shouldBootstrap = request.headers.get("AI-Bootstrap");
     if (shouldBootstrap != null) {
-      await bootstrapAssistant();
+      await loadNotionPages();
+      //await bootstrapAssistant();
       return new Response("Bootstrapping...", {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });

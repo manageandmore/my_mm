@@ -4,8 +4,8 @@ import {
   ChatPostMessageResponse,
   MessageAttachment,
 } from "slack-edge";
-import { slack } from "../../slack";
-import { promptAssistant } from "./prompt";
+import { slack } from "../../../slack";
+import { promptAssistant } from "../ai/prompt";
 
 /**
  * Handle the app_mention event by prompting chatgpt to respond to the users message.

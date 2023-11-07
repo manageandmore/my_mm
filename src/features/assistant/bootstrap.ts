@@ -2,7 +2,7 @@ import { NotionAPILoader } from "langchain/document_loaders/web/notionapi";
 import { notionToken } from "../../constants";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { Document } from "langchain/dist/document";
-import { getVectorStore } from "./chain";
+import { getVectorStore } from "./ai/chain";
 
 const textSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 500,

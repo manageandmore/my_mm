@@ -1,2 +1,2 @@
-import "./event";
-import "./shortcut";
+import "./events/app_mention";
+import "./events/shortcut";
