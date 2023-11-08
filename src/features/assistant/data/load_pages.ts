@@ -41,7 +41,7 @@ export type ReportInfo =
     };
 
 export async function loadNotionPages(
-  report: (info: ReportInfo) => Promise<void>
+  report?: (info: ReportInfo) => Promise<void>
 ) {
   const vectorStore = await getVectorStore();
 
@@ -110,7 +110,7 @@ export async function loadNotionPages(
         `- Skipped ${stats.skipped.length}\n- Updated ${stats.updated.length}\n- Added ${stats.added.length}\n- Removed ${stats.removed.length}`
     );
 
-    await report({
+    await report?.({
       type: "update",
       target: targetType,
       id: targetId,
@@ -129,7 +129,7 @@ export async function loadNotionPages(
 
     console.log(`Removed ${deleted} documents for ${targetId}`);
 
-    await report({
+    await report?.({
       type: "removed",
       id: targetId,
       amount: deleted,

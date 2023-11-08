@@ -2,6 +2,7 @@ import { Document } from "langchain/dist/document";
 import { slack } from "../../../slack";
 import { getVectorStore } from "../ai/chain";
 import { getUserById } from "../../common/id_utils";
+import { ButtonAction } from "slack-edge";
 
 const addToAssistantShortcut = "add_to_assistant";
 
@@ -36,6 +37,46 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
     payload.channel.id + ":" + payload.message_ts
   );
 
+  const vectorStore = await getVectorStore();
+
+  const query = await vectorStore.client.query(
+    `SELECT ${vectorStore.idColumnName} FROM ${vectorStore.tableName} WHERE ${vectorStore.idColumnName} = $1`,
+    [documentId]
+  );
+
+  if (query.rowCount > 0) {
+    await slack.client.chat.postEphemeral({
+      channel: payload.channel.id,
+      user: payload.user.id,
+      text: "🧠 This message is already part of my knowledge index. If you want, I can remove it again.",
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "🧠 This message is already part of my knowledge index. If you want, I can remove it again.",
+          },
+          accessory: {
+            type: "button",
+            action_id: removeFromAssistantAction,
+            text: {
+              type: "plain_text",
+              text: `Remove from assistant`,
+              emoji: true,
+            },
+            style: "primary",
+            value: JSON.stringify({
+              documentId,
+              messageTs: payload.message_ts,
+            }),
+          },
+        },
+      ],
+    });
+
+    return;
+  }
+
   const user = await getUserById(payload.message.user ?? "");
   const timestamp = new Date(Number(payload.message_ts) * 1000).toISOString();
 
@@ -53,7 +94,6 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
     .replaceAll("<!channel>", "@channel");
   title = `#${payload.channel.name} - ${title}`;
 
-  const vectorStore = await getVectorStore();
   await vectorStore.delete({ ids: [documentId] });
 
   const header = `---
@@ -91,6 +131,30 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
     channel: payload.channel.id,
     user: payload.user.id,
     text: "🧠 I successfully added the message to my knowledge index. 🙏 Thanks for helping me grow my knowledge to better assist the community.",
+  });
+});
+
+const removeFromAssistantAction = "remove_from_assistant";
+
+slack.action(removeFromAssistantAction, async (request) => {
+  const payload = request.payload;
+  const action = payload.actions[0] as ButtonAction;
+
+  const { documentId, messageTs } = JSON.parse(action.value);
+
+  const vectorStore = await getVectorStore();
+  await vectorStore.delete({ ids: [documentId] });
+
+  await slack.client.reactions.remove({
+    channel: payload.channel!.id,
+    timestamp: messageTs,
+    name: "brain",
+  });
+
+  await slack.client.chat.postEphemeral({
+    channel: payload.channel!.id,
+    user: payload.user.id,
+    text: "🧠 I successfully removed the message from my knowledge index.",
   });
 });
 
