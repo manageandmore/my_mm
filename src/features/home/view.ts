@@ -1,4 +1,5 @@
 import { HomeTabView } from "slack-edge";
+import { newSkillItemAction } from "../skill_interface/events/add_skill";
 import { openWishlistAction } from "../wishlist/events/open_wishlist";
 
 /** Interface for one Item of Credits Leaderboard */
@@ -76,6 +77,10 @@ export function getHomeView(options: HomeOptions): HomeTabView {
             type: "mrkdwn",
             text: "*🏆 Liga:*\n Credit Warrior",
           },
+          {
+            type: "mrkdwn",
+            text: "*🏆 Liga:*\n Credit Warrior",
+          },
         ],
         accessory: {
           type: "image",
@@ -111,6 +116,19 @@ export function getHomeView(options: HomeOptions): HomeTabView {
             text: `*Beginner:*\n${options.skillList.beginnerSkills.join(", ")}`,
           },
         ]
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "Add Skill"
+            },
+            action_id: newSkillItemAction,
+          },
+        ],
       },
       {
         type: "header",

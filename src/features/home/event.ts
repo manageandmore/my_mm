@@ -10,14 +10,24 @@ import { getHomeView } from "./view";
  */
 slack.event("app_home_opened", async (request) => {
   const event = request.payload;
-
+  console.log(event);
   try {
-    const profile = await queryScholarProfile(event.user);
+    await updateHomeViewForUser(event.user);
+  } catch (e) {
+    //console.log(e);
+    // TODO Show error view to user
+    return;
+  }
+});
+
+export async function updateHomeViewForUser(userId: string) {
+  try {
+    const profile = await queryScholarProfile(userId);
     const leaderboard = await queryCreditsLeaderboard();
-    const skillList = await querySkillList(event.user);
+    const skillList = await querySkillList(userId);
 
     await slack.client.views.publish({
-      user_id: event.user,
+      user_id: userId,
       view: getHomeView({
         name: profile.name,
         generation: profile.generation,
@@ -33,6 +43,5 @@ slack.event("app_home_opened", async (request) => {
   } catch (e) {
     console.log(e);
     // TODO Show error view to user
-    return;
   }
-});
+}

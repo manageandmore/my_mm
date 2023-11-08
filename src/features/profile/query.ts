@@ -33,7 +33,7 @@ export type ScholarRow = PageObjectResponse & {
 export type SkillRow = PageObjectResponse & {
   properties: {
     Scholar: Property<"relation">;
-    Skill: Property<"select">;
+    Skill: Property<"title">;
     SkillLevel: Property<"select">;
   };
 };
@@ -150,7 +150,8 @@ export async function querySkillList(
       // This might need to be adjusted based on how the data is structured in Notion
       return (response.results as SkillRow[]).map((result) => {
         const props = result.properties;
-        return props.Skill.select?.name ?? "Unknown";
+        console.log(props);
+        return props.Skill.title[0]?.plain_text ?? "Unknown";
       });
     }
 
