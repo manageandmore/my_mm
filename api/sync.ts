@@ -8,6 +8,8 @@ export const config = {
   runtime: "edge",
 };
 
+const cronSecret = process.env.CRON_SECRET;
+
 /**
  * Handler for the /api/sync route.
  *
@@ -17,6 +19,10 @@ export default async function events(
   request: Request,
   context: RequestContext
 ) {
+  if (request.headers.get("Authorization") !== `Bearer ${cronSecret}`) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   context.waitUntil(loadNotionPages());
   return new Response("Sync started.");
 }
