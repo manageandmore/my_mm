@@ -1,6 +1,12 @@
-import { queryCreditsLeaderboard, queryScholarProfile, querySkillList } from "../profile/query";
+import {
+  queryCreditsLeaderboard,
+  queryScholarProfile,
+  querySkillList,
+} from "../profile/query";
 import { slack } from "../../slack";
 import { getHomeView } from "./view";
+import { features } from "../../features";
+import { homeFeatureFlag } from ".";
 
 /**
  * Handle the app_home_opened event by updating the users home view with the current data.
@@ -10,8 +16,32 @@ import { getHomeView } from "./view";
  */
 slack.event("app_home_opened", async (request) => {
   const event = request.payload;
-  console.log(event);
+
+  let homeFeatureEnabled = await features.check(homeFeatureFlag, event.user);
+
   try {
+    if (!homeFeatureEnabled) {
+      let countdown = features.read(homeFeatureFlag).tags.Countdown;
+      await slack.client.views.publish({
+        user_id: event.user,
+        view: {
+          type: "home",
+          blocks: [
+            {
+              type: "header",
+              text: {
+                type: "plain_text",
+                text:
+                  "Coming soon." +
+                  (countdown ? `\n${countdown.toISOString()}` : ""),
+              },
+            },
+          ],
+        },
+      });
+      return;
+    }
+
     await updateHomeViewForUser(event.user);
   } catch (e) {
     //console.log(e);

@@ -1,6 +1,10 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 import { notion, Property, RollupProperty } from "../../notion";
-import { getScholarIdFromUserId, scholarsDatabaseId, skillDatabaseId } from "../common/id_utils";
+import {
+  getScholarIdFromUserId,
+  scholarsDatabaseId,
+  skillDatabaseId,
+} from "../common/id_utils";
 import { CreditsLeaderboardItem, SkillItem } from "../home/view";
 
 /** The interface for a user profile in the scholars database. */
@@ -26,6 +30,7 @@ export type ScholarRow = PageObjectResponse & {
     Generation: Property<"number">;
     Status: Property<"select">;
     "Community Credits": RollupProperty<"number">;
+    Roles: Property<"multi_select">;
   };
 };
 
@@ -37,7 +42,6 @@ export type SkillRow = PageObjectResponse & {
     SkillLevel: Property<"select">;
   };
 };
-
 
 /**
  * Retrieves the profile for some scholar.
@@ -83,9 +87,10 @@ export async function queryScholarProfile(
 }
 
 /** function queries notion for the top 3 entries of the credit leaderboard */
-export async function queryCreditsLeaderboard(): Promise<CreditsLeaderboardItem[]> {
+export async function queryCreditsLeaderboard(): Promise<
+  CreditsLeaderboardItem[]
+> {
   try {
-
     const response = await notion.databases.query({
       database_id: scholarsDatabaseId,
       filter: {
@@ -118,12 +123,10 @@ export async function queryCreditsLeaderboard(): Promise<CreditsLeaderboardItem[
 }
 
 /** function queries notion for the skill list of a scholar */
-export async function querySkillList(
-  userId: string
-): Promise<SkillItem> {
+export async function querySkillList(userId: string): Promise<SkillItem> {
   try {
     const scholarId = await getScholarIdFromUserId(userId);
-    
+
     // Helper function to query skills by level
     async function getSkillsByLevel(level: string): Promise<string[]> {
       const response = await notion.databases.query({
@@ -134,15 +137,15 @@ export async function querySkillList(
               property: "Skill Level",
               select: {
                 equals: level,
-              }
+              },
             },
             {
               property: "Scholar",
               relation: {
                 contains: scholarId,
-              }
-            }
-          ]
+              },
+            },
+          ],
         },
       });
 
