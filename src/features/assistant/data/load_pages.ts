@@ -1,8 +1,5 @@
-import {
-  MentionRichTextItemResponse,
-  PageObjectResponse,
-} from "@notionhq/client/build/src/api-endpoints";
-import { Property, notion } from "../../../notion";
+import { MentionRichTextItemResponse } from "@notionhq/client/build/src/api-endpoints";
+import { DatabaseRow, Property, notion } from "../../../notion";
 import { getVectorStore } from "../ai/chain";
 import { notionToken } from "../../../constants";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -17,12 +14,10 @@ const assistantIndexDatabaseId = "f6004560d0b54e3384a42a2f4d59687b";
 /**
  * Type definition for a row in the Assistant Index database.
  */
-export type AssistantIndexRow = PageObjectResponse & {
-  properties: {
-    Name: Property<"title">;
-    Type: Property<"select">;
-  };
-};
+export type AssistantIndexRow = DatabaseRow<{
+  Name: Property<"title">;
+  Type: Property<"select">;
+}>;
 
 var _m: MentionRichTextItemResponse;
 type IndexTarget = Extract<typeof _m.mention, { type: "page" | "database" }>;

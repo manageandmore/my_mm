@@ -1,9 +1,9 @@
-const ONE_HOUR = 3600;
-const TWO_HOURS = ONE_HOUR * 2;
-const ONE_DAY = ONE_HOUR * 24;
-const TWO_DAYS = ONE_DAY * 2;
-const ONE_WEEK = ONE_DAY * 7;
-const TWO_WEEKS = ONE_WEEK * 2;
+export const ONE_HOUR = 3600;
+export const TWO_HOURS = ONE_HOUR * 2;
+export const ONE_DAY = ONE_HOUR * 24;
+export const TWO_DAYS = ONE_DAY * 2;
+export const ONE_WEEK = ONE_DAY * 7;
+export const TWO_WEEKS = ONE_WEEK * 2;
 
 /**
  * Returns the time between now and some date as a formatted duration.

@@ -26,6 +26,6 @@ export default async function events(
   request: Request,
   context: RequestContext
 ) {
-  await features.initialize();
+  await features.initialize(context.waitUntil.bind(context));
   return await slack.run(request, context);
 }

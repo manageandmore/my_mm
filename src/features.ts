@@ -1,22 +1,14 @@
+import { kv } from "@vercel/kv";
 import { getRolesForUser } from "./features/common/role_utils";
-import { Property, notion } from "./notion";
+import { DatabaseRow, Property, RichTextItemRequest, notion } from "./notion";
 import {
   DatabaseObjectResponse,
   PageObjectResponse,
   RichTextItemResponse,
-  UpdateDatabaseParameters,
 } from "@notionhq/client/build/src/api-endpoints";
+import { Prop, hash } from "./utils";
 
-export type Prop<T, K extends keyof T> = T extends { [key in K]: infer V }
-  ? V
-  : undefined;
-
-type RichTextItemRequest = (UpdateDatabaseParameters extends {
-  description?: infer T;
-}
-  ? T
-  : never)[any];
-
+/** The id of the feature flags database in notion. */
 const featureFlagsDatabaseId = "e8efe34c14e64132baca7b3f131c319e";
 
 /**
@@ -47,6 +39,11 @@ type TagOption = {
 type TagValueTypes = { date: Date } & { number: number } & { string: string };
 type TagValueIdentifier = keyof TagValueTypes;
 
+/**
+ * The value of a feature flag after it was read.
+ *
+ * Contains the label, roles and resolved tags of a feature flag.
+ */
 type FeatureFlag<F extends FeatureFlagOptions> = {
   label: Prop<F, "label">;
   roles: string[];
@@ -55,6 +52,13 @@ type FeatureFlag<F extends FeatureFlagOptions> = {
     : never;
 };
 
+/**
+ * The resolved tags of a feature flag.
+ *
+ * This is returned as an object, with each tag being a property on that object.
+ * Normal tags are a boolean, that represent if that tag is being used or not.
+ * Value tags contain the value of the tag if it is used, or `false`.
+ */
 type Tags<T extends TagOption> = {
   [key in Prop<T, "name">]:
     | TagValue<
@@ -66,6 +70,7 @@ type Tags<T extends TagOption> = {
     | false;
 };
 
+/** The value of a tag property, which is either a boolean or the value type of the tag. */
 type TagValue<K extends TagValueIdentifier | undefined> = K extends undefined
   ? boolean
   : Prop<TagValueTypes, Exclude<K, undefined>>;
@@ -84,13 +89,11 @@ type FeatureFlagReference<F extends FeatureFlagOptions> = F;
 /**
  * Type definition for a row in the Feature Flags database.
  */
-type FeatureFlagRow = PageObjectResponse & {
-  properties: {
-    Label: Property<"title">;
-    Roles: Property<"multi_select">;
-    Tags: Property<"multi_select">;
-  };
-};
+type FeatureFlagRow = DatabaseRow<{
+  Label: Property<"title">;
+  Roles: Property<"multi_select">;
+  Tags: Property<"multi_select">;
+}>;
 
 /**
  * Manages the feature flags of this application.
@@ -117,6 +120,8 @@ class FeatureFlags {
    * For correct typing, include "as const" after your options object:
    * `const myFeatureFlag = features.register({label: ..., tags: ...} as const);`
    *
+   * This has to be called before `.initialize()`, otherwise it will throw an error.
+   *
    * @param feature The provided feature options to register.
    * @returns A reference to the registered feature flag.
    */
@@ -130,18 +135,82 @@ class FeatureFlags {
     return feature.label as any;
   }
 
-  async initialize() {
-    let response = (await notion.databases.retrieve({
-      database_id: featureFlagsDatabaseId,
-    })) as DatabaseObjectResponse;
+  /**
+   * Loads the values of all registered feature flags.
+   *
+   * This will check if cached values exist and can be fully mapped to the registered feature flags.
+   * If either the cache does not exist, is expired, or the registered feature flags have changed, the
+   * current values are loaded from notion.
+   *
+   * This will also update the database description in notion to document all registered feature flags when reloading.
+   *
+   * @param waitUntil The RequestContext.waitUntil method.
+   */
+  async initialize(waitUntil: (promise: Promise<any>) => void) {
+    try {
+      let { features, hash: cachedHash } =
+        (await kv.get<{ features: any; hash: string }>("feature-flags")) ?? {};
 
-    let description = this.updateDescriptionWithFeatures(response.description);
+      // We hash the feature flag configuration to detect changes like added or removed flags, or changed tags.
+      let currentHash = await hash(Array.from(this.features.entries()));
 
-    await notion.databases.update({
-      database_id: featureFlagsDatabaseId,
-      description: description,
-    });
+      if (cachedHash != null && cachedHash == currentHash) {
+        // Populate with the cached values and return.
+        for (var [id, feature] of features) {
+          this.features.set(id, feature);
+        }
+        return;
+      }
 
+      // Load the current feature flags from notion.
+      await this.loadFeatureFlags(currentHash);
+
+      // Update the description of flags in notion without blocking the request handler.
+      waitUntil(this.updateFeatureDescriptions());
+    } finally {
+      this.didInitialize = true;
+    }
+  }
+
+  /**
+   * Reads the current value of a feature flag defined by its reference.
+   *
+   * @param ref The stored reference of the feature flag.
+   * @returns The current value of the feature flag.
+   */
+  read<F extends FeatureFlagOptions>(
+    ref: FeatureFlagReference<F>
+  ): FeatureFlag<F> {
+    if (!this.didInitialize) {
+      throw Error(
+        "Not yet initialized. Make sure to call .read() after .initialize()"
+      );
+    }
+    return this.features.get(ref as any)?.value!;
+  }
+
+  /**
+   * Checks if the referenced feature is accessible to the current user.
+   *
+   * @param ref The stored reference of the feature flag.
+   * @param userId: The id of the current user.
+   * @returns Whether the feature is accessible.
+   */
+  async check<F extends FeatureFlagOptions>(
+    ref: FeatureFlagReference<F>,
+    userId: string
+  ): Promise<boolean> {
+    if (!this.didInitialize) {
+      throw Error(
+        "Not yet initialized. Make sure to call .check() after .initialize()"
+      );
+    }
+    let roles = this.features.get(ref as any)?.value!.roles;
+    let userRoles = await getRolesForUser(userId);
+    return roles?.some((r) => userRoles.includes(r)) ?? false;
+  }
+
+  private async loadFeatureFlags(currentHash: string) {
     let query = await notion.databases.query({
       database_id: featureFlagsDatabaseId,
     });
@@ -171,46 +240,25 @@ class FeatureFlags {
       }
     }
 
-    this.didInitialize = true;
+    // Caches the feature flags with an expiration of one day.
+    await kv.set(
+      "feature-flags",
+      { features: Array.from(this.features.entries()), hash: currentHash },
+      { ex: 86400 }
+    );
   }
 
-  /**
-   * Reads the current value of a feature flag defined by its reference.
-   *
-   * @param ref The stored reference of the feature flag.
-   * @returns The current value of the feature flag.
-   */
-  read<F extends FeatureFlagOptions>(
-    ref: FeatureFlagReference<F>
-  ): FeatureFlag<F> {
-    if (!this.didInitialize) {
-      throw Error(
-        "Not yet initialized. Make sure to call .read() after .initialize()"
-      );
-    }
-    return this.features.get(ref as any)?.value!;
-  }
+  private async updateFeatureDescriptions() {
+    let response = (await notion.databases.retrieve({
+      database_id: featureFlagsDatabaseId,
+    })) as DatabaseObjectResponse;
 
-  /**
-   * Checks if the referenced feature is accessible by the current user.
-   *
-   * @param ref The stored reference of the feature flag.
-   * @param userId: The id of the current user.
-   * @returns Whether the feature is accessible.
-   */
-  async check<F extends FeatureFlagOptions>(
-    ref: FeatureFlagReference<F>,
-    userId: string
-  ): Promise<boolean> {
-    if (!this.didInitialize) {
-      throw Error(
-        "Not yet initialized. Make sure to call .check() after .initialize()"
-      );
-    }
-    let roles = this.features.get(ref as any)?.value!.roles;
-    let userRoles = await getRolesForUser(userId);
-    console.log(roles, userRoles);
-    return roles?.some((r) => userRoles.includes(r)) ?? false;
+    let description = this.updateDescriptionWithFeatures(response.description);
+
+    await notion.databases.update({
+      database_id: featureFlagsDatabaseId,
+      description: description,
+    });
   }
 
   private updateDescriptionWithFeatures(
@@ -233,8 +281,8 @@ class FeatureFlags {
       }
     });
 
-    // copy the description until the #app-features marker
-    let marker = "#app-features";
+    // copy the description until the #features marker and remove the rest
+    let marker = "#features";
     let markerIndex = updated.findIndex(
       (item) => item.type == "text" && item.text.content.includes(marker)
     );
@@ -244,6 +292,11 @@ class FeatureFlags {
       let textIndex = text.content.indexOf(marker);
       text.content = text.content.substring(0, textIndex + 13) + "\n";
       updated.splice(markerIndex + 1, updated.length - markerIndex);
+    } else {
+      updated.push({
+        type: "text",
+        text: { content: `\n${marker}\n` },
+      });
     }
 
     // add the list of features to the description

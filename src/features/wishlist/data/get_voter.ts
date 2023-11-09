@@ -5,6 +5,7 @@ import {
   getUserById,
   getUserIdFromScholarId,
 } from "../../common/id_utils";
+import { ONE_WEEK } from "../../common/time_since";
 
 /**
  * The interface for a voter on a wishlist item.
@@ -48,7 +49,7 @@ export async function getVoterByScholarId(scholarId: string): Promise<Voter> {
   }
 
   // Caches the voter object with an expiration of one week.
-  await kv.set(`voter:${scholarId}`, voter, { ex: 604800 });
+  await kv.set(`voter:${scholarId}`, voter, { ex: ONE_WEEK });
 
   return voter;
 }

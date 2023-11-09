@@ -1,5 +1,4 @@
-import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { notion, Property, RollupProperty } from "../../notion";
+import { DatabaseRow, notion, Property, RollupProperty } from "../../notion";
 import {
   getScholarIdFromUserId,
   scholarsDatabaseId,
@@ -21,27 +20,23 @@ export interface ScholarProfile {
 /**
  * Type definition for a row in the Scholars database.
  */
-export type ScholarRow = PageObjectResponse & {
-  properties: {
-    Name: Property<"title">;
-    Email: Property<"email">;
-    IP: Property<"select">;
-    EP: Property<"select">;
-    Generation: Property<"number">;
-    Status: Property<"select">;
-    "Community Credits": RollupProperty<"number">;
-    Roles: Property<"multi_select">;
-  };
-};
+export type ScholarRow = DatabaseRow<{
+  Name: Property<"title">;
+  Email: Property<"email">;
+  IP: Property<"select">;
+  EP: Property<"select">;
+  Generation: Property<"number">;
+  Status: Property<"select">;
+  "Community Credits": RollupProperty<"number">;
+  Roles: Property<"multi_select">;
+}>;
 
 /** Type definition for a row in the Skills databas */
-export type SkillRow = PageObjectResponse & {
-  properties: {
-    Scholar: Property<"relation">;
-    Skill: Property<"title">;
-    SkillLevel: Property<"select">;
-  };
-};
+export type SkillRow = DatabaseRow<{
+  Scholar: Property<"relation">;
+  Skill: Property<"title">;
+  SkillLevel: Property<"select">;
+}>;
 
 /**
  * Retrieves the profile for some scholar.

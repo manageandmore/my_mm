@@ -11,4 +11,5 @@ export const notionToken = process.env.NOTION_INTEGRATION_TOKEN;
 /** The api token used to authenticate with the openai api. */
 export const openaiToken = process.env.OPENAI_TOKEN;
 
+/** The current url of the hosted api. */
 export const currentUrl = process.env.VERCEL_URL;
