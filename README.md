@@ -1,18 +1,60 @@
 # My MM
 
-This repository holds the code and resources for the custom slack integration for MM.
+This repository holds the code and resources for the custom slack app for MM.
 
-# Structure
+# Outline
 
-- `api/` contains the api entry routes
-  - `events.ts` is the entrypoint for slack events, messages and shortcuts
-  - `social.ts` is the entrypoint for the social media post generator
-  - `ai.ts` is the experimental assistant code
-- `src/` contains the source code
-  - `features/` contains each feature in a separate directory
-    - `_FEATURE.md` contains specific documentation for each feature
-    - `index.ts` is the entrypoint for a feature and should be imported in `/api/events.ts`
-- `manifest.yaml` stores the current config for the production slack app
+- [\*Overview\*\*](#overview)
+- [**Project Structure**](#project-structure)
+- [**Development Guide**](#development-guide)
+- [**Development Setup**](#development-setup)
+- [**Deployment**](#deployment)
+
+# Overview
+
+TODO
+
+# Project Structure
+
+- `api/`: Top level api routes. Each file defines a `/api/<filename>` route.
+  - `events.ts`: Entrypoint for slack events, messages and shortcuts.
+  - `social.ts`: Generates an image in a specific layout, used by the social media post generator.
+  - `sync.ts`: Syncs the notion ai index to the vector database, triggered by a daily cron job.
+- `src/`: Contains the source code.
+  - `features/`: The features of the application in separate folders.
+    - `<featurename>/`
+      - `_FEATURE.md`: Specific documentation for a single feature.
+      - `index.ts`: Entrypoint for a feature, should be imported in `/api/events.ts`
+  - `constants.ts`: Constant environment variables, like tokens for slack and notion.
+  - `features.ts`: Manages features flags.
+  - `notion.ts`: The notion api client.
+  - `slack.ts`: The slack api client.
+- `manifest.yaml`: Stores the current config for the production slack app, used as a template for all other apps.
+
+# Development Guide
+
+Below are a few ground rules and best practices to follow when developing this app. The goal is to produce clean, consistent and understandable code so that following semesters of MM scholars can maintain this app. The rules are allowed to be extended or changed over time as long as they follow the goal and work for the current active team.
+
+- **Think feature-first**: Since the app contains many, often independently working features we use a feature-first approach to the architecture of this app. Each new feature gets a folder under `src/features/` that contains all its event handlers, business logic and data access.
+
+- **Document everything**: Documentation is vital for the maintainability of this app, since team members are expected to change frequently. We document both on a code level and on a feature level.
+
+  - In the code, use jsdoc comments (\/\*\* ... \*/) on **every** top-level element, like event handlers, functions, constants or classes. Additionally use normal comments (// ...) throughout your implementation to explain key logic.
+    - Read the jsdoc guides here: https://jsdoc.app/
+    - Also refer to this on how to use clear and effective language in comments: https://dart.dev/effective-dart/documentation. Some good rules include:
+      - Write all comments as sentences (Capitalize first word, end with ‘.’).
+      - Write in present tense.
+      - Separate the first sentence of a multi-line comment into its own paragraph.
+      - Be clear and precise, but also terse.
+  - For each feature, create a `<featurename>/_FEATURE.md` file containing higher-level documentation for this feature. This should at least contain three sections: General description, overall and complete functionality and the structure of the feature.
+
+- **Use well-defined typing**: Typescript allows us to be clear about the types of our objects and catch potential errors already when writing the code. We want to leverage this ability the best we can. Both the slack and notion packages we use come with well-defined types. We also added additional type structures for notion queries and feature flags that should be used.
+
+- **Name consistently**: We use prettier as our code formatter. Additionally we want to use a consistent naming for our files, variables and methods across the codebase. For files use **snake_case**, for variables and methods use **camelCase**, for types and interfaces use **PascalCase**.
+
+- **Reduce notion api calls**: Compared to a normal database, fetching data from notion is really slow. Therefore we aim to reduce the number of api calls to notion. This is not only needed for a smooth user experience, but also since slack expects responses to an incoming event in less than 3 seconds. There are two main ways to improve the performance of data-fetching tasks:
+  - Cache appropriate data using the redis store. We use redis as a key-value store to cache data that is expected to change very rarely, such as the mapping of user ids between slack and notion.
+  - Use relations and rollups in notion. When relying on related data from multiple notion databases, using rollup properties is much faster, since you reduce the number of databases you need to query.
 
 # Development Setup
 
@@ -115,6 +157,10 @@ To deploy your personal development app run:
 vercel deploy --prod
 ```
 
-# Production
+# Deployment
 
-To deploy a new version to production (The real MM Workspace), commit and push your changes to the `main` branch.
+We have two deployment environments for the app:
+
+**Staging** is for testing new changes in an environment that is similar to production, but in a separate slack and notion workspace. To deploy to staging, push commits to the **staging** branch of this git repository.
+
+**Production** is the live app in the real ManageAndMore slack and notion workspaces. To deploy to production, open and merge a pull request to the **main** branch of this git repository.

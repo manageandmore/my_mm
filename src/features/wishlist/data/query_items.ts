@@ -1,5 +1,4 @@
-import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { notion, Property, RollupProperty } from "../../../notion";
+import { DatabaseRow, notion, Property, RollupProperty } from "../../../notion";
 import { timeSince } from "../../common/time_since";
 import { getVoterByScholarId, Voter } from "./get_voter";
 
@@ -9,14 +8,12 @@ export const wishlistDatabaseId = "a18536c8d58f4cfe97419700fd5c2d82";
 /**
  * Type definition for a row in the Wishlist database.
  */
-type WishlistRow = PageObjectResponse & {
-  properties: {
-    Title: Property<"title">;
-    Description: Property<"rich_text">;
-    Votes: RollupProperty<"number">;
-    Voted: Property<"relation">;
-  };
-};
+type WishlistRow = DatabaseRow<{
+  Title: Property<"title">;
+  Description: Property<"rich_text">;
+  Votes: RollupProperty<"number">;
+  Voted: Property<"relation">;
+}>;
 
 /**
  * Interface for a wishlist item.
