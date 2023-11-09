@@ -1,0 +1,33 @@
+
+**Scripts to transfer data from google sheets to notion**
+
+**HOW TO USE** (should never be necessary unless all entries have been deleted on notion
+0. in both scripts change these variables to fit with current values:
+    NOTION_SECRET_API_KEY = 'secret_Rcz8sh5V0pYLCer9VWQkPnDpVWLTWSzMYwTeoJ3Fqpl'
+    NOTION_SCHOLAR_DATABASE_ID = '9fd93456efb34c6f9fe1ca63fa376899'
+    NOTION_CREDIT_DATABASE_ID = '1d617de2cf7c42c8bb78c1efaf1b2b3f'
+
+    NOTION_REQUEST_HEADER = {
+        "Authorization": f"Bearer {NOTION_SECRET_API_KEY}",
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json"
+    }   
+
+    SPREADSHEET_ID = '1LL6YrPLxU67_1NAZ4xFPZT7OXvzvBc3asY95Mr-g8x4'
+    
+1. Run scholarToNotion.py
+2. Run creditEntriesToNotion.py
+
+**creditEntriesToNotion.py**
+Tranfers all credit entries from all sheets into a notion database entry, where each entry represents a one credit entry.
+
+**scholarsToNotion.py**
+Tranfers all scholars found based on entries from the credit google sheets into a scholar entry on the notion scholars database. (Email is auto-generated based on first and last name)
+
+
+
+TO-DO
+- Add tqdm progress bar to upload script
+- somehow prevent multiple entries for multiple uploads
+- improve speed of script
+- Filter project name for credit entry to prevent differently spelled version of the same name
