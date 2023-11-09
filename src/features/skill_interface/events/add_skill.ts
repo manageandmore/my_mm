@@ -1,10 +1,9 @@
 import { slack } from "../../../slack";
 import { getScholarIdFromUserId } from "../../common/id_utils";
 import { getSkillModal } from "../modals/skill";
-import { getSkillConfirmedModal } from "../modals/skillConfirmed";
+import { getSkillConfirmedModal } from "../modals/skill_confirmed";
 import { addSkillItem } from "../data/add_item";
 import { updateHomeViewForUser } from "../../home/event";
-
 
 export const newSkillItemAction = "new_skill_item";
 
@@ -49,10 +48,9 @@ slack.viewSubmission(
           "Undefined",
         createdBy: scholarId,
       });
-      
+
       //update home view
       await updateHomeViewForUser(payload.user.id);
-
     } catch (error) {
       console.error("Error handling the view submission: ", error);
       // Handle errors, possibly informing the user

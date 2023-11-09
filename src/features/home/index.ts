@@ -1,4 +1,4 @@
-import { features } from "../../features";
+import { features } from "../common/feature_flags";
 import "./event";
 
 export const homeFeatureFlag = features.register({

@@ -1,7 +1,5 @@
-import { AnyModalBlock, Button, ImageElement, ModalView } from "slack-edge";
+import { ModalView } from "slack-edge";
 import { newSkillItemAction } from "../events/add_skill";
-
-
 
 /**
  * Constructs the modal for adding a skill to the skill database.

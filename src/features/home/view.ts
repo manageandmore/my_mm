@@ -1,20 +1,8 @@
 import { HomeTabView } from "slack-edge";
 import { newSkillItemAction } from "../skill_interface/events/add_skill";
 import { openWishlistAction } from "../wishlist/events/open_wishlist";
-
-/** Interface for one Item of Credits Leaderboard */
-export interface CreditsLeaderboardItem {
-  name: string;
-  credits: number;
-}
-
-/** Interface for one Skill List of Lists for the Scholar */
-export interface SkillItem {
-  expertSkills: string[];
-  intermediateSkills: string[];
-  beginnerSkills: string[];
-}
-
+import { CreditsLeaderboardItem } from "../community_credits/query_leaderboard";
+import { SkillItem } from "../skill_interface/data/query_skills";
 
 /** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
@@ -109,13 +97,15 @@ export function getHomeView(options: HomeOptions): HomeTabView {
           },
           {
             type: "mrkdwn",
-            text: `*Intermediate:*\n${options.skillList.intermediateSkills.join(", ")}`,
+            text: `*Intermediate:*\n${options.skillList.intermediateSkills.join(
+              ", "
+            )}`,
           },
           {
             type: "mrkdwn",
             text: `*Beginner:*\n${options.skillList.beginnerSkills.join(", ")}`,
           },
-        ]
+        ],
       },
       {
         type: "actions",
@@ -124,7 +114,7 @@ export function getHomeView(options: HomeOptions): HomeTabView {
             type: "button",
             text: {
               type: "plain_text",
-              text: "Add Skill"
+              text: "Add Skill",
             },
             action_id: newSkillItemAction,
           },

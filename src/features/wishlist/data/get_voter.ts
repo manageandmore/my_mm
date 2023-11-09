@@ -5,7 +5,7 @@ import {
   getUserById,
   getUserIdFromScholarId,
 } from "../../common/id_utils";
-import { ONE_WEEK } from "../../common/time_since";
+import { ONE_WEEK } from "../../common/time_utils";
 
 /**
  * The interface for a voter on a wishlist item.

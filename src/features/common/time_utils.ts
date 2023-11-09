@@ -39,3 +39,18 @@ export function timeSince(date: string): string {
     return `${weeks} weeks`;
   }
 }
+
+export function timeDisplay(date: string): string {
+  var seconds = Math.floor((Date.now() - Date.parse(date)) / 1000);
+
+  function toTime(unit: number, cut: number | null, tag: string): string {
+    var n = Math.floor((seconds % (cut ?? seconds)) / unit);
+    return n.toString().padStart(2, "0") + tag;
+  }
+
+  let result =
+    `${toTime(ONE_DAY, null, "d")} ` +
+    `${toTime(ONE_HOUR, ONE_DAY, "h")} ` +
+    `${toTime(60, ONE_HOUR, "m")}`;
+  return result;
+}

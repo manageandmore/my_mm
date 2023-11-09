@@ -2,6 +2,7 @@ import { Filter, notion } from "../../notion";
 import { ScholarRow } from "../profile/query";
 import { getScholarIdFromUserId } from "./id_utils";
 import { kv } from "@vercel/kv";
+import { ONE_WEEK } from "./time_utils";
 
 const rolesPropertyId = "yQJE";
 
@@ -32,7 +33,7 @@ export async function getRolesForUser(userId: string): Promise<string[]> {
     let roles = response.properties.Roles.multi_select.map((s) => s.name);
 
     // Cache the users roles with an expiration of one week.
-    await kv.set(`roles:${userId}`, roles, { ex: 604800 });
+    await kv.set(`roles:${userId}`, roles, { ex: ONE_WEEK });
 
     return roles;
   } catch (_) {

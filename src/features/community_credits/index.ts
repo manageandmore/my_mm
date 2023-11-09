@@ -1,1 +1,1 @@
-import "./detect_community_credits";
+import "./detect_message";

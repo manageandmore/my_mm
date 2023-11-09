@@ -1,4 +1,4 @@
-import { AnyModalBlock, Button, ImageElement, ModalView } from "slack-edge";
+import { ModalView } from "slack-edge";
 
 /**
  * Constructs the modal for confirming the addition of a skill to the skill database.

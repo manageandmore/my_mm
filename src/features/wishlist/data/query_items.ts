@@ -1,5 +1,5 @@
 import { DatabaseRow, notion, Property, RollupProperty } from "../../../notion";
-import { timeSince } from "../../common/time_since";
+import { timeSince } from "../../common/time_utils";
 import { getVoterByScholarId, Voter } from "./get_voter";
 
 /** The id of the wishlist database in notion. */

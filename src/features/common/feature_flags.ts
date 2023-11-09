@@ -1,12 +1,19 @@
 import { kv } from "@vercel/kv";
-import { getRolesForUser } from "./features/common/role_utils";
-import { DatabaseRow, Property, RichTextItemRequest, notion } from "./notion";
+import { getRolesForUser } from "./role_utils";
+import {
+  DatabaseRow,
+  Property,
+  RichTextItemRequest,
+  notion,
+} from "../../notion";
 import {
   DatabaseObjectResponse,
   PageObjectResponse,
   RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints";
-import { Prop, hash } from "./utils";
+import { Prop, hash } from "../../utils";
+import { ONE_DAY } from "./time_utils";
+import { SyncCommandRequest } from "./sync_command";
 
 /** The id of the feature flags database in notion. */
 const featureFlagsDatabaseId = "e8efe34c14e64132baca7b3f131c319e";
@@ -21,7 +28,7 @@ const featureFlagsDatabaseId = "e8efe34c14e64132baca7b3f131c319e";
 type FeatureFlagOptions = {
   label: string;
   description: string;
-  tags: readonly TagOption[];
+  tags?: readonly TagOption[];
 };
 
 /**
@@ -152,7 +159,7 @@ class FeatureFlags {
         (await kv.get<{ features: any; hash: string }>("feature-flags")) ?? {};
 
       // We hash the feature flag configuration to detect changes like added or removed flags, or changed tags.
-      let currentHash = await hash(Array.from(this.features.entries()));
+      let currentHash = await this.getCurrentHash();
 
       if (cachedHash != null && cachedHash == currentHash) {
         // Populate with the cached values and return.
@@ -186,7 +193,15 @@ class FeatureFlags {
         "Not yet initialized. Make sure to call .read() after .initialize()"
       );
     }
-    return this.features.get(ref as any)?.value!;
+    let feature = this.features.get(ref as any);
+    if (feature == null) {
+      throw Error(
+        `Cannot find feature for ref "${ref}". Make sure to call .register() before .read()`
+      );
+    }
+    return (
+      feature.value ?? { label: feature.options.label, roles: [], tags: {} }
+    );
   }
 
   /**
@@ -205,12 +220,26 @@ class FeatureFlags {
         "Not yet initialized. Make sure to call .check() after .initialize()"
       );
     }
-    let roles = this.features.get(ref as any)?.value!.roles;
+    let roles = this.read(ref).roles;
     let userRoles = await getRolesForUser(userId);
     return roles?.some((r) => userRoles.includes(r)) ?? false;
   }
 
-  private async loadFeatureFlags(currentHash: string) {
+  async sync(request: SyncCommandRequest) {
+    await this.loadFeatureFlags();
+
+    await request.context.respond({
+      response_type: "ephemeral",
+      text: "⛳️ Successfully updated all feature flags.",
+    });
+  }
+
+  private async getCurrentHash(): Promise<string> {
+    let data = Array.from(this.features.entries());
+    return hash(data.map(([key, value]) => [key, value.options]));
+  }
+
+  private async loadFeatureFlags(currentHash?: string) {
     let query = await notion.databases.query({
       database_id: featureFlagsDatabaseId,
     });
@@ -221,7 +250,9 @@ class FeatureFlags {
       if (feature != null) {
         let roles = row.properties.Roles.multi_select.map((t) => t.name);
         let tags = Object.assign(
-          Object.fromEntries(feature.options.tags.map((t) => [t.name, false])),
+          Object.fromEntries(
+            feature.options.tags?.map((t) => [t.name, false]) ?? []
+          ),
           Object.fromEntries(
             row.properties.Tags.multi_select
               .map((t) => this.parseTag(t.name, feature!.options.tags))
@@ -243,8 +274,11 @@ class FeatureFlags {
     // Caches the feature flags with an expiration of one day.
     await kv.set(
       "feature-flags",
-      { features: Array.from(this.features.entries()), hash: currentHash },
-      { ex: 86400 }
+      {
+        features: Array.from(this.features.entries()),
+        hash: currentHash ?? (await this.getCurrentHash()),
+      },
+      { ex: ONE_DAY }
     );
   }
 
@@ -290,7 +324,8 @@ class FeatureFlags {
       type TextItemRequest = RichTextItemRequest & { type: "text" };
       let text = (updated[markerIndex] as TextItemRequest).text;
       let textIndex = text.content.indexOf(marker);
-      text.content = text.content.substring(0, textIndex + 13) + "\n";
+      text.content =
+        text.content.substring(0, textIndex + marker.length) + "\n";
       updated.splice(markerIndex + 1, updated.length - markerIndex);
     } else {
       updated.push({
@@ -312,7 +347,7 @@ class FeatureFlags {
         text: { content: `: ${options.description}\n` },
       });
 
-      for (var tag of options.tags) {
+      for (var tag of options.tags ?? []) {
         updated.push({
           type: "text",
           text: { content: "    " },
@@ -336,11 +371,11 @@ class FeatureFlags {
 
   parseTag(
     tag: string,
-    options: readonly TagOption[]
+    options?: readonly TagOption[]
   ): [string, any] | undefined {
     let parts = tag.split(":");
     let name = parts[0];
-    let option = options.find((o) => o.name == name);
+    let option = options?.find((o) => o.name == name);
     if (option == undefined) {
       return;
     }
