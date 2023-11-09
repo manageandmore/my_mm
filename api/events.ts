@@ -8,6 +8,8 @@ import "../src/features/home/index";
 import "../src/features/post_generator/index";
 import "../src/features/wishlist/index";
 
+import { features } from "../src/features";
+
 /**
  * Configures the vercel deployment to use the edge runtime.
  */
@@ -24,5 +26,6 @@ export default async function events(
   request: Request,
   context: RequestContext
 ) {
+  await features.initialize();
   return await slack.run(request, context);
 }
