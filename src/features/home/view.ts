@@ -37,6 +37,31 @@ export function getHomeView(options: HomeOptions): HomeTabView {
         type: "divider",
       },
       getWishlistActionSection(),
+      {
+        type: "divider",
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "Made with ❤️ and 🍕 by your *IP Digital*",
+          },
+        ],
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "<https://github.com/schultek/mm_app|See the code>",
+          },
+          {
+            type: "mrkdwn",
+            text: "<https://github.com/schultek/mm_app/issues|Report an issue>",
+          },
+        ],
+      },
     ],
   };
 }

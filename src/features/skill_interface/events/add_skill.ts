@@ -1,6 +1,6 @@
 import { slack } from "../../../slack";
 import { getScholarIdFromUserId } from "../../common/id_utils";
-import { getNewSkillModal } from "../views/skill";
+import { getNewSkillModal } from "../views/new_skill_modal";
 import { getSkillConfirmedModal } from "../views/skill_confirmed_modal";
 import { addSkillItem } from "../data/add_item";
 import { updateHomeViewForUser } from "../../home/event";
