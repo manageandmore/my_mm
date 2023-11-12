@@ -1,7 +1,7 @@
 import { slack } from "../../../slack";
 import { getScholarIdFromUserId } from "../../common/id_utils";
-import { getSkillModal } from "../modals/skill";
-import { getSkillConfirmedModal } from "../modals/skill_confirmed";
+import { getNewSkillModal } from "../views/skill";
+import { getSkillConfirmedModal } from "../views/skill_confirmed_modal";
 import { addSkillItem } from "../data/add_item";
 import { updateHomeViewForUser } from "../../home/event";
 
@@ -15,7 +15,7 @@ slack.action(newSkillItemAction, async (request) => {
 
   const view = await slack.client.views.open({
     trigger_id: payload.trigger_id,
-    view: getSkillModal(),
+    view: getNewSkillModal(),
   });
 });
 

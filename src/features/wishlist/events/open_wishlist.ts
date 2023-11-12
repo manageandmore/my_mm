@@ -1,5 +1,5 @@
 import { slack } from "../../../slack";
-import { getWishlistModal } from "../modals/wishlist";
+import { getWishlistModal } from "../views/wishlist_modal";
 import { queryWishlistItems } from "../data/query_items";
 
 export const openWishlistAction = "open_wishlist";

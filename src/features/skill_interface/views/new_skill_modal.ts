@@ -6,7 +6,7 @@ import { newSkillItemAction } from "../events/add_skill";
  *
  * @returns The modal view.
  */
-export function getSkillModal(): ModalView {
+export function getNewSkillModal(): ModalView {
   return {
     type: "modal",
     callback_id: newSkillItemAction,
