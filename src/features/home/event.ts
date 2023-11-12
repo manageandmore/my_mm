@@ -50,6 +50,7 @@ export async function updateHomeViewForUser(userId: string) {
         ip: profile.ip,
         ep: profile.ep,
         communityCredits: profile.credits,
+        url: profile.url,
         skills: [],
         creditsLeaderboard: leaderboard,
         skillList: skillList,
@@ -61,8 +62,7 @@ export async function updateHomeViewForUser(userId: string) {
   }
 }
 
-async function setCountdownView(userId: string, countdown: Date | null) {
-  console.log(countdown);
+async function setCountdownView(userId: string, countdown: string | null) {
   await slack.client.views.publish({
     user_id: userId,
     view: {
@@ -74,7 +74,7 @@ async function setCountdownView(userId: string, countdown: Date | null) {
             type: "plain_text",
             text:
               countdown != null
-                ? `Coming soon.\n${timeDisplay(countdown.toISOString())}`
+                ? `Coming soon.\n${timeDisplay(countdown)}`
                 : "Nothing here yet.",
           },
         },

@@ -29,27 +29,17 @@ export function getProfileSection(options: ProfileOptions): AnyHomeTabBlock[] {
       fields: [
         {
           type: "mrkdwn",
-          text: `*⏳ Generation* · ${options.generation}`,
+          text:
+            `*⏳ Generation* · ${options.generation}\n` +
+            `*📒 Internal Project* · ${options.ip}\n` +
+            `*🚀 External Project* · ${options.ep}`,
         },
         {
           type: "mrkdwn",
-          text: `*👤 Status* · ${options.status}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*📒 Internal Project* · ${options.ip}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*⭐️ Community Credits* · ${options.communityCredits}/6`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*🚀 External Project* · ${options.ep}`,
-        },
-        {
-          type: "mrkdwn",
-          text: "*🏆 Liga* · Credit Warrior",
+          text:
+            `*👤 Status* · ${options.status}\n` +
+            `*⭐️ Community Credits* · ${options.communityCredits}/6\n` +
+            "*🏆 Liga* · Credit Warrior",
         },
       ],
       accessory:
