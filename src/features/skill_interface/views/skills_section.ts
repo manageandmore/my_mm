@@ -1,8 +1,9 @@
 import { AnyHomeTabBlock } from "slack-edge";
-import { SkillItem } from "../data/query_skills";
-import { newSkillItemAction } from "../events/add_skill";
+import { SkillListPerLevel } from "../data/query_skills";
+import { addSkillItemAction } from "../events/add_skill";
+import { editSkillItemsAction } from "../events/edit_skills";
 
-export function getSkillsSection(skills: SkillItem): AnyHomeTabBlock[] {
+export function getSkillsSection(skills: SkillListPerLevel): AnyHomeTabBlock[] {
   return [
     {
       type: "header",
@@ -20,13 +21,13 @@ export function getSkillsSection(skills: SkillItem): AnyHomeTabBlock[] {
       text: {
         type: "mrkdwn",
         text:
-          `🧑‍🏫 *Beginner*: ${(skills.beginnerSkills || ["/"])
+          `🧑‍🏫 *Beginner*: ${(skills.beginner || ["/"])
             .map((s) => `\`${s}\``)
             .join(" · ")}\n` +
-          `🦸 *Intermediate*: ${(skills.intermediateSkills || ["/"])
+          `🦸 *Intermediate*: ${(skills.intermediate || ["/"])
             .map((s) => `\`${s}\``)
             .join(" · ")}\n` +
-          `🥷 *Expert*: ${(skills.expertSkills || ["/"])
+          `🥷 *Expert*: ${(skills.expert || ["/"])
             .map((s) => `\`${s}\``)
             .join(" · ")}\n`,
       },
@@ -38,9 +39,9 @@ export function getSkillsSection(skills: SkillItem): AnyHomeTabBlock[] {
           type: "button",
           text: {
             type: "plain_text",
-            text: "✨ Add Skill",
+            text: "✨ Edit Skills",
           },
-          action_id: newSkillItemAction,
+          action_id: editSkillItemsAction,
         },
       ],
     },

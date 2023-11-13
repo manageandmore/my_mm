@@ -1,10 +1,10 @@
 import { HomeTabView } from "slack-edge";
 import { CreditsLeaderboardItem } from "../community_credits/query_leaderboard";
-import { SkillItem } from "../skill_interface/data/query_skills";
 import { getWishlistActionSection } from "../wishlist/views/action_section";
 import { getSkillsSection } from "../skill_interface/views/skills_section";
 import { getProfileSection } from "../profile/profile_section";
 import { getCreditsLeaderboardSection } from "../community_credits/leaderboard_section";
+import { SkillListPerLevel } from "../skill_interface/data/query_skills";
 
 /** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
@@ -15,7 +15,6 @@ export interface HomeOptions {
   ep: string;
   communityCredits: number;
   url?: string;
-  skills: string[];
   creditsLeaderboard: CreditsLeaderboardItem[];
   skillList: SkillListPerLevel;
 }

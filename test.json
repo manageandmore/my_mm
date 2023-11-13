@@ -1,0 +1,124 @@
+{
+    payload: {
+    type: 'block_actions',
+    user: {
+    id: 'U06020CBKFH',
+    username: 'samuel.jahn',
+    name: 'samuel.jahn',
+    team_id: 'T060JRGF5L4'
+  },
+    api_app_id: 'A063DETCKJ6',
+    token: 'JLbzZMXRx6XmGv3nP7nlSNm6',
+    container: { type: 'view', view_id: 'V065CEB1E03' },
+    trigger_id: '6175947064534.6018866515684.86a44b3268be0105ff768272038a92e0',
+    team: { id: 'T060JRGF5L4', domain: 'manageandmoretest' },
+    enterprise: null,
+    is_enterprise_install: false,
+    view: {
+    id: 'V065CEB1E03',
+    team_id: 'T060JRGF5L4',
+    type: 'modal',
+    blocks: [
+    {
+    type: 'context',
+    block_id: 'Z3c73',
+    elements: [
+    { type: 'mrkdwn', text: 'Delete or add new Skills', verbatim: false }
+  ]
+  },
+    { type: 'divider', block_id: 'hxy/p' },
+    {
+    type: 'section',
+    block_id: '1a76402d-d4f5-4798-bbdf-222203d8f0ae',
+    text: { type: 'mrkdwn', text: '*Test7*', verbatim: false },
+    accessory: {
+    type: 'button',
+    action_id: 'remove_skill_item',
+    text: { type: 'plain_text', text: 'Delete Skill', emoji: true },
+    value: '1a76402d-d4f5-4798-bbdf-222203d8f0ae'
+  }
+  },
+    { type: 'divider', block_id: 'xPV8V' },
+    {
+    type: 'section',
+    block_id: '716a461c-b788-4c97-937a-b52e5ab731d2',
+    text: { type: 'mrkdwn', text: '*Test6*', verbatim: false },
+    accessory: {
+    type: 'button',
+    action_id: 'remove_skill_item',
+    text: { type: 'plain_text', text: 'Delete Skill', emoji: true },
+    value: '716a461c-b788-4c97-937a-b52e5ab731d2'
+  }
+  },
+    { type: 'divider', block_id: 'l7ZiB' },
+    {
+    type: 'section',
+    block_id: 'fd9c610f-7fdb-44c9-bd15-b2a77d3add9f',
+    text: { type: 'mrkdwn', text: '*Test123*', verbatim: false },
+    accessory: {
+    type: 'button',
+    action_id: 'remove_skill_item',
+    text: { type: 'plain_text', text: 'Delete Skill', emoji: true },
+    value: 'fd9c610f-7fdb-44c9-bd15-b2a77d3add9f'
+  }
+  },
+    { type: 'divider', block_id: 'Ud17n' },
+    {
+    type: 'section',
+    block_id: 'f5a33db9-8dc4-431e-ac02-2a5b02f923c8',
+    text: { type: 'mrkdwn', text: '*Test5*', verbatim: false },
+    accessory: {
+    type: 'button',
+    action_id: 'remove_skill_item',
+    text: { type: 'plain_text', text: 'Delete Skill', emoji: true },
+    value: 'f5a33db9-8dc4-431e-ac02-2a5b02f923c8'
+  }
+  },
+    { type: 'divider', block_id: 'Q2I9g' },
+    {
+    type: 'section',
+    block_id: 'e1d59bbd-7043-4f08-a215-b4b5acec0354',
+    text: { type: 'mrkdwn', text: '*Samness*', verbatim: false },
+    accessory: {
+    type: 'button',
+    action_id: 'remove_skill_item',
+    text: { type: 'plain_text', text: 'Delete Skill', emoji: true },
+    value: 'e1d59bbd-7043-4f08-a215-b4b5acec0354'
+  }
+  },
+    { type: 'divider', block_id: 'DaBQo' },
+    {
+    type: 'actions',
+    block_id: 'j7chR',
+    elements: [
+    {
+    type: 'button',
+    action_id: 'new_skill_item',
+    text: { type: 'plain_text', text: 'Add Skill', emoji: true },
+    style: 'primary',
+    value: '{"items":[{"id":"1a76402d-d4f5-4798-bbdf-222203d8f0ae","scholar":"10be4d8a-ce9f-483b-8b1b-5a1802d3475a","skillName":"Test7","skillLevel":"Expert","status":"active"},{"id":"716a461c-b788-4c97-937a-b52e5ab731d2","scholar":"10be4d8a-ce9f-483b-8b1b-5a1802d3475a","skillName":"Test6","skillLevel":"Intermediate","status":"active"},{"id":"fd9c610f-7fdb-44c9-bd15-b2a77d3add9f","scholar":"10be4d8a-ce9f-483b-8b1b-5a1802d3475a","skillName":"Test123","skillLevel":"Beginner","status":"active"},{"id":"f5a33db9-8dc4-431e-ac02-2a5b02f923c8","scholar":"10be4d8a-ce9f-483b-8b1b-5a1802d3475a","skillName":"Test5","skillLevel":"Intermediate","status":"active"},{"id":"e1d59bbd-7043-4f08-a215-b4b5acec0354","scholar":"10be4d8a-ce9f-483b-8b1b-5a1802d3475a","skillName":"Samness","skillLevel":"Expert","status":"active"}]}'
+  }
+  ]
+  }
+  ],
+    private_metadata: '',
+    callback_id: '',
+    state: { values: {} },
+    hash: '1699793612.Kzor1wWy',
+    title: { type: 'plain_text', text: 'Skill List', emoji: true },
+    clear_on_close: false,
+    notify_on_close: false,
+    close: null,
+    submit: null,
+    previous_view_id: null,
+    root_view_id: 'V065CEB1E03',
+    app_id: 'A063DETCKJ6',
+    external_id: '',
+    app_installed_team_id: 'T060JRGF5L4',
+    bot_id: 'B063FU5KHD2'
+  },
+    actions: [
+    {
+    action_id: 'new_skill_item',
+    block_id: 'j7chR',
+    text: { type: 'plain
