@@ -1,6 +1,5 @@
 import { AnyHomeTabBlock } from "slack-edge";
 import { SkillListPerLevel } from "../data/query_skills";
-import { addSkillItemAction } from "../events/add_skill";
 import { editSkillItemsAction } from "../events/edit_skills";
 
 export function getSkillsSection(skills: SkillListPerLevel): AnyHomeTabBlock[] {

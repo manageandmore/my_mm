@@ -5,6 +5,10 @@ import { getEditSkillsModal } from "../modals/edit_skills";
 
 export const removeSkillItemAction = "remove_skill_item";
 
+
+/**
+ * This event is triggered when the user clicks the "Remove Skill" button
+ */
 slack.action(removeSkillItemAction, async (request) => {
   const payload = request.payload;
   const action = payload.actions[0] as ButtonAction;

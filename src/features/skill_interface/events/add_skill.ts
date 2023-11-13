@@ -8,7 +8,7 @@ import { SkillItems, SkillItem } from "../data/skill_stack";
 export const addSkillItemAction = "new_skill_item";
 
 /**
- * Opens a the modal for adding a new suggestion when the user clicks the 'Add Suggestion' button.
+ * Opens a modal for adding a new skill.
  */
 slack.action(addSkillItemAction, async (request) => {
   const payload = request.payload;
@@ -21,6 +21,9 @@ slack.action(addSkillItemAction, async (request) => {
 
 export const newSkillItemCallback = "new_skill_item";
 
+/**
+ * Executes the callback for adding a new skill.
+ */
 slack.viewSubmission(
   newSkillItemCallback,
   async (request) => {

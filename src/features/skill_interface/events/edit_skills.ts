@@ -8,7 +8,7 @@ import { getSkillEditStatusModal } from "../modals/skill_status";
 export const editSkillItemsAction = "edit_skill_items";
 
 /**
- *
+ * This event is triggered when the user clicks the "Edit Skills" button
  */
 slack.action(editSkillItemsAction, async (request) => {
   const payload = request.payload;
@@ -21,23 +21,9 @@ slack.action(editSkillItemsAction, async (request) => {
   });
 });
 
-/** 
-slack.viewClosed(editSkillItemsAction, async (request) => {
-  const payload = request.payload;
-  const skillList = payload.view.private_metadata as SkillItems;
-  console.log(request);
-  try {
-    //updating notion database
-    await updateNotionDatabase(skillList, payload.user.id);
-    //update home view
-    await updateHomeViewForUser(payload.user.id);
-  } catch (error) {
-    console.error("Error handling the view submission: ", error);
-    // Handle errors, possibly informing the user
-  }
-});
-*/
-
+/**
+ * This event is triggered when the user clicks the "Submit changes" button
+ */
 slack.viewSubmission(
   editSkillItemsAction,
   async (request) => {

@@ -5,7 +5,9 @@ import { getScholarIdFromUserId, skillDatabaseId } from "../../common/id_utils";
 import { SkillItem, SkillItems } from "./skill_stack";
 
 /**
- *
+ * Wrapper funtion that updates the notion skill database with the new skill list.
+ * if the skill item is marked as removed, it will be removed from the database.
+ * if the skill item is marked as new, it will be added to the database.
  */
 export async function updateNotionDatabase(
   skillList: SkillItems,
@@ -28,7 +30,7 @@ export async function updateNotionDatabase(
 }
 
 /**
- * Creates a new entry in the skill database.
+ * Adds a new skill item to the notion skill database.
  *
  * @param item The data for the new entry.
  */
@@ -55,6 +57,9 @@ export async function addSkillItemToDatabase(item: SkillItem, userId: string) {
   });
 }
 
+/**
+ * Removes a skill item from the notion skill database.
+ */
 export async function removeSkillItemFromDatabase(pageId: string) {
   await notion.pages.update({
     page_id: pageId,
