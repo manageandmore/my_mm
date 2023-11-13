@@ -1,8 +1,10 @@
 import { HomeTabView } from "slack-edge";
-import { openWishlistAction } from "../wishlist/events/open_wishlist";
 import { CreditsLeaderboardItem } from "../community_credits/query_leaderboard";
-import { SkillListPerLevel } from "../skill_interface/data/query_skills";
-import { editSkillItemsAction } from "../skill_interface/events/edit_skills";
+import { SkillItem } from "../skill_interface/data/query_skills";
+import { getWishlistActionSection } from "../wishlist/views/action_section";
+import { getSkillsSection } from "../skill_interface/views/skills_section";
+import { getProfileSection } from "../profile/profile_section";
+import { getCreditsLeaderboardSection } from "../community_credits/leaderboard_section";
 
 /** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
@@ -12,6 +14,8 @@ export interface HomeOptions {
   ip: string;
   ep: string;
   communityCredits: number;
+  url?: string;
+  skills: string[];
   creditsLeaderboard: CreditsLeaderboardItem[];
   skillList: SkillListPerLevel;
 }
@@ -26,157 +30,35 @@ export function getHomeView(options: HomeOptions): HomeTabView {
   return {
     type: "home",
     blocks: [
+      ...getProfileSection(options),
+      ...getSkillsSection(options.skillList),
+      ...getCreditsLeaderboardSection(options.creditsLeaderboard),
       {
-        type: "header",
-        text: {
-          type: "plain_text",
-          text: options.name,
-          emoji: true,
-        },
+        type: "divider",
       },
+      getWishlistActionSection(),
       {
         type: "divider",
       },
       {
-        type: "section",
-        fields: [
-          {
-            type: "mrkdwn",
-            text: `*👤 Status :*\n${options.status}\n`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*⏳ Generation:*\n${options.generation}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*📒 Internal Project:*\n${options.ip}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*🚀 External Project:*\n${options.ep}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*⭐️ Community Credits:*\n${options.communityCredits}/6`,
-          },
-          {
-            type: "mrkdwn",
-            text: "*🏆 Liga:*\n Credit Warrior",
-          },
-        ],
-        accessory: {
-          type: "image",
-          image_url:
-            "https://www.befunky.com/images/wp/wp-2013-08-featured1.png?auto=avif,webp&format=jpg&width=500&crop=16:9",
-          alt_text: "calendar thumbnail",
-        },
-      },
-      {
-        type: "header",
-        text: {
-          type: "plain_text",
-          text: "Skills",
-          emoji: true,
-        },
-      },
-      {
-        type: "divider",
-      },
-      {
-        type: "section",
-        fields: [
-          {
-            type: "mrkdwn",
-            text: `*Expert:*\n${options.skillList.expert.join(", ")}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*Intermediate:*\n${options.skillList.intermediate.join(
-              ", "
-            )}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `*Beginner:*\n${options.skillList.beginner.join(", ")}`,
-          },
-        ],
-      },
-      {
-        type: "actions",
+        type: "context",
         elements: [
           {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "Edit Skills",
-            },
-            action_id: editSkillItemsAction,
+            type: "mrkdwn",
+            text: "Made with ❤️ and 🍕 by your *IP Digital*",
           },
         ],
       },
       {
-        type: "header",
-        text: {
-          type: "plain_text",
-          text: "Community Credits Leaderboard",
-          emoji: true,
-        },
-      },
-      {
-        type: "divider",
-      },
-      {
-        type: "section",
-        fields: [
-          {
-            type: "mrkdwn",
-            text: "👑 *Name*",
-          },
-          {
-            type: "mrkdwn",
-            text: "⭐️ *Credits*",
-          },
-          {
-            type: "mrkdwn",
-            text: `${options.creditsLeaderboard[0].name}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `${options.creditsLeaderboard[0].credits}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `${options.creditsLeaderboard[1].name}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `${options.creditsLeaderboard[1].credits}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `${options.creditsLeaderboard[2].name}`,
-          },
-          {
-            type: "mrkdwn",
-            text: `${options.creditsLeaderboard[2].credits}`,
-          },
-        ],
-      },
-      {
-        type: "divider",
-      },
-      {
-        type: "actions",
+        type: "context",
         elements: [
           {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "🎁 Open Wishlist",
-              emoji: true,
-            },
-            action_id: openWishlistAction,
+            type: "mrkdwn",
+            text: "<https://github.com/schultek/mm_app|See the code>",
+          },
+          {
+            type: "mrkdwn",
+            text: "<https://github.com/schultek/mm_app/issues|Report an issue>",
           },
         ],
       },

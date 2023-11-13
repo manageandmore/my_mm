@@ -1,17 +1,10 @@
 import { ModalView } from "slack-edge";
-import { currentUrl } from "../../constants";
-import { createSocialPostCallback, updateSocialPostAction } from "./action";
-
-export type PostCreatorModalOptions = {
-  size?: number;
-  title?: string;
-  subtitle?: string;
-  image?: string;
-  file?: string;
-  logoPosition?: string;
-  titleColor?: string;
-  titleAlignment?: string;
-};
+import { currentUrl } from "../../../constants";
+import {
+  createSocialPostCallback,
+  updateSocialPostAction,
+} from "../actions/create_post";
+import { PostCreatorOptions, getPostImageUrl } from "../image_utils";
 
 /**
  * Constructs the modal view for the social post creator.
@@ -19,10 +12,8 @@ export type PostCreatorModalOptions = {
  * @param options The options for hydrating the modal.
  * @returns The modal view.
  */
-export function getPostCreatorModal(
-  options: PostCreatorModalOptions
-): ModalView {
-  const imageUrl = getPostImageUrl(options, false);
+export function getPostCreatorModal(options: PostCreatorOptions): ModalView {
+  const imageUrl = getPostImageUrl(options);
 
   return {
     type: "modal",
@@ -213,31 +204,4 @@ export function getPostCreatorModal(
       },
     ],
   };
-}
-
-export function getPostImageUrl(
-  options: PostCreatorModalOptions,
-  encode: boolean
-): string {
-  return `https://${currentUrl}/api/social${makeQueryParams(options, encode)}`;
-}
-
-function makeQueryParams(
-  params: Record<string, string | number | undefined>,
-  encode: boolean
-): string {
-  if (encode) {
-    const data = Object.fromEntries(
-      Object.entries(params).filter(([_, v]) => v != null)
-    );
-    return "?d=" + btoa(JSON.stringify(data));
-  }
-  let query = "";
-  for (let key in params) {
-    if (params[key] == null) continue;
-    if (query.length > 0) query += "&";
-    else query += "?";
-    query += `${key}=${encodeURIComponent(params[key]!)}`;
-  }
-  return query;
 }

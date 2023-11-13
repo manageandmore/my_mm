@@ -43,7 +43,7 @@ type TagOption = {
 };
 
 /** All available tag value types mapped by their identifier. */
-type TagValueTypes = { date: Date } & { number: number } & { string: string };
+type TagValueTypes = { date: string } & { number: number } & { string: string };
 type TagValueIdentifier = keyof TagValueTypes;
 
 /**
@@ -384,7 +384,8 @@ class FeatureFlags {
       case undefined:
         return [name, true];
       case "date":
-        return [name, new Date(value ?? 0)];
+        // TODO: validate date format
+        return [name, value ?? ""];
       case "number":
         return [name, Number(value ?? 0)];
       case "string":

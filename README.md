@@ -1,20 +1,35 @@
 # My MM
 
-This repository holds the code and resources for the custom slack app for MM.
+This repository holds the code and resources for the internal slack app of Manage and More.
 
 # Outline
 
-- [\*Overview\*\*](#overview)
-- [**Project Structure**](#project-structure)
-- [**Development Guide**](#development-guide)
-- [**Development Setup**](#development-setup)
+- [**Overview**](#overview)
+  - [**Components**](#components)
+  - [**Project Structure**](#project-structure)
+- [**Development**](#development)
+  - [**Ground Rules**](#ground-rules)
+  - [**Development Setup**](#development-setup)
 - [**Deployment**](#deployment)
 
 # Overview
 
-TODO
+_TODO: General overview of the project._
 
-# Project Structure
+## Components
+
+The following table gives an overview of the high-level system components the app consists of and what producs or services we use for each.
+
+| Component       | Product or Service    | Link                                               |
+| --------------- | --------------------- | -------------------------------------------------- |
+| User Interface  | Slack Integration     | https://api.slack.com/start/apps                   |
+| Data Storage    | Notion Integration    | https://developers.notion.com/docs/getting-started |
+| Server Hosting  | Vercel Edge Functions | https://vercel.com/docs/functions/edge-functions   |
+| LLM             | OpenAI GPT            | https://openai.com/product                         |
+| Vector Database | Vercel Postgres       | https://vercel.com/docs/storage/vercel-postgres    |
+| Cache Database  | Vercel KV (Redis)     | https://vercel.com/docs/storage/vercel-kv          |
+
+## Project Structure
 
 - `api/`: Top level api routes. Each file defines a `/api/<filename>` route.
   - `events.ts`: Entrypoint for slack events, messages and shortcuts.
@@ -31,7 +46,9 @@ TODO
   - `slack.ts`: The slack api client.
 - `manifest.yaml`: Stores the current config for the production slack app, used as a template for all other apps.
 
-# Development Guide
+# Development
+
+## Ground Rules
 
 Below are a few ground rules and best practices to follow when developing this app. The goal is to produce clean, consistent and understandable code so that following semesters of MM scholars can maintain this app. The rules are allowed to be extended or changed over time as long as they follow the goal and work for the current active team.
 
@@ -56,7 +73,7 @@ Below are a few ground rules and best practices to follow when developing this a
   - Cache appropriate data using the redis store. We use redis as a key-value store to cache data that is expected to change very rarely, such as the mapping of user ids between slack and notion.
   - Use relations and rollups in notion. When relying on related data from multiple notion databases, using rollup properties is much faster, since you reduce the number of databases you need to query.
 
-# Development Setup
+## Development Setup
 
 For development, you will create a personal slack app and api application. The slack app will be added
 to the **ManageAndMore Test** Workspace. For hosting the api, we use vercel (because its easy and free). For data storage, we use notion with the **ManageAndMore Test** notion workspace.
@@ -65,21 +82,21 @@ Running the api locally is currently not supported, since the slack app, even yo
 
 ---
 
+### 0. Prerequisites
+
 You need the following prerequisites:
 
 - Installed **NodeJS** and **npm**
-- Create a vercel account (https://vercel.com/signup)
-  - Select the Hobby plan for free projects
 - Installed and setup **vercel** cli (https://vercel.com/docs/cli)
+- Setup code linting (optional):
+  - Install `Prettier` extension on VS Code: https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode
+  - Enable `format on save` in VS Code: https://stackoverflow.com/questions/39494277/how-do-you-format-code-on-save-in-vs-code
+- Given access to the **ManageAndMore Test** slack workspace.
+- Given access to the **ManageAndMore Test** notion workspace.
+- Created a personal vercel account (https://vercel.com/signup)
+  - Select the Hobby plan for free projects
 
-Code linting (optional):
-
-- Install `Prettier` extension on VS Code: https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode
-- Enable `format on save` in VS Code: https://stackoverflow.com/questions/39494277/how-do-you-format-code-on-save-in-vs-code
-
----
-
-## Project Init
+### 1. Project Init
 
 For starters clone the git repository into a new directory called `mm_app`:
 
@@ -88,7 +105,7 @@ git clone https://github.com/schultek/mm_app mm_app
 cd mm_app
 ```
 
-## Vercel Project Setup
+### 2. Vercel Project Setup
 
 Inside the `mm_app` folder, initialize a new vercel project through the vercel cli:
 
@@ -111,7 +128,7 @@ Next go to `vercel.com` and open your project dashboard. Go to the `Storage` tab
 
 Go to `Settings` -> `Domains` and note down your projects domain for production deployments. Create one if none exists.
 
-## Slack App Setup
+### 3. Slack App Setup
 
 Next create your own custom slack app like this:
 
@@ -136,7 +153,7 @@ Add the following variables:
 - `SLACK_SIGNING_SECRET` as found under **Basic Information** -> **App Credentials** -> **Signing Secret**
 - `SLACK_BOT_TOKEN` as found under **OAuth & Permissions** -> **Bot User OAuth Token**
 
-## Notion Setup
+### 4. Notion Setup
 
 Add the `NOTION_INTEGRATION_TOKEN` environment variable in the vercel settings with the following:
 
@@ -144,12 +161,12 @@ Add the `NOTION_INTEGRATION_TOKEN` environment variable in the vercel settings w
 - Open the **MM App** integration
 - Copy the **Internal Integration Secret** to the env var.
 
-## OpenAI Setup
+### 5. OpenAI Setup
 
 Either get a real OpenAI Api token from a personal account, or make up a dummy token (e.g. 'DUMMY_TOKEN').
 Add your token as the `OPENAI_TOKEN` environment variable in the vercel settings.
 
-## Deploy Development App
+### 6. Deploy Development App
 
 To deploy your personal development app run:
 

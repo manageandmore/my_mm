@@ -10,6 +10,7 @@ export interface ScholarProfile {
   generation: string;
   status: string;
   credits: number;
+  url?: string;
 }
 
 /**
@@ -54,6 +55,7 @@ export async function queryScholarProfile(
       generation: props.Generation.number?.toString() ?? "Unknown",
       status: props.Status.select?.name ?? "Unknown",
       credits: props["Community Credits"].rollup.number ?? 0,
+      url: response.url,
     };
   } catch (e) {
     console.error("Error fetching scholar profile", e);

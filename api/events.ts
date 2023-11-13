@@ -8,7 +8,7 @@ import "../src/features/assistant/index";
 import "../src/features/common/index";
 import "../src/features/community_credits/index";
 import "../src/features/home/index";
-import "../src/features/post_generator/index";
+import "../src/features/post_creator/index";
 import "../src/features/wishlist/index";
 
 /**

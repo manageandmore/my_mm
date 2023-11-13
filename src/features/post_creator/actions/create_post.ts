@@ -1,35 +1,8 @@
 import { ButtonAction, DataSubmissionView, FileItem } from "slack-edge";
-import { slack } from "../../slack";
-import {
-  getPostCreatorModal,
-  getPostImageUrl,
-  PostCreatorModalOptions,
-} from "./modal";
-
-const createSocialPostShortcut = "create_social_post";
-
-/**
- * Shows a helpful starting message when the user triggers the 'Create Social Post' shortcut.
- */
-slack.globalShortcut(createSocialPostShortcut, async (request) => {
-  const payload = request.payload;
-
-  await slack.client.chat.postMessage({
-    channel: payload.user.id,
-    text: "Send me an image to get started with the post creation.",
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text:
-            "Hi 👋\n\nLooks like you want to create a social media post four our amazing *ManageAndMore Socials*.\n" +
-            "To get started, simply *send me a message* in this chat *containing the image* that you want to use for the post.",
-        },
-      },
-    ],
-  });
-});
+import { slack } from "../../../slack";
+import { getPostCreatorModal } from "../views/post_creator_modal";
+import { addToCalendarAction } from "./add_to_calendar";
+import { PostCreatorOptions, getPostImageUrl } from "../image_utils";
 
 /**
  * Shows a "Create Social Media Post" button whenever the user sends an image to the app.
@@ -143,30 +116,58 @@ slack.viewSubmission(
 
     const options = getPostOptionsFromView(payload.view);
 
-    const imageUrl =
-      getPostImageUrl(
-        {
-          ...options,
-          size: 1200, // Generate a high resolution image.
-        },
-        true
-      ) + "&download=1";
+    // Generate a high resolution image for downloading.
+    const downloadImageUrl = getPostImageUrl(
+      { ...options, size: 1200 },
+      { encode: true, download: true }
+    );
+
+    // Generate a mid-resolution preview image.
+    const previewImageUrl = getPostImageUrl(
+      { ...options, size: 600 },
+      { encode: true }
+    );
 
     await slack.client.chat.postMessage({
       channel: payload.user.id,
-      text: "Here is your post",
+      text: "Here is your finished post.",
       blocks: [
         {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: "Here is your finished post.\n\n🙏 Thanks for helping us with your amazing content for the MM socials. ",
+            text: "Here is your finished post.",
+          },
+          accessory: {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "Download",
+            },
+            url: downloadImageUrl,
           },
         },
         {
           type: "image",
-          image_url: imageUrl,
-          alt_text: "Post Image",
+          image_url: previewImageUrl,
+          alt_text: "Preview Image",
+        },
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "Should I add this post to the content calendar?",
+          },
+          accessory: {
+            type: "button",
+            action_id: addToCalendarAction,
+            text: {
+              type: "plain_text",
+              text: "Add to Content Calendar",
+            },
+            style: "primary",
+            value: JSON.stringify(options),
+          },
         },
       ],
     });
@@ -190,10 +191,10 @@ interface PostCreatorModalState {
 
 function getPostOptionsFromView(
   view: DataSubmissionView | undefined
-): PostCreatorModalOptions {
+): PostCreatorOptions {
   if (view == null) return {};
   const state = view.state.values as PostCreatorModalState;
-  const data = JSON.parse(view.private_metadata) as PostCreatorModalOptions;
+  const data = JSON.parse(view.private_metadata) as PostCreatorOptions;
 
   return Object.assign(data, {
     title: state.title?.[updateSocialPostAction].value,

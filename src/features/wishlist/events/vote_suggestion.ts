@@ -2,7 +2,7 @@ import { ButtonAction } from "slack-edge";
 import { notion } from "../../../notion";
 import { slack } from "../../../slack";
 import { getScholarIdFromUserId } from "../../common/id_utils";
-import { getWishlistModal } from "../modals/wishlist";
+import { getWishlistModal } from "../views/wishlist_modal";
 import { WishlistItem } from "../data/query_items";
 import { getVoterById } from "../data/get_voter";
 

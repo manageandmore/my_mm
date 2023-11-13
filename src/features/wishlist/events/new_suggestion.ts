@@ -1,7 +1,7 @@
 import { slack } from "../../../slack";
 import { getScholarIdFromUserId } from "../../common/id_utils";
-import { getNewSuggestionModal } from "../modals/new_suggestion";
-import { getWishlistModal } from "../modals/wishlist";
+import { getNewSuggestionModal } from "../views/new_suggestion_modal";
+import { getWishlistModal } from "../views/wishlist_modal";
 import { queryWishlistItems } from "../data/query_items";
 import { addWishlistItem } from "../data/add_item";
 

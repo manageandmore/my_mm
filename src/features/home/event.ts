@@ -16,10 +16,9 @@ import { timeDisplay } from "../common/time_utils";
 slack.event("app_home_opened", async (request) => {
   const event = request.payload;
 
-  let homeFeatureEnabled = await features.check(homeFeatureFlag, event.user);
-
   try {
-    if (!homeFeatureEnabled) {
+    let isEnabled = await features.check(homeFeatureFlag, event.user);
+    if (!isEnabled) {
       await setCountdownView(
         event.user,
         features.read(homeFeatureFlag).tags.Countdown || null
@@ -50,6 +49,7 @@ export async function updateHomeViewForUser(userId: string) {
         ip: profile.ip,
         ep: profile.ep,
         communityCredits: profile.credits,
+        url: profile.url,
         creditsLeaderboard: leaderboard,
         skillList: skillList,
       }),
@@ -60,8 +60,7 @@ export async function updateHomeViewForUser(userId: string) {
   }
 }
 
-async function setCountdownView(userId: string, countdown: Date | null) {
-  console.log(countdown);
+async function setCountdownView(userId: string, countdown: string | null) {
   await slack.client.views.publish({
     user_id: userId,
     view: {
@@ -73,7 +72,7 @@ async function setCountdownView(userId: string, countdown: Date | null) {
             type: "plain_text",
             text:
               countdown != null
-                ? `Coming soon.\n${timeDisplay(countdown.toISOString())}`
+                ? `Coming soon.\n${timeDisplay(countdown)}`
                 : "Nothing here yet.",
           },
         },
