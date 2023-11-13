@@ -26,7 +26,7 @@ Tranfers all scholars found based on entries from the credit google sheets into 
 
 
 
-TO-DO
+**TO-DO**
 - Add tqdm progress bar to upload script
 - somehow prevent multiple entries for multiple uploads
 - improve speed of script
