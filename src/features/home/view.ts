@@ -1,8 +1,8 @@
 import { HomeTabView } from "slack-edge";
-import { newSkillItemAction } from "../skill_interface/events/add_skill";
 import { openWishlistAction } from "../wishlist/events/open_wishlist";
 import { CreditsLeaderboardItem } from "../community_credits/query_leaderboard";
-import { SkillItem } from "../skill_interface/data/query_skills";
+import { SkillListPerLevel } from "../skill_interface/data/query_skills";
+import { editSkillItemsAction } from "../skill_interface/events/edit_skills";
 
 /** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
@@ -12,9 +12,8 @@ export interface HomeOptions {
   ip: string;
   ep: string;
   communityCredits: number;
-  skills: string[];
   creditsLeaderboard: CreditsLeaderboardItem[];
-  skillList: SkillItem;
+  skillList: SkillListPerLevel;
 }
 
 /**
@@ -65,10 +64,6 @@ export function getHomeView(options: HomeOptions): HomeTabView {
             type: "mrkdwn",
             text: "*🏆 Liga:*\n Credit Warrior",
           },
-          {
-            type: "mrkdwn",
-            text: "*🏆 Liga:*\n Credit Warrior",
-          },
         ],
         accessory: {
           type: "image",
@@ -93,17 +88,17 @@ export function getHomeView(options: HomeOptions): HomeTabView {
         fields: [
           {
             type: "mrkdwn",
-            text: `*Expert:*\n${options.skillList.expertSkills.join(", ")}`,
+            text: `*Expert:*\n${options.skillList.expert.join(", ")}`,
           },
           {
             type: "mrkdwn",
-            text: `*Intermediate:*\n${options.skillList.intermediateSkills.join(
+            text: `*Intermediate:*\n${options.skillList.intermediate.join(
               ", "
             )}`,
           },
           {
             type: "mrkdwn",
-            text: `*Beginner:*\n${options.skillList.beginnerSkills.join(", ")}`,
+            text: `*Beginner:*\n${options.skillList.beginner.join(", ")}`,
           },
         ],
       },
@@ -114,9 +109,9 @@ export function getHomeView(options: HomeOptions): HomeTabView {
             type: "button",
             text: {
               type: "plain_text",
-              text: "Add Skill",
+              text: "Edit Skills",
             },
-            action_id: newSkillItemAction,
+            action_id: editSkillItemsAction,
           },
         ],
       },

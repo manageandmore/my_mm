@@ -4,7 +4,7 @@ import { getHomeView } from "./view";
 import { features } from "../common/feature_flags";
 import { homeFeatureFlag } from ".";
 import { queryCreditsLeaderboard } from "../community_credits/query_leaderboard";
-import { querySkillList } from "../skill_interface/data/query_skills";
+import { querySkillListForHomeView } from "../skill_interface/data/query_skills";
 import { timeDisplay } from "../common/time_utils";
 
 /**
@@ -39,7 +39,7 @@ export async function updateHomeViewForUser(userId: string) {
   try {
     const profile = await queryScholarProfile(userId);
     const leaderboard = await queryCreditsLeaderboard();
-    const skillList = await querySkillList(userId);
+    const skillList = await querySkillListForHomeView(userId);
 
     await slack.client.views.publish({
       user_id: userId,
@@ -50,7 +50,6 @@ export async function updateHomeViewForUser(userId: string) {
         ip: profile.ip,
         ep: profile.ep,
         communityCredits: profile.credits,
-        skills: [],
         creditsLeaderboard: leaderboard,
         skillList: skillList,
       }),
