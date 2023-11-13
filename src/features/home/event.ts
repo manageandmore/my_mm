@@ -16,10 +16,9 @@ import { timeDisplay } from "../common/time_utils";
 slack.event("app_home_opened", async (request) => {
   const event = request.payload;
 
-  let homeFeatureEnabled = await features.check(homeFeatureFlag, event.user);
-
   try {
-    if (!homeFeatureEnabled) {
+    let isEnabled = await features.check(homeFeatureFlag, event.user);
+    if (!isEnabled) {
       await setCountdownView(
         event.user,
         features.read(homeFeatureFlag).tags.Countdown || null

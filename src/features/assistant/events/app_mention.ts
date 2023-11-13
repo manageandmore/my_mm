@@ -2,10 +2,11 @@ import {
   AnyMessageBlock,
   AnyTextField,
   ChatPostMessageResponse,
-  MessageAttachment,
 } from "slack-edge";
 import { slack } from "../../../slack";
 import { promptAssistant } from "../ai/prompt";
+import { features } from "../../common/feature_flags";
+import { assistantFeatureFlag } from "..";
 
 /**
  * Handle the app_mention event by prompting chatgpt to respond to the users message.
@@ -15,6 +16,13 @@ import { promptAssistant } from "../ai/prompt";
  */
 slack.event("app_mention", async (request) => {
   const event = request.payload;
+
+  const isEnabled = await features.check(assistantFeatureFlag, event.user!);
+  if (!isEnabled) {
+    let message = features.read(assistantFeatureFlag).tags.DisabledHint;
+    await sendDisabledMessage(event.channel, event.user!, message || null);
+    return;
+  }
 
   const message = event.text;
 
@@ -88,6 +96,19 @@ slack.event("app_mention", async (request) => {
     blocks: blocks,
   });
 });
+
+async function sendDisabledMessage(
+  channel: string,
+  userId: string,
+  message: string | null
+) {
+  message ??= "Sorry, the ai assistant is currently disabled.";
+  await slack.client.chat.postEphemeral({
+    channel: channel,
+    user: userId,
+    text: message,
+  });
+}
 
 async function createLoadingMessage(
   channel: string
