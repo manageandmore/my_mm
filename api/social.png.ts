@@ -1,4 +1,4 @@
-import { generatePostImage } from "../src/features/post_generator/generator";
+import { generatePostImage } from "../src/features/post_creator/generator";
 
 /**
  * Configures the vercel deployment to use the edge runtime.
