@@ -9,8 +9,6 @@ from googleapiclient.errors import HttpError
 import requests
 import json
 
-from collections import defaultdic
-
 from dotenv import load_dotenv
 
 # Load environment variables from the .env file
@@ -21,9 +19,9 @@ NOTION_SECRET_API_KEY = os.environ.get("NOTION_SECRET_API_KEY")
 # If modifying these SCOPES, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
-NOTION_DATABASE_ID = '79aae9b224804c3d8997a71287480111'
+NOTION_CREDITS_DATABASE_ID = '3e8172d8079a466fa027356895626e0a'
 
-NOTION_PEOPLE_DATABASE_ID = '9fd93456efb34c6f9fe1ca63fa376899'
+NOTION_SCHOLARS_DATABASE_ID = '258576df97e347fa89b0ab2b237d3118'
 
 NOTION_REQUEST_HEADER = {
     "Authorization": f"Bearer {NOTION_SECRET_API_KEY}",
@@ -139,7 +137,7 @@ def send_data_to_notion(credit_entries):
     for entry in credit_entries:
         entry_count = 0
         data = {
-            "parent": {"database_id": NOTION_DATABASE_ID},
+            "parent": {"database_id": NOTION_CREDITS_DATABASE_ID},
             "properties": {
                 "Scholar": { "relation": [{"id": entry[0]}]},
                 "Credits": {"number": int(entry[1])},
@@ -156,9 +154,9 @@ def send_data_to_notion(credit_entries):
             
     return entry_count
 
-def get_people_page_data(notion_people_database_id):
+def get_people_page_data():
     # Query the database to retrieve all pages
-    response = requests.post(f'https://api.notion.com/v1/databases/{notion_people_database_id}/query', headers=NOTION_REQUEST_HEADER, json={})
+    response = requests.post(f'https://api.notion.com/v1/databases/{NOTION_SCHOLARS_DATABASE_ID}/query', headers=NOTION_REQUEST_HEADER, json={})
     page_ids = []
     entries = []
     # Ensure the request was successful
@@ -170,7 +168,7 @@ def get_people_page_data(notion_people_database_id):
         while response.json()["has_more"]:
             last_id = one_request_entries[-1]['id']
             payload = {"start_cursor": last_id}
-            response = requests.post(f'https://api.notion.com/v1/databases/{notion_people_database_id}/query', headers=NOTION_REQUEST_HEADER, json=payload)
+            response = requests.post(f'https://api.notion.com/v1/databases/{NOTION_SCHOLARS_DATABASE_ID}/query', headers=NOTION_REQUEST_HEADER, json=payload)
             one_request_entries = response.json()["results"]
             entries.extend(one_request_entries)
             request_count += 1
@@ -197,8 +195,8 @@ def main():
     service = get_service()
     sheet_ids = get_sheet_ids(service, SPREADSHEET_ID)
     values = read_sheets(service, SPREADSHEET_ID, sheet_ids)
-    page_ids = get_people_page_data(NOTION_PEOPLE_DATABASE_ID)
-    print(len(page_ids))
+    page_ids = get_people_page_data()
+    
     entry_count = 0
     credit_entries = create_credit_entries(values, page_ids)
     #for credit_entry in credit_entries:
