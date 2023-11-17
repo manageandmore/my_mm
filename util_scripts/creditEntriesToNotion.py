@@ -9,12 +9,18 @@ from googleapiclient.errors import HttpError
 import requests
 import json
 
-from collections import defaultdict
+from collections import defaultdic
+
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv()
+
+NOTION_SECRET_API_KEY = os.environ.get("NOTION_SECRET_API_KEY")
 
 # If modifying these SCOPES, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
-NOTION_SECRET_API_KEY = 'secret_Rcz8sh5V0pYLCer9VWQkPnDpVWLTWSzMYwTeoJ3Fqpl'
 NOTION_DATABASE_ID = '79aae9b224804c3d8997a71287480111'
 
 NOTION_PEOPLE_DATABASE_ID = '9fd93456efb34c6f9fe1ca63fa376899'

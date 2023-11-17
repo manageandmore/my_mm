@@ -13,10 +13,15 @@ from collections import defaultdict
 
 from unidecode import unidecode
 
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv()
+NOTION_SECRET_API_KEY = os.environ.get("NOTION_SECRET_API_KEY")
+
 # If modifying these SCOPES, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
-NOTION_SECRET_API_KEY = 'secret_Rcz8sh5V0pYLCer9VWQkPnDpVWLTWSzMYwTeoJ3Fqpl'
 NOTION_SCHOLAR_DATABASE_ID = '9fd93456efb34c6f9fe1ca63fa376899'
 NOTION_CREDIT_DATABASE_ID = '1d617de2cf7c42c8bb78c1efaf1b2b3f'
 
