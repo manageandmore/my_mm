@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os.path
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -36,6 +37,12 @@ SAMPLE_RANGE_NAME = 'Sheet1!A1:Q200'  # Modify this range as per your needs
 
 scholar_database = []
 
+# Get the path to the current script's directory
+script_directory = os.path.dirname(os.path.realpath(__file__))
+
+# Construct the full path to credentials.json
+credentials_path = os.path.join(script_directory, "credentials.json")
+
 def get_service():
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -49,7 +56,7 @@ def get_service():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
+                credentials_path, SCOPES)
             creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
             with open('token.json', 'w') as token:
