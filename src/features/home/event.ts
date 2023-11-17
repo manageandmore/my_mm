@@ -42,7 +42,13 @@ export async function updateHomeViewForUser(userId: string) {
     const profile = await queryScholarProfile(userId);
     const leaderboard = await queryCreditsLeaderboard();
     const skillList = await querySkillListForHomeView(userId);
-
+    if (profile.name == "Unknown") {
+      await slack.client.views.publish({
+        user_id: userId,
+        view: getHomeErrorView("There was no scholar entry found for you in the notion database. Please contact program management.")
+      });
+      return;
+    }
     await slack.client.views.publish({
       user_id: userId,
       view: getHomeView({

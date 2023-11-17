@@ -85,7 +85,7 @@ export function getHomeErrorView(errorMsg :string): HomeTabView {
         text: {
           type: "mrkdwn",
           text:
-            "The specific error is:" + errorMsg + "Report this to your IP Digital if you can't identify the problem.",
+            "The specific error is:\n _" + errorMsg + "_ \nReport this to your IP Digital if you can't identify the problem.",
         },
       },
     ],
