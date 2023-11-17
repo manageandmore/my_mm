@@ -23,7 +23,6 @@ NOTION_SECRET_API_KEY = os.environ.get("NOTION_SECRET_API_KEY")
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 NOTION_SCHOLAR_DATABASE_ID = '9fd93456efb34c6f9fe1ca63fa376899'
-NOTION_CREDIT_DATABASE_ID = '1d617de2cf7c42c8bb78c1efaf1b2b3f'
 
 NOTION_REQUEST_HEADER = {
     "Authorization": f"Bearer {NOTION_SECRET_API_KEY}",
@@ -98,7 +97,7 @@ def read_sheets(service, sheet_ids):
 
     return values
 
-def create_scholar_entries(values):
+def create_scholar_entries(values, users):
     global scholar_database
     scholars = []
     #print(values)
@@ -113,7 +112,8 @@ def create_scholar_entries(values):
         vorname = row[2]
         name = vorname+" "+nachname
         mail = cleanup_string(vorname)+"."+cleanup_string(nachname)+"@manageandmore.de"
-        scholars.append([name, generation, mail])
+        id = users.get(mail)
+        scholars.append([name, generation, mail, id])
 
     scholars = remove_duplicates(scholars)
     scholar_database = scholars.copy()
@@ -138,6 +138,24 @@ def replace_umlauts(input_str):
     
     return input_str
 
+def get_all_notion_users():
+
+    users = {}
+    has_more = True
+    start_cursor = ""
+
+    while has_more:
+        response = requests.get(f"https://api.notion.com/v1/users{f'?start_cursor={start_cursor}' if start_cursor != '' else ''}", headers=NOTION_REQUEST_HEADER)
+        response_content = response.json()
+
+        has_more = response_content.get("has_more")
+        start_cursor = response_content.get("next_cursor")
+
+        for user in response_content.get("results"):
+            if user.get("type") == "person":
+                users[user.get("person").get("email")] = user.get("id")
+    return users
+
 def send_scholars_to_notion(scholars, database_id):
     entry_count = 0
     for scholar in scholars:
@@ -146,7 +164,11 @@ def send_scholars_to_notion(scholars, database_id):
             "properties": {
                 "Name": {"title": [{"text": {"content": scholar[0]}}]},
                 "Generation": {"number": int(scholar[1])},
-                "Email": {"email": scholar[2]}
+                "Email": {"email": scholar[2]},
+                "Person": {"people": ([
+                    {"object": "user", "id": scholar[3]}
+                ] if scholar[3] != None else [])},
+                "Status": {"select": {"name": "Active" if int(scholar[1]) >= 38 else "Alumni"}}
             }
         }
         response = requests.post("https://api.notion.com/v1/pages", headers=NOTION_REQUEST_HEADER, data=json.dumps(data))
@@ -157,61 +179,6 @@ def send_scholars_to_notion(scholars, database_id):
         entry_count += 1
 
     return entry_count
-
-def send_scholars_to_credit_overview(page_ids, database_id):
-    entry_count = 0
-    for page_id in page_ids:
-        data = {
-            "parent": {"database_id": database_id},
-            "properties": {
-                "Scholar": { "relation": [{"id": page_id[1]}]}
-            }
-        }
-        response = requests.post("https://api.notion.com/v1/pages", headers=NOTION_REQUEST_HEADER, data=json.dumps(data))
-        response_content = response.json()
-        #Check if response is error and print it out
-        if response_content.get("object") == "error":
-            print(response_content)
-        entry_count += 1
-
-    return entry_count
-
-def get_people_page_data(notion_people_database_id):
-    # Query the database to retrieve all pages
-    response = requests.post(f'https://api.notion.com/v1/databases/{notion_people_database_id}/query', headers=NOTION_REQUEST_HEADER, json={})
-    page_ids = []
-    entries = []
-    # Ensure the request was successful
-    if response.status_code == 200:
-        one_request_entries = response.json()["results"]
-        request_count = 1
-        entries.extend(one_request_entries)
-        #one request to notion returns max 100 entries
-        while response.json()["has_more"]:
-            last_id = one_request_entries[-1]['id']
-            payload = {"start_cursor": last_id}
-            response = requests.post(f'https://api.notion.com/v1/databases/{notion_people_database_id}/query', headers=NOTION_REQUEST_HEADER, json=payload)
-            one_request_entries = response.json()["results"]
-            entries.extend(one_request_entries)
-            request_count += 1
-            #Safeguard against infinite loop
-            if(request_count > 10):
-                break
-
-        # Write the data to output.json
-        with open('output.json', 'w') as outfile:
-            json.dump(response.json(), outfile, indent=4)
-        for entry in entries:
-            page_id = entry["id"]
-            # Extracting the name from the "Name" property (assuming it's a title property)
-            name = entry["properties"]["Name"]["title"][0]["plain_text"]
-            page_ids.append([name,page_id])
-            #print(f"ID: {page_id} | Name: {name}")
-        
-    else:
-        print(f"Failed to retrieve entries. Error: {response.text}")
-    
-    return page_ids
 
 def remove_duplicates(lst):
     result = []
@@ -225,16 +192,13 @@ def main():
     service = get_service()
     sheet_ids = get_sheet_ids()
     values = read_sheets(service, sheet_ids)
-    scholars = create_scholar_entries(values)
+    users = get_all_notion_users()
+    scholars = create_scholar_entries(values, users)
     for scholar in scholars:
         print(scholar)
     entry_count = 0
-    #entry_count = send_scholars_to_notion(scholars, NOTION_SCHOLAR_DATABASE_ID)
+    entry_count = send_scholars_to_notion(scholars, NOTION_SCHOLAR_DATABASE_ID)
     print("Added "+str(entry_count)+" entries to notion scholar database sucessfully")
-    page_ids = get_people_page_data(NOTION_SCHOLAR_DATABASE_ID)
-    print(len(page_ids))
-    entry_count = send_scholars_to_credit_overview(page_ids, NOTION_CREDIT_DATABASE_ID)
-    print("Added "+str(entry_count)+" entries to notion credit overview database sucessfully")
-
+    
 if __name__ == '__main__':
     main()
