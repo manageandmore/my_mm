@@ -2,20 +2,20 @@
 **Scripts to transfer data from google sheets to notion**
 
 **HOW TO USE** (should never be necessary unless all entries have been deleted on notion
-0. in both scripts change these variables to fit with current values:
-    NOTION_SECRET_API_KEY = 'secret_Rcz8sh5V0pYLCer9VWQkPnDpVWLTWSzMYwTeoJ3Fqpl'
-    NOTION_SCHOLAR_DATABASE_ID = '9fd93456efb34c6f9fe1ca63fa376899'
-    NOTION_CREDIT_DATABASE_ID = '1d617de2cf7c42c8bb78c1efaf1b2b3f'
 
-    NOTION_REQUEST_HEADER = {
-        "Authorization": f"Bearer {NOTION_SECRET_API_KEY}",
-        "Notion-Version": "2022-06-28",
-        "Content-Type": "application/json"
-    }   
+1. Follow the instructions here: https://developers.google.com/sheets/api/quickstart/python until have installed the google client library
+2. Create a .env file in your clone of the repository with this structure:
 
-    SPREADSHEET_ID = '1LL6YrPLxU67_1NAZ4xFPZT7OXvzvBc3asY95Mr-g8x4'
-    
-1. Run scholarToNotion.py
+```env
+NOTION_SECRET_API_KEY = "<notion_secret_api_key>"
+NOTION_INTEGRATION_TOKEN="<notion_integration_token>"
+OPENAI_TOKEN="<openai_token>"
+SLACK_BOT_TOKEN="<slack_bot_token>"
+SLACK_SIGNING_SECRET="<slack_signing_secret>"
+```
+
+3. Make sure you have generated a credentials.json file with your google credentials and placed it in the util_scripts folder
+4. Run scholarsToNotion.py
 2. Run creditEntriesToNotion.py
 
 **creditEntriesToNotion.py**
