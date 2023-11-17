@@ -1,6 +1,6 @@
 import { queryScholarProfile } from "../profile/query";
 import { slack } from "../../slack";
-import { getHomeView } from "./view";
+import { getHomeErrorView, getHomeView } from "./view";
 import { features } from "../common/feature_flags";
 import { homeFeatureFlag } from ".";
 import { queryCreditsLeaderboard } from "../community_credits/query_leaderboard";
@@ -29,7 +29,10 @@ slack.event("app_home_opened", async (request) => {
     await updateHomeViewForUser(event.user);
   } catch (e) {
     console.log(e);
-    // TODO Show error view to user
+    await slack.client.views.publish({
+      user_id: event.user,
+      view: getHomeErrorView((e as Error).message)
+    });
     return;
   }
 });
@@ -57,6 +60,10 @@ export async function updateHomeViewForUser(userId: string) {
   } catch (e) {
     console.log(e);
     // TODO Show error view to user
+    await slack.client.views.publish({
+      user_id: userId,
+      view: getHomeErrorView((e as Error).message)
+    });
   }
 }
 

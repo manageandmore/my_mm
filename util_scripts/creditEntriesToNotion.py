@@ -134,8 +134,8 @@ def get_page_id(page_ids, name):
 
 
 def send_data_to_notion(credit_entries):
+    entry_count = 0
     for entry in credit_entries:
-        entry_count = 0
         data = {
             "parent": {"database_id": NOTION_CREDITS_DATABASE_ID},
             "properties": {

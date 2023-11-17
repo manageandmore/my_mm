@@ -23,7 +23,7 @@ NOTION_SECRET_API_KEY = os.environ.get("NOTION_SECRET_API_KEY")
 # If modifying these SCOPES, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
-NOTION_SCHOLAR_DATABASE_ID = '9fd93456efb34c6f9fe1ca63fa376899'
+NOTION_SCHOLAR_DATABASE_ID = '258576df97e347fa89b0ab2b237d3118'
 
 NOTION_REQUEST_HEADER = {
     "Authorization": f"Bearer {NOTION_SECRET_API_KEY}",
@@ -154,6 +154,7 @@ def get_all_notion_users():
     while has_more:
         response = requests.get(f"https://api.notion.com/v1/users{f'?start_cursor={start_cursor}' if start_cursor != '' else ''}", headers=NOTION_REQUEST_HEADER)
         response_content = response.json()
+        print(response_content)
 
         has_more = response_content.get("has_more")
         start_cursor = response_content.get("next_cursor")
@@ -161,6 +162,8 @@ def get_all_notion_users():
         for user in response_content.get("results"):
             if user.get("type") == "person":
                 users[user.get("person").get("email")] = user.get("id")
+        
+        print(users)
     return users
 
 def send_scholars_to_notion(scholars, database_id):
@@ -183,6 +186,8 @@ def send_scholars_to_notion(scholars, database_id):
         #Check if response is error and print it out
         if response_content.get("object") == "error":
             print(response_content)
+        else :
+            print("added scholar " + scholar[0] + "to the notion database")
         entry_count += 1
 
     return entry_count
