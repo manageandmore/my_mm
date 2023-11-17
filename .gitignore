@@ -4,4 +4,4 @@ node_modules
 .env
 .env.*
 dist/
-*/util_scripts/*.json
+util_scripts/*.json
