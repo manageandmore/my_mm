@@ -1,9 +1,8 @@
 import { slack } from "../../../slack";
 import { getScholarIdFromUserId } from "../../common/id_utils";
 import { getAddSkillModal } from "../modals/add_skill";
-import { getSkillEditStatusModal } from "../modals/skill_status";
 import { getEditSkillsModal } from "../modals/edit_skills";
-import { SkillItems, SkillItem } from "../data/skill_stack";
+import { SkillItem } from "../data/skill_stack";
 
 export const addSkillItemAction = "new_skill_item";
 
