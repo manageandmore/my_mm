@@ -1,6 +1,13 @@
+import { notionEnv } from "../../../constants";
 import { DatabaseRow, Property, notion } from "../../../notion";
-import { getScholarIdFromUserId, skillDatabaseId } from "../../common/id_utils";
-import { SkillItem, SkillItems } from "./skill_stack";
+import { getScholarIdFromUserId } from "../../common/id_utils";
+import { SkillItems } from "./skill_stack";
+
+/** The id of the skills database in notion. */
+export const skillDatabaseId =
+  notionEnv == "production"
+    ? "38bb222d07234f50ba5b6d94fc742e85"
+    : "76dca6588e9544fbbc6a763159b8c1c9";
 
 /** Interface definition with all skill names sorted per level in string arrayy */
 export interface SkillListPerLevel {
@@ -54,11 +61,10 @@ export async function getSkillFilter(skill: string): Promise<Filter> {
   };
 }
 
-
-/** 
+/**
  * function queries notion for all skill entries for a given scholar
  * returns a SkillItems object with all skill entries
- * 
+ *
  */
 export async function querySkillDatabase(
   filters: Filter[]
@@ -89,7 +95,7 @@ export async function querySkillDatabase(
           scholar: props.Scholar.relation[0]?.id ?? "Unknown",
           skillName: props.Skill.title[0]?.plain_text ?? "Unknown",
           skillLevel: props["Skill Level"].select?.name ?? "Unknown",
-          status: "active", 
+          status: "active",
         };
       }),
     };
@@ -101,45 +107,50 @@ export async function querySkillDatabase(
   }
 }
 
-/** 
+/**
  * Wrapper function to query skills by level
  * returns a string array with all skill names for a given level
- * 
+ *
  */
 export async function getSkillsByLevel(
   skillList: SkillItems,
   userId: string,
   level: string
 ): Promise<string[]> {
-  const skillListByLevel = skillList.items?.filter((item: { skillLevel: string }) => item.skillLevel === level) ?? [];
-  return(skillListByLevel.map((item: { skillName: string; }) => item.skillName));
+  const skillListByLevel =
+    skillList.items?.filter(
+      (item: { skillLevel: string }) => item.skillLevel === level
+    ) ?? [];
+  return skillListByLevel.map((item: { skillName: string }) => item.skillName);
 }
 
-/** 
+/**
  * Wrapper function to query skills by scholar
  * returns a SkillItems object with all skill entries for a given scholar
- * 
+ *
  */
-export async function getSkillsByScholar(
-  userId: string,
-): Promise<SkillItems> {
+export async function getSkillsByScholar(userId: string): Promise<SkillItems> {
   const scholarId = await getScholarIdFromUserId(userId);
   const filters = [await getScholarFilter(scholarId)];
   const skillList = await querySkillDatabase(filters);
   return skillList;
 }
 
-/** 
+/**
  * Wrapper function to query skills by scholar and format them for the home view
  * returns a SkillListPerLevel object with all skill entries for a given scholar
- * 
+ *
  */
 export async function querySkillListForHomeView(
   userId: string
 ): Promise<SkillListPerLevel> {
   const skillList = await getSkillsByScholar(userId);
   const beginnerSkills = await getSkillsByLevel(skillList, userId, "Beginner");
-  const intermediateSkills = await getSkillsByLevel(skillList, userId, "Intermediate");
+  const intermediateSkills = await getSkillsByLevel(
+    skillList,
+    userId,
+    "Intermediate"
+  );
   const expertSkills = await getSkillsByLevel(skillList, userId, "Expert");
   return {
     beginner: beginnerSkills,
@@ -147,5 +158,3 @@ export async function querySkillListForHomeView(
     expert: expertSkills,
   };
 }
-
-

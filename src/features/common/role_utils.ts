@@ -3,8 +3,9 @@ import { ScholarRow } from "../profile/query";
 import { getScholarIdFromUserId } from "./id_utils";
 import { kv } from "@vercel/kv";
 import { ONE_WEEK } from "./time_utils";
+import { notionEnv } from "../../constants";
 
-const rolesPropertyId = "yQJE";
+const rolesPropertyId = notionEnv == "production" ? "gxSS" : "yQJE";
 
 /**
  * Retrieves the roles assigned to a user.

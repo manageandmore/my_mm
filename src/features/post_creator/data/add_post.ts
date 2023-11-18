@@ -1,11 +1,14 @@
 import {
   BlockObjectRequest,
-  CreatePageResponse,
   PageObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 import { notion } from "../../../notion";
+import { notionEnv } from "../../../constants";
 
-const contentCalendarDatabaseId = "f41ee9c232f547b18dca33ec40d727bf";
+const contentCalendarDatabaseId =
+  notionEnv == "production"
+    ? "e028412a13ed432eb35b42eebe0c4864"
+    : "f41ee9c232f547b18dca33ec40d727bf";
 
 type ContentCalendarOptions = {
   title: string;

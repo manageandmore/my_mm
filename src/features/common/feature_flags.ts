@@ -14,9 +14,13 @@ import {
 import { Prop, hash } from "../../utils";
 import { ONE_DAY } from "./time_utils";
 import { SyncCommandRequest } from "./sync_command";
+import { notionEnv } from "../../constants";
 
 /** The id of the feature flags database in notion. */
-const featureFlagsDatabaseId = "e8efe34c14e64132baca7b3f131c319e";
+const featureFlagsDatabaseId =
+  notionEnv == "production"
+    ? "8f7e1575dcc942db8e95e4da91e3467c"
+    : "e8efe34c14e64132baca7b3f131c319e";
 
 /**
  * Type definition for feature flag options.

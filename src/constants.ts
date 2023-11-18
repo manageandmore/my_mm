@@ -7,6 +7,8 @@ export const slackSigningSecret = process.env.SLACK_SIGNING_SECRET!;
 
 /** The api token used to authenticate with the notion api. */
 export const notionToken = process.env.NOTION_INTEGRATION_TOKEN;
+/** The notion environment to use, either "production" or anything else. */
+export const notionEnv = process.env.NOTION_ENV;
 
 /** The api token used to authenticate with the openai api. */
 export const openaiToken = process.env.OPENAI_TOKEN;

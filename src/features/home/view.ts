@@ -65,7 +65,7 @@ export function getHomeView(options: HomeOptions): HomeTabView {
   };
 }
 
-export function getHomeErrorView(errorMsg :string): HomeTabView {
+export function getHomeErrorView(errorMsg: string): HomeTabView {
   return {
     type: "home",
     blocks: [
@@ -74,7 +74,9 @@ export function getHomeErrorView(errorMsg :string): HomeTabView {
         text: {
           type: "mrkdwn",
           text:
-            "We're sorry but something went wrong while loading your profile. Maybe your profile wasn't added to the scholar notion database yet. You can find it <https://www.notion.so/manageandmore/258576df97e347fa89b0ab2b237d3118?v=9af3d7c905bd48ce8ed96466e5027e9c|here>. If so please contact Program Management.",
+            "We're sorry but something went wrong while loading your profile. " +
+            "Maybe your profile wasn't added to the scholar notion database yet. " +
+            "You can find it <https://www.notion.so/manageandmore/258576df97e347fa89b0ab2b237d3118?v=9af3d7c905bd48ce8ed96466e5027e9c|here>. If so please contact Program Management.",
         },
       },
       {
@@ -85,7 +87,9 @@ export function getHomeErrorView(errorMsg :string): HomeTabView {
         text: {
           type: "mrkdwn",
           text:
-            "The specific error is:\n _" + errorMsg + "_ \nReport this to your IP Digital if you can't identify the problem.",
+            "The specific error is:\n _" +
+            errorMsg +
+            "_ \nReport this to your IP Digital if you can't identify the problem.",
         },
       },
     ],

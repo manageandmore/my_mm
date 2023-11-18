@@ -1,9 +1,13 @@
+import { notionEnv } from "../../../constants";
 import { DatabaseRow, notion, Property, RollupProperty } from "../../../notion";
 import { timeSince } from "../../common/time_utils";
 import { getVoterByScholarId, Voter } from "./get_voter";
 
 /** The id of the wishlist database in notion. */
-export const wishlistDatabaseId = "a18536c8d58f4cfe97419700fd5c2d82";
+export const wishlistDatabaseId =
+  notionEnv == "production"
+    ? "96cd6950e18544318f98ee86a1886deb"
+    : "a18536c8d58f4cfe97419700fd5c2d82";
 
 /**
  * Type definition for a row in the Wishlist database.

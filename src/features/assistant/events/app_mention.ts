@@ -20,7 +20,9 @@ slack.event("app_mention", async (request) => {
   const isEnabled = await features.check(assistantFeatureFlag, event.user!);
   if (!isEnabled) {
     let message = features.read(assistantFeatureFlag).tags.DisabledHint;
-    await sendDisabledMessage(event.channel, event.user!, message || null);
+    if (message) {
+      await sendDisabledMessage(event.channel, event.user!, message);
+    }
     return;
   }
 
@@ -100,9 +102,8 @@ slack.event("app_mention", async (request) => {
 async function sendDisabledMessage(
   channel: string,
   userId: string,
-  message: string | null
+  message: string
 ) {
-  message ??= "Sorry, the ai assistant is currently disabled.";
   await slack.client.chat.postEphemeral({
     channel: channel,
     user: userId,

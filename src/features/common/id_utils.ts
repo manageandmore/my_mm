@@ -3,12 +3,13 @@ import { notion } from "../../notion";
 import { ScholarRow } from "../profile/query";
 import { User } from "slack-web-api-client/dist/client/generated-response/UsersLookupByEmailResponse";
 import { kv } from "@vercel/kv";
+import { notionEnv } from "../../constants";
 
 /** The id of the scholars database in notion. */
-export const scholarsDatabaseId = "9fd93456efb34c6f9fe1ca63fa376899";
-
-/** The id of the skills database in notion. */
-export const skillDatabaseId = "76dca6588e9544fbbc6a763159b8c1c9";
+export const scholarsDatabaseId =
+  notionEnv == "production"
+    ? "258576df97e347fa89b0ab2b237d3118"
+    : "9fd93456efb34c6f9fe1ca63fa376899";
 
 /**
  * Retrieves the associated scholarId for a given userId.

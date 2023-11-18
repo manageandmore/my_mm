@@ -1,11 +1,7 @@
 import {
   AnyRichTextBlockElement,
   ButtonAction,
-  MultiStaticSelect,
   PlainTextOption,
-  RichTextBlockElement,
-  RichTextInput,
-  RichTextSection,
   RichTextSectionElement,
   RichTextSectionEmoji,
   RichTextSectionLink,
@@ -17,8 +13,7 @@ import { PostCreatorOptions, getPostImageUrl } from "../image_utils";
 import { addPostToContentCalendar } from "../data/add_post";
 import { ONE_DAY } from "../../common/time_utils";
 import { BlockObjectRequest } from "@notionhq/client/build/src/api-endpoints";
-import { RichTextItemRequest, notion } from "../../../notion";
-import { getBlockChildren } from "notion-to-md/build/utils/notion";
+import { RichTextItemRequest } from "../../../notion";
 
 export const addToCalendarAction = "add_to_content_calendar";
 

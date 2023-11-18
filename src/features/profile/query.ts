@@ -1,5 +1,4 @@
 import { DatabaseRow, notion, Property, RollupProperty } from "../../notion";
-import { getScholarIdFromUserId } from "../common/id_utils";
 
 /** The interface for a user profile in the scholars database. */
 export interface ScholarProfile {
@@ -34,16 +33,12 @@ export type ScholarRow = DatabaseRow<{
  * @returns The profile of the requested scholar.
  */
 export async function queryScholarProfile(
-  userId: string
+  scholarId: string
 ): Promise<ScholarProfile> {
   try {
-    const scholarId = await getScholarIdFromUserId(userId);
-
     const response = (await notion.pages.retrieve({
       page_id: scholarId,
     })) as ScholarRow;
-
-    console.log("Notion Profile", response);
 
     const props = response.properties;
 
@@ -59,14 +54,8 @@ export async function queryScholarProfile(
     };
   } catch (e) {
     console.error("Error fetching scholar profile", e);
-    // TODO Add a new empty profile to notion.
-    return {
-      name: "Unknown",
-      ip: "/",
-      ep: "/",
-      generation: "Unknown",
-      status: "Unknown",
-      credits: 0,
-    };
+    throw Error(
+      "Could not read profile for scholar with id " + scholarId + "."
+    );
   }
 }

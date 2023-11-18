@@ -1,7 +1,8 @@
 //** TODO implement function to add skill item to skill database */
 
 import { notion } from "../../../notion";
-import { getScholarIdFromUserId, skillDatabaseId } from "../../common/id_utils";
+import { getScholarIdFromUserId } from "../../common/id_utils";
+import { skillDatabaseId } from "./query_skills";
 import { SkillItem, SkillItems } from "./skill_stack";
 
 /**
