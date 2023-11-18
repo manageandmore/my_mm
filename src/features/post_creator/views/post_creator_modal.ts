@@ -1,5 +1,4 @@
 import { ModalView } from "slack-edge";
-import { currentUrl } from "../../../constants";
 import {
   createSocialPostCallback,
   updateSocialPostAction,
