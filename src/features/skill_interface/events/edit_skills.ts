@@ -1,4 +1,5 @@
 import { slack } from "../../../slack";
+import { getScholarIdFromUserId } from "../../common/id_utils";
 import { updateHomeViewForUser } from "../../home/event";
 import { updateNotionDatabase } from "../data/edit_skills";
 import { getSkillsByScholar } from "../data/query_skills";
@@ -13,7 +14,8 @@ export const editSkillItemsAction = "edit_skill_items";
 slack.action(editSkillItemsAction, async (request) => {
   const payload = request.payload;
 
-  var skillList = await getSkillsByScholar(payload.user.id);
+  var scholarId = await getScholarIdFromUserId(payload.user.id);
+  var skillList = await getSkillsByScholar(scholarId);
 
   const view = await slack.client.views.open({
     trigger_id: payload.trigger_id,

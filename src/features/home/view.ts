@@ -5,6 +5,7 @@ import { getSkillsSection } from "../skill_interface/views/skills_section";
 import { getProfileSection } from "../profile/profile_section";
 import { getCreditsLeaderboardSection } from "../community_credits/leaderboard_section";
 import { SkillListPerLevel } from "../skill_interface/data/query_skills";
+import { scholarsDatabaseId } from "../common/id_utils";
 
 /** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
@@ -76,7 +77,7 @@ export function getHomeErrorView(errorMsg: string): HomeTabView {
           text:
             "We're sorry but something went wrong while loading your profile. " +
             "Maybe your profile wasn't added to the scholar notion database yet. " +
-            "You can find it <https://www.notion.so/manageandmore/258576df97e347fa89b0ab2b237d3118?v=9af3d7c905bd48ce8ed96466e5027e9c|here>. If so please contact Program Management.",
+            `You can find it <https://www.notion.so/${scholarsDatabaseId}|here>. If so please contact Program Management.`,
         },
       },
       {

@@ -114,7 +114,6 @@ export async function querySkillDatabase(
  */
 export async function getSkillsByLevel(
   skillList: SkillItems,
-  userId: string,
   level: string
 ): Promise<string[]> {
   const skillListByLevel =
@@ -129,8 +128,9 @@ export async function getSkillsByLevel(
  * returns a SkillItems object with all skill entries for a given scholar
  *
  */
-export async function getSkillsByScholar(userId: string): Promise<SkillItems> {
-  const scholarId = await getScholarIdFromUserId(userId);
+export async function getSkillsByScholar(
+  scholarId: string
+): Promise<SkillItems> {
   const filters = [await getScholarFilter(scholarId)];
   const skillList = await querySkillDatabase(filters);
   return skillList;
@@ -142,16 +142,12 @@ export async function getSkillsByScholar(userId: string): Promise<SkillItems> {
  *
  */
 export async function querySkillListForHomeView(
-  userId: string
+  scholarId: string
 ): Promise<SkillListPerLevel> {
-  const skillList = await getSkillsByScholar(userId);
-  const beginnerSkills = await getSkillsByLevel(skillList, userId, "Beginner");
-  const intermediateSkills = await getSkillsByLevel(
-    skillList,
-    userId,
-    "Intermediate"
-  );
-  const expertSkills = await getSkillsByLevel(skillList, userId, "Expert");
+  const skillList = await getSkillsByScholar(scholarId);
+  const beginnerSkills = await getSkillsByLevel(skillList, "Beginner");
+  const intermediateSkills = await getSkillsByLevel(skillList, "Intermediate");
+  const expertSkills = await getSkillsByLevel(skillList, "Expert");
   return {
     beginner: beginnerSkills,
     intermediate: intermediateSkills,
