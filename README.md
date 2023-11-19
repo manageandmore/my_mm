@@ -7,6 +7,7 @@ This repository holds the code and resources for the internal slack app of Manag
 - [**Overview**](#overview)
   - [**Components**](#components)
   - [**Project Structure**](#project-structure)
+  - [**Features**](#features)
 - [**Development**](#development)
   - [**Ground Rules**](#ground-rules)
   - [**Development Setup**](#development-setup)
@@ -47,10 +48,24 @@ The following table gives an overview of the high-level system components the ap
       - `_FEATURE.md`: Specific documentation for a single feature.
       - `index.ts`: Entrypoint for a feature, should be imported in `/api/events.ts`
   - `constants.ts`: Constant environment variables, like tokens for slack and notion.
-  - `features.ts`: Manages features flags.
   - `notion.ts`: The notion api client.
   - `slack.ts`: The slack api client.
 - `manifest.yaml`: Stores the current config for the production slack app, used as a template for all other apps.
+
+## Features
+
+Below is the table of all existing features and their documentation:
+
+| Feature           | Description                                        | Documentation                                            |
+| ----------------- | -------------------------------------------------- | -------------------------------------------------------- |
+| Common            | Common functionality shared across other features. | [FEATURE.md](./src/features/common/_FEATURE.md)          |
+| Home              | The apps home screen.                              | [FEATURE.md](./src/features/home/_FEATURE.md)            |
+| Profile           | The profile of a user.                             | _TODO_                                                   |
+| Assistant         | The ai assistant for asking questions.             | _TODO_                                                   |
+| Skill Interface   | Managing the skills of a user.                     | [FEATURE.md](./src/features/skill_interface/_FEATURE.md) |
+| Community Credits | Credit leaderboard and channel management.         | _TODO_                                                   |
+| Wishlist          | New feature suggestions.                           | [FEATURE.md](./src/features/wishlist/_FEATURE.md)        |
+| Post Creator      | Social media post creation.                        | [FEATURE.md](./src/features/post_creator/_FEATURE.md)    |
 
 # Development
 
@@ -71,7 +86,7 @@ Below are a few ground rules and best practices to follow when developing this a
       - Write in present tense.
       - Separate the first sentence of a multi-line comment into its own paragraph.
       - Be clear and precise, but also terse.
-  - For each feature, create a `<featurename>/_FEATURE.md` file containing higher-level documentation for this feature. This should at least contain three sections: General description, overall and complete functionality and the structure of the feature.
+  - For each feature, create a `<featurename>/_FEATURE.md` file containing higher-level documentation for this feature. This should at least contain three sections: General description, overall and complete functionality and the structure of the feature. Link this document in the features table above.
 
 - **Use well-defined typing**: Typescript allows us to be clear about the types of our objects and catch potential errors already when writing the code. We want to leverage this ability the best we can. Both the slack and notion packages we use come with well-defined types. We also added additional type structures for notion queries and feature flags that should be used.
 
