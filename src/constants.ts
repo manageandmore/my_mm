@@ -15,3 +15,6 @@ export const openaiToken = process.env.OPENAI_TOKEN;
 
 /** The current url of the hosted api. */
 export const currentUrl = process.env.VERCEL_URL;
+
+/** Prefix for all cache keys. Used to avoid clashes between environments. */
+export const cachePrefix = process.env.CACHE_PREFIX;

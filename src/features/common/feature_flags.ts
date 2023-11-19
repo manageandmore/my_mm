@@ -1,4 +1,3 @@
-import { kv } from "@vercel/kv";
 import { getRolesForUser } from "./role_utils";
 import {
   DatabaseRow,
@@ -8,10 +7,9 @@ import {
 } from "../../notion";
 import {
   DatabaseObjectResponse,
-  PageObjectResponse,
   RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints";
-import { Prop, hash } from "../../utils";
+import { Prop, cache, hash } from "../../utils";
 import { ONE_DAY } from "./time_utils";
 import { SyncCommandRequest } from "./sync_command";
 import { notionEnv } from "../../constants";
@@ -160,7 +158,8 @@ class FeatureFlags {
   async initialize(waitUntil: (promise: Promise<any>) => void) {
     try {
       let { features, hash: cachedHash } =
-        (await kv.get<{ features: any; hash: string }>("feature-flags")) ?? {};
+        (await cache.get<{ features: any; hash: string }>("feature-flags")) ??
+        {};
 
       // We hash the feature flag configuration to detect changes like added or removed flags, or changed tags.
       let currentHash = await this.getCurrentHash();
@@ -276,7 +275,7 @@ class FeatureFlags {
     }
 
     // Caches the feature flags with an expiration of one day.
-    await kv.set(
+    await cache.set(
       "feature-flags",
       {
         features: Array.from(this.features.entries()),

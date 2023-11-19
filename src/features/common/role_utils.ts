@@ -1,9 +1,9 @@
 import { Filter, notion } from "../../notion";
 import { ScholarRow } from "../profile/query";
 import { getScholarIdFromUserId } from "./id_utils";
-import { kv } from "@vercel/kv";
 import { ONE_WEEK } from "./time_utils";
 import { notionEnv } from "../../constants";
+import { cache } from "../../utils";
 
 const rolesPropertyId = notionEnv == "production" ? "gxSS" : "yQJE";
 
@@ -18,7 +18,7 @@ const rolesPropertyId = notionEnv == "production" ? "gxSS" : "yQJE";
  */
 export async function getRolesForUser(userId: string): Promise<string[]> {
   // Check if the users roles are cached.
-  const cachedRoles = await kv.get<string[]>(`roles:${userId}`);
+  const cachedRoles = await cache.get<string[]>(`roles:${userId}`);
   if (cachedRoles != null) {
     return cachedRoles;
   }
@@ -34,7 +34,7 @@ export async function getRolesForUser(userId: string): Promise<string[]> {
     let roles = response.properties.Roles.multi_select.map((s) => s.name);
 
     // Cache the users roles with an expiration of one week.
-    await kv.set(`roles:${userId}`, roles, { ex: ONE_WEEK });
+    await cache.set(`roles:${userId}`, roles, { ex: ONE_WEEK });
 
     return roles;
   } catch (_) {
@@ -45,6 +45,5 @@ export async function getRolesForUser(userId: string): Promise<string[]> {
 
 /** Purges all user associated roles from the cache. */
 export async function refreshRoles(): Promise<void> {
-  const keys = await kv.keys("roles:*");
-  await kv.del(...keys);
+  await cache.delAll("roles:*");
 }

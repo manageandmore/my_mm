@@ -2,8 +2,8 @@ import { slack } from "../../slack";
 import { notion } from "../../notion";
 import { ScholarRow } from "../profile/query";
 import { User } from "slack-web-api-client/dist/client/generated-response/UsersLookupByEmailResponse";
-import { kv } from "@vercel/kv";
 import { notionEnv } from "../../constants";
+import { cache } from "../../utils";
 
 /** The id of the scholars database in notion. */
 export const scholarsDatabaseId =
@@ -24,7 +24,7 @@ export const scholarsDatabaseId =
  */
 export async function getScholarIdFromUserId(userId: string): Promise<string> {
   // Check if the associated scholarId is cached.
-  const cachedScholarId = await kv.get<string>(`scholarId:${userId}`);
+  const cachedScholarId = await cache.get<string>(`scholarId:${userId}`);
   if (cachedScholarId != null) {
     return cachedScholarId;
   }
@@ -57,7 +57,7 @@ export async function getScholarIdFromUserId(userId: string): Promise<string> {
   const scholarId = response.results[0].id;
 
   // Cache the associated scholarId.
-  await kv.set(`scholarId:${userId}`, scholarId);
+  await cache.set(`scholarId:${userId}`, scholarId);
 
   return scholarId;
 }
@@ -77,7 +77,7 @@ export async function getUserIdFromScholarId(
   scholarId: string
 ): Promise<string> {
   // Check if the associated userId is cached.
-  const cachedUserId = await kv.get<string>(`userId:${scholarId}`);
+  const cachedUserId = await cache.get<string>(`userId:${scholarId}`);
   if (cachedUserId != null) {
     return cachedUserId;
   }
@@ -94,7 +94,7 @@ export async function getUserIdFromScholarId(
     const userId = response.user!.id!;
 
     // Cache the associated userId.
-    await kv.set(`userId:${scholarId}`, userId);
+    await cache.set(`userId:${scholarId}`, userId);
 
     return userId;
   } catch (e) {

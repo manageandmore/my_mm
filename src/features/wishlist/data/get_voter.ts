@@ -1,4 +1,3 @@
-import { kv } from "@vercel/kv";
 import { User } from "slack-web-api-client/dist/client/generated-response/UsersLookupByEmailResponse";
 import {
   getScholarIdFromUserId,
@@ -6,6 +5,7 @@ import {
   getUserIdFromScholarId,
 } from "../../common/id_utils";
 import { ONE_WEEK } from "../../common/time_utils";
+import { cache } from "../../../utils";
 
 /**
  * The interface for a voter on a wishlist item.
@@ -29,7 +29,7 @@ export interface Voter {
  */
 export async function getVoterByScholarId(scholarId: string): Promise<Voter> {
   // Check if the voter for a scholarId is cached.
-  const cached = await kv.get<Voter>(`voter:${scholarId}`);
+  const cached = await cache.get<Voter>(`voter:${scholarId}`);
   if (cached != null) {
     return cached;
   }
@@ -49,7 +49,7 @@ export async function getVoterByScholarId(scholarId: string): Promise<Voter> {
   }
 
   // Caches the voter object with an expiration of one week.
-  await kv.set(`voter:${scholarId}`, voter, { ex: ONE_WEEK });
+  await cache.set(`voter:${scholarId}`, voter, { ex: ONE_WEEK });
 
   return voter;
 }
