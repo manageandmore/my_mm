@@ -1,12 +1,33 @@
 import {
   AnyMessageBlock,
   AnyTextField,
+  AppMentionEvent,
   ChatPostMessageResponse,
+  GenericMessageEvent,
 } from "slack-edge";
 import { slack } from "../../../slack";
 import { promptAssistant } from "../ai/prompt";
 import { features } from "../../common/feature_flags";
 import { assistantFeatureFlag } from "..";
+
+/**
+ * Handles text messages sent to the app by prompting chatgpt to respond to the users message.
+ */
+slack.anyMessage(async (request) => {
+  const payload = request.payload;
+
+  // Guard for direct messages to the app.
+  if (payload.channel_type != "im") {
+    return;
+  }
+
+  // Guard for any special messages like file upload.
+  if (payload.subtype != undefined) {
+    return;
+  }
+
+  await triggerAssistant(payload, request.context.botUserId);
+});
 
 /**
  * Handle the app_mention event by prompting chatgpt to respond to the users message.
@@ -15,8 +36,15 @@ import { assistantFeatureFlag } from "..";
  * The handler will prompt chatgpt with the users message and post its response as a new message in the same channel.
  */
 slack.event("app_mention", async (request) => {
-  const event = request.payload;
+  const payload = request.payload;
 
+  await triggerAssistant(payload, request.context.botUserId);
+});
+
+async function triggerAssistant(
+  event: GenericMessageEvent | AppMentionEvent,
+  botUserId: string | undefined
+) {
   const isEnabled = await features.check(assistantFeatureFlag, event.user!);
   if (!isEnabled) {
     let message = features.read(assistantFeatureFlag).tags.DisabledHint;
@@ -26,7 +54,7 @@ slack.event("app_mention", async (request) => {
     return;
   }
 
-  const message = event.text;
+  const message = event.text.replaceAll(`<@${botUserId}>`, "");
 
   let n = 0;
   const msg = await createLoadingMessage(event.channel);
@@ -97,7 +125,7 @@ slack.event("app_mention", async (request) => {
     text: results.text,
     blocks: blocks,
   });
-});
+}
 
 async function sendDisabledMessage(
   channel: string,
