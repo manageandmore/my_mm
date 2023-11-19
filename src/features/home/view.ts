@@ -1,4 +1,4 @@
-import { HomeTabView } from "slack-edge";
+import { AnyHomeTabBlock, HomeTabView } from "slack-edge";
 import { CreditsLeaderboardItem } from "../community_credits/query_leaderboard";
 import { getWishlistActionSection } from "../wishlist/views/action_section";
 import { getSkillsSection } from "../skill_interface/views/skills_section";
@@ -40,30 +40,36 @@ export function getHomeView(options: HomeOptions): HomeTabView {
       {
         type: "divider",
       },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: "Made with ❤️ and 🍕 by your *IP Digital*",
-          },
-        ],
-      },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: "<https://github.com/schultek/mm_app|See the code>",
-          },
-          {
-            type: "mrkdwn",
-            text: "<https://github.com/schultek/mm_app/issues|Report an issue>",
-          },
-        ],
-      },
+      ...getHomeFooter(),
     ],
   };
+}
+
+function getHomeFooter(): AnyHomeTabBlock[] {
+  return [
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "Made with ❤️ and 🍕 by your *IP Digital*",
+        },
+      ],
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "<https://github.com/schultek/mm_app|See the code>",
+        },
+        {
+          type: "mrkdwn",
+          text: "<https://github.com/schultek/mm_app/issues|Report an issue>",
+        },
+      ],
+    },
+  ];
 }
 
 export function getHomeErrorView(errorMsg: string): HomeTabView {
@@ -71,28 +77,60 @@ export function getHomeErrorView(errorMsg: string): HomeTabView {
     type: "home",
     blocks: [
       {
-        type: "section",
+        type: "header",
         text: {
-          type: "mrkdwn",
-          text:
-            "We're sorry but something went wrong while loading your profile. " +
-            "Maybe your profile wasn't added to the scholar notion database yet. " +
-            `You can find it <https://www.notion.so/${scholarsDatabaseId}|here>. If so please contact Program Management.`,
+          type: "plain_text",
+          text: "🚫 Sorry, there was an error.",
         },
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text:
+              "We're sorry but something went wrong while loading your profile. " +
+              "Maybe your profile wasn't added to the scholar notion database yet. " +
+              `You can find it <https://www.notion.so/${scholarsDatabaseId}|here>. If so please contact Program Management.`,
+          },
+        ],
       },
       {
         type: "divider",
       },
       {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "The specific error is:",
+          },
+        ],
+      },
+      {
         type: "section",
         text: {
           type: "mrkdwn",
-          text:
-            "The specific error is:\n _" +
-            errorMsg +
-            "_ \nReport this to your IP Digital if you can't identify the problem.",
+          text: `_${errorMsg}_`,
         },
       },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text:
+              "If you can't identify the problem, report this to your IP Digital by clicking the following link: " +
+              `<https://github.com/schultek/mm_app/issues/new?label=bug&title=Home%20screen%20error&body=${encodeURIComponent(
+                errorMsg
+              )}|Report error>.`,
+          },
+        ],
+      },
+      {
+        type: "divider",
+      },
+      ...getHomeFooter(),
     ],
   };
 }
