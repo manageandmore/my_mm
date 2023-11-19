@@ -1,7 +1,8 @@
 import { SlackAppEnv, SlackRequestWithRespond, SlashCommand } from "slack-edge";
 import { slack } from "../../slack";
 import { features } from "./feature_flags";
-import { syncAssistantIndex } from "../assistant/events/sync_assistant";
+import { syncNotionIndex } from "../assistant/events/sync_notion_index";
+import { refreshRoles } from "./role_utils";
 
 export type SyncCommandRequest = SlackRequestWithRespond<
   SlackAppEnv,
@@ -21,14 +22,19 @@ type SubCommand = {
 
 const subcommands: SubCommand[] = [
   {
-    command: "assistant",
-    help: "🧠 Sync the assistant index from notion.",
-    run: syncAssistantIndex,
+    command: "notion-index",
+    help: "🧠 Sync the notion index for the mm assistant.",
+    run: syncNotionIndex,
   },
   {
-    command: "flags",
+    command: "feature-flags",
     help: "⛳️ Sync all feature flags from notion.",
     run: features.sync.bind(features),
+  },
+  {
+    command: "roles",
+    help: "👥 Refreshes the roles for all users.",
+    run: refreshRoles,
   },
 ];
 

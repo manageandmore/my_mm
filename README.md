@@ -14,20 +14,26 @@ This repository holds the code and resources for the internal slack app of Manag
 
 # Overview
 
-_TODO: General overview of the project._
+The **My MM** app is an internal tool for and by Manage And More. Its goal is to make MM scholars more productive with everyday tasks inside the MM ecosystem.
+
+The tool comes in form of a custom **Slack App**, which lives inside the official Manage And More slack workspace. This way it can integrate into the existing workflow of a scholar without the need for logging into _yet another tool_. Internally, we can thereby leverage the existing authentication system, platforms (mobile and desktop apps) and UI surfaces.
+
+For datastorage we integrate into the official Manage And More notion workspace. We effectively use notion as a database for the app. This has the advantage that we have no additional service to maintain and everyone has access to the stored data. This is especially important for if the app would be unavailable at some point that the data will still be accessible. Also it means the app is not required to implement full data handling capabilities (create, edit, delete) for all features, but instead can implement a subset and rely on manual notion editing for the rest (e.g. create new information through the app, but allow to edit through notion).
+
+The app is built in a modular way to encompass several independent use-cases. It uses a feature based approach to be easily maintainable and extendable in the future.
 
 ## Components
 
 The following table gives an overview of the high-level system components the app consists of and what producs or services we use for each.
 
-| Component       | Product or Service    | Link                                               |
-| --------------- | --------------------- | -------------------------------------------------- |
-| User Interface  | Slack Integration     | https://api.slack.com/start/apps                   |
-| Data Storage    | Notion Integration    | https://developers.notion.com/docs/getting-started |
-| Server Hosting  | Vercel Edge Functions | https://vercel.com/docs/functions/edge-functions   |
-| LLM             | OpenAI GPT            | https://openai.com/product                         |
-| Vector Database | Vercel Postgres       | https://vercel.com/docs/storage/vercel-postgres    |
-| Cache Database  | Vercel KV (Redis)     | https://vercel.com/docs/storage/vercel-kv          |
+| Component       | Product or Service    | Link                                               | Pricing              |
+| --------------- | --------------------- | -------------------------------------------------- | -------------------- |
+| User Interface  | Slack Integration     | https://api.slack.com/start/apps                   | Free                 |
+| Data Storage    | Notion Integration    | https://developers.notion.com/docs/getting-started | Free                 |
+| Server Hosting  | Vercel Edge Functions | https://vercel.com/docs/functions/edge-functions   | Free Tier / 20$/mo   |
+| LLM             | OpenAI GPT            | https://openai.com/product                         | Pay per Use (~5$/mo) |
+| Vector Database | Vercel Postgres       | https://vercel.com/docs/storage/vercel-postgres    | Free with Hosting    |
+| Cache Database  | Vercel KV (Redis)     | https://vercel.com/docs/storage/vercel-kv          | Free Tier            |
 
 ## Project Structure
 
@@ -47,6 +53,8 @@ The following table gives an overview of the high-level system components the ap
 - `manifest.yaml`: Stores the current config for the production slack app, used as a template for all other apps.
 
 # Development
+
+We use Github for managing the development process. The repository is hosted here: https://github.com/schultek/mm_app. Every change has to be made in a Pull Request to either the `staging` or `main` branch. We use issues for tracking bugs and new features.
 
 ## Ground Rules
 

@@ -1,6 +1,6 @@
 import "./events/app_mention";
 import "./events/add_to_assistant";
-import "./events/sync_assistant";
+import "./events/sync_notion_index";
 import { features } from "../common/feature_flags";
 
 export const assistantFeatureFlag = features.register({

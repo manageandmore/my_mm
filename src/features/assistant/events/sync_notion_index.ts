@@ -2,7 +2,7 @@ import { AnyMessageBlock } from "slack-edge";
 import { ReportInfo, loadNotionPages } from "../data/load_pages";
 import { SyncCommandRequest } from "../../common/sync_command";
 
-export async function syncAssistantIndex(request: SyncCommandRequest) {
+export async function syncNotionIndex(request: SyncCommandRequest) {
   await request.context.respond({
     response_type: "ephemeral",
     text: "♻️ Syncing assistant index...",

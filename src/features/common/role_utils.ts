@@ -42,3 +42,9 @@ export async function getRolesForUser(userId: string): Promise<string[]> {
     return [];
   }
 }
+
+/** Purges all user associated roles from the cache. */
+export async function refreshRoles(): Promise<void> {
+  const keys = await kv.keys("roles:*");
+  await kv.del(...keys);
+}
