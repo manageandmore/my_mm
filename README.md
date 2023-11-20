@@ -1,4 +1,12 @@
-# My MM
+<div>
+  <img align="left" src="./assets/mm_logo.png" height="20"/>
+  <img align="right" src="./assets/utum_logo.png" height="30"/>
+</div>
+
+<br/>
+<br/>
+
+# <img src="./assets/icon-small.png" width="25"/> My MM
 
 This repository holds the code and resources for the internal slack app of Manage and More.
 
