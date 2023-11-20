@@ -3,11 +3,12 @@ import { slack } from "../../../slack";
 import { getPostCreatorModal } from "../views/post_creator_modal";
 import { addToCalendarAction } from "./add_to_calendar";
 import { PostCreatorOptions, getPostImageUrl } from "../image_utils";
+import { anyMessage } from "../../common/message_handlers";
 
 /**
  * Shows a "Create Social Media Post" button whenever the user sends an image to the app.
  */
-slack.anyMessage(async (request) => {
+anyMessage(async (request) => {
   const payload = request.payload;
 
   // Guard for direct messages to the app.

@@ -6,6 +6,7 @@
 import { ButtonAction, DataSubmissionView, FileItem } from "slack-edge";
 import { slack } from "../../slack";
 import { getUserById } from "../common/id_utils";
+import { anyMessage } from "../common/message_handlers";
 
 const communityCreditsRegexPattern =
   /\b(?:community\s*[-]?credits?|community\s*[-]?points?|credits?|helper\s*points?|helferpunkte?)\b/i;
@@ -24,8 +25,12 @@ const getCommunityCreditsChannelId = async () => {
     });
 };
 
-slack.message(communityCreditsRegexPattern, async (request) => {
+anyMessage(async (request) => {
   const payload = request.payload;
+
+  if (payload.text.match(communityCreditsRegexPattern) == null) {
+    return;
+  }
 
   // find chanel id for community credits channel
   const communityCreditsChannelId = await getCommunityCreditsChannelId();

@@ -1,7 +1,7 @@
 import { MentionRichTextItemResponse } from "@notionhq/client/build/src/api-endpoints";
 import { DatabaseRow, Property, notion } from "../../../notion";
 import { getVectorStore } from "../ai/chain";
-import { notionToken } from "../../../constants";
+import { notionEnv, notionToken } from "../../../constants";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { Document } from "langchain/dist/document";
 import { QueryResult } from "@vercel/postgres";
@@ -9,7 +9,10 @@ import { VercelPostgres } from "langchain/vectorstores/vercel_postgres";
 import { LoaderStats, NotionAPILoader } from "./notion_loader";
 import yaml from "js-yaml";
 
-const assistantIndexDatabaseId = "f6004560d0b54e3384a42a2f4d59687b";
+export const assistantIndexDatabaseId =
+  notionEnv == "production"
+    ? "9960f3b53a9545a99ee1951851086911"
+    : "f6004560d0b54e3384a42a2f4d59687b";
 
 /**
  * Type definition for a row in the Assistant Index database.

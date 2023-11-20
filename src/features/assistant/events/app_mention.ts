@@ -9,11 +9,12 @@ import { slack } from "../../../slack";
 import { promptAssistant } from "../ai/prompt";
 import { features } from "../../common/feature_flags";
 import { assistantFeatureFlag } from "..";
+import { anyMessage } from "../../common/message_handlers";
 
 /**
  * Handles text messages sent to the app by prompting chatgpt to respond to the users message.
  */
-slack.anyMessage(async (request) => {
+anyMessage(async (request) => {
   const payload = request.payload;
 
   // Guard for direct messages to the app.
@@ -21,7 +22,7 @@ slack.anyMessage(async (request) => {
     return;
   }
 
-  // Guard for any special messages like file upload.
+  // Guard for only generic text messages.
   if (payload.subtype != undefined) {
     return;
   }

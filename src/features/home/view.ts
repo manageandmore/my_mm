@@ -1,11 +1,13 @@
 import { AnyHomeTabBlock, HomeTabView } from "slack-edge";
 import { CreditsLeaderboardItem } from "../community_credits/query_leaderboard";
-import { getWishlistActionSection } from "../wishlist/views/action_section";
+import { getOpenWishlistButton } from "../wishlist/views/open_wishlist_button";
 import { getSkillsSection } from "../skill_interface/views/skills_section";
 import { getProfileSection } from "../profile/profile_section";
 import { getCreditsLeaderboardSection } from "../community_credits/leaderboard_section";
 import { SkillListPerLevel } from "../skill_interface/data/query_skills";
 import { scholarsDatabaseId } from "../common/id_utils";
+import { getAskAIButton } from "../assistant/events/ask_ai_action";
+import { getCreatePostButton } from "../post_creator/actions/create_post_action";
 
 /** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
@@ -36,7 +38,14 @@ export function getHomeView(options: HomeOptions): HomeTabView {
       {
         type: "divider",
       },
-      getWishlistActionSection(),
+      {
+        type: "actions",
+        elements: [
+          getAskAIButton(),
+          getCreatePostButton(),
+          getOpenWishlistButton(),
+        ],
+      },
       {
         type: "divider",
       },
