@@ -41,97 +41,103 @@ export type ReportInfo =
 export async function loadNotionPages(
   report?: (info: ReportInfo) => Promise<void>
 ) {
-  const vectorStore = await getVectorStore();
+  try {
+    const vectorStore = await getVectorStore();
 
-  const response = await notion.databases.query({
-    database_id: assistantIndexDatabaseId,
-  });
+    const response = await notion.databases.query({
+      database_id: assistantIndexDatabaseId,
+    });
 
-  let existingTimestamps = await queryNotionDocuments(vectorStore);
+    let existingTimestamps = await queryNotionDocuments(vectorStore);
 
-  for (let row of response.results as AssistantIndexRow[]) {
-    let name = row.properties.Name;
-    let target: IndexTarget | null = null;
+    for (let row of response.results as AssistantIndexRow[]) {
+      let name = row.properties.Name;
+      let target: IndexTarget | null = null;
 
-    for (var part of name.title) {
-      if (part.type != "mention") {
+      for (var part of name.title) {
+        if (part.type != "mention") {
+          continue;
+        }
+        let mention = part.mention;
+        if (mention.type == "page" || mention.type == "database") {
+          target = mention;
+          break;
+        }
+      }
+
+      if (target == null) {
         continue;
       }
-      let mention = part.mention;
-      if (mention.type == "page" || mention.type == "database") {
-        target = mention;
-        break;
+
+      let targetType = target.type;
+      let targetId =
+        target.type == "page" ? target.page.id : target.database.id;
+      let existingLastEdited = existingTimestamps.get(targetId);
+      existingTimestamps.delete(targetId);
+
+      let options: LoadingOptions =
+        targetType == "page"
+          ? {
+              lastEdited: existingLastEdited,
+              splitDocuments: true,
+              titleKey: "Title",
+              addChunkHeader: true,
+              getHeader: (_) => ({ Type: "Notion Page" }),
+            }
+          : {
+              lastEdited: existingLastEdited,
+              splitDocuments: false,
+              titleKey: "Database",
+              addChunkHeader: false,
+              getHeader: (doc) =>
+                doc.metadata.notionId != doc.metadata.targetId
+                  ? { Type: "Notion Database Entry" }
+                  : { Type: "Notion Database" },
+            };
+
+      let { docs, stats } = await loadPage(targetId, options);
+
+      for (let notionId of stats.removed) {
+        await deleteNotionDocuments(vectorStore, notionId, "notionId");
       }
+
+      if (docs.length > 0) {
+        await vectorStore.addDocuments(docs);
+      }
+
+      console.log(
+        `Completed loading documents for ${targetType} ${targetId}:\n` +
+          `- Skipped ${stats.skipped.length}\n- Updated ${stats.updated.length}\n- Added ${stats.added.length}\n- Removed ${stats.removed.length}`
+      );
+
+      await report?.({
+        type: "update",
+        target: targetType,
+        id: targetId,
+        stats: Object.fromEntries(
+          Object.entries(stats).map(([k, v]) => [k, v.length])
+        ) as Record<keyof LoaderStats, number>,
+      });
     }
 
-    if (target == null) {
-      continue;
+    for (let targetId of existingTimestamps.keys()) {
+      let deleted = await deleteNotionDocuments(
+        vectorStore,
+        targetId,
+        "targetId"
+      );
+
+      console.log(`Removed ${deleted} documents for ${targetId}`);
+
+      await report?.({
+        type: "removed",
+        id: targetId,
+        amount: deleted,
+      });
     }
-
-    let targetType = target.type;
-    let targetId = target.type == "page" ? target.page.id : target.database.id;
-    let existingLastEdited = existingTimestamps.get(targetId);
-    existingTimestamps.delete(targetId);
-
-    let options: LoadingOptions =
-      targetType == "page"
-        ? {
-            lastEdited: existingLastEdited,
-            splitDocuments: true,
-            titleKey: "Title",
-            addChunkHeader: true,
-            getHeader: (_) => ({ Type: "Notion Page" }),
-          }
-        : {
-            lastEdited: existingLastEdited,
-            splitDocuments: false,
-            titleKey: "Database",
-            addChunkHeader: false,
-            getHeader: (doc) =>
-              doc.metadata.notionId != doc.metadata.targetId
-                ? { Type: "Notion Database Entry" }
-                : { Type: "Notion Database" },
-          };
-
-    let { docs, stats } = await loadPage(targetId, options);
-
-    for (let notionId of stats.removed) {
-      await deleteNotionDocuments(vectorStore, notionId, "notionId");
-    }
-
-    if (docs.length > 0) {
-      await vectorStore.addDocuments(docs);
-    }
-
-    console.log(
-      `Completed loading documents for ${targetType} ${targetId}:\n` +
-        `- Skipped ${stats.skipped.length}\n- Updated ${stats.updated.length}\n- Added ${stats.added.length}\n- Removed ${stats.removed.length}`
-    );
-
-    await report?.({
-      type: "update",
-      target: targetType,
-      id: targetId,
-      stats: Object.fromEntries(
-        Object.entries(stats).map(([k, v]) => [k, v.length])
-      ) as Record<keyof LoaderStats, number>,
-    });
-  }
-
-  for (let targetId of existingTimestamps.keys()) {
-    let deleted = await deleteNotionDocuments(
-      vectorStore,
-      targetId,
-      "targetId"
-    );
-
-    console.log(`Removed ${deleted} documents for ${targetId}`);
-
-    await report?.({
-      type: "removed",
-      id: targetId,
-      amount: deleted,
-    });
+  } catch (e) {
+    console.log("Error at syncing notion index", e);
+    throw e;
   }
 }
 

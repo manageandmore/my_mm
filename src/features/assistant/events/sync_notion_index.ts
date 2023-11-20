@@ -10,9 +10,17 @@ export async function syncNotionIndex(request: SyncCommandRequest) {
 
   let reports: ReportInfo[] = [];
 
-  await loadNotionPages(async (report) => {
-    reports.push(report);
-  });
+  try {
+    await loadNotionPages(async (report) => {
+      reports.push(report);
+    });
+  } catch (e) {
+    await request.context.respond({
+      response_type: "ephemeral",
+      text: `🚫 Error syncing assistant index: ${e}`,
+    });
+    return;
+  }
 
   await request.context.respond({
     response_type: "ephemeral",
