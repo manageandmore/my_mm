@@ -73,11 +73,11 @@ function getHomeFooter(): AnyHomeTabBlock[] {
       elements: [
         {
           type: "mrkdwn",
-          text: "<https://github.com/schultek/mm_app|See the code>",
+          text: "<https://github.com/schultek/my_mm|See the code>",
         },
         {
           type: "mrkdwn",
-          text: "<https://github.com/schultek/mm_app/issues|Report an issue>",
+          text: "<https://github.com/schultek/my_mm/issues|Report an issue>",
         },
       ],
     },
