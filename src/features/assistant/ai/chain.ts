@@ -1,5 +1,5 @@
 import { VercelPostgres } from "langchain/vectorstores/vercel_postgres";
-import { openaiToken } from "../../../constants";
+import { notionEnv, openaiToken } from "../../../constants";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 
@@ -13,5 +13,7 @@ export const model = new ChatOpenAI({
 });
 
 export async function getVectorStore() {
-  return VercelPostgres.initialize(embeddings);
+  return VercelPostgres.initialize(embeddings, {
+    tableName: notionEnv == "production" ? "vectors_production" : "vectors_dev",
+  });
 }
