@@ -135,8 +135,8 @@ export async function loadNotionPages(
         amount: deleted,
       });
     }
-  } catch (e) {
-    console.log("Error at syncing notion index", e);
+  } catch (e: any) {
+    console.log("Error at syncing notion index", e, e.message, e.errors);
     throw e;
   }
 }
