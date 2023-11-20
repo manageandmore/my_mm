@@ -75,8 +75,9 @@ async function setCountdownView(userId: string, countdown: string | null) {
             type: "plain_text",
             text:
               countdown != null
-                ? `Coming soon.\n\n${timeDisplay(countdown)}`
-                : "Nothing here yet.",
+                ? `✨ Coming soon - ${timeDisplay(countdown)} ✨`
+                : "🥷 Nothing here yet",
+            emoji: true,
           },
         },
       ],

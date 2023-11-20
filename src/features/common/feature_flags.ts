@@ -382,7 +382,7 @@ class FeatureFlags {
     if (option == undefined) {
       return;
     }
-    let value = parts.length > 1 ? parts[1] : undefined;
+    let value = parts.length > 1 ? parts.slice(1).join(":") : undefined;
     switch (option.value) {
       case undefined:
         return [name, true];

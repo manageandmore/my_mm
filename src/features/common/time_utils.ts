@@ -41,10 +41,10 @@ export function timeSince(date: string): string {
 }
 
 export function timeDisplay(date: string): string {
-  var seconds = Math.floor((Date.now() - Date.parse(date)) / 1000);
+  var seconds = Math.floor((Date.parse(date) - Date.now()) / 1000);
 
   function toTime(unit: number, cut: number | null, tag: string): string {
-    var n = Math.floor((seconds % (cut ?? seconds)) / unit);
+    var n = Math.floor((seconds % (cut ?? seconds + 1)) / unit);
     return n.toString().padStart(2, "0") + tag;
   }
 
