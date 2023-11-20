@@ -1,4 +1,4 @@
-import { AnyHomeTabBlock, HomeTabView } from "slack-edge";
+import { AnyHomeTabBlock, Button, HomeTabView } from "slack-edge";
 import { CreditsLeaderboardItem } from "../community_credits/query_leaderboard";
 import { getOpenWishlistButton } from "../wishlist/views/open_wishlist_button";
 import { getSkillsSection } from "../skill_interface/views/skills_section";
@@ -28,7 +28,10 @@ export interface HomeOptions {
  * @param options The user data needed to fill out the view.
  * @returns The home view as a set of structured blocks.
  */
-export function getHomeView(options: HomeOptions): HomeTabView {
+export async function getHomeView(
+  userId: string,
+  options: HomeOptions
+): Promise<HomeTabView> {
   return {
     type: "home",
     blocks: [
@@ -41,10 +44,10 @@ export function getHomeView(options: HomeOptions): HomeTabView {
       {
         type: "actions",
         elements: [
-          getAskAIButton(),
-          getCreatePostButton(),
+          await getAskAIButton(userId),
+          await getCreatePostButton(userId),
           getOpenWishlistButton(),
-        ],
+        ].filter((b): b is Button => b != null),
       },
       {
         type: "divider",

@@ -49,7 +49,7 @@ export async function updateHomeViewForUser(userId: string) {
 
   await slack.client.views.publish({
     user_id: userId,
-    view: getHomeView({
+    view: await getHomeView(userId, {
       name: profile.name,
       generation: profile.generation,
       status: profile.status,

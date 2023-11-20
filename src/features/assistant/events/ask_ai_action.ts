@@ -1,6 +1,8 @@
 import { Button } from "slack-edge";
 import { slack } from "../../../slack";
 import { assistantIndexDatabaseId } from "../data/load_pages";
+import { features } from "../../common/feature_flags";
+import { assistantFeatureFlag } from "..";
 
 const askAIAction = "ask_ai_action";
 
@@ -49,7 +51,12 @@ slack.action(askAIAction, async (request) => {
   });
 });
 
-export function getAskAIButton(): Button {
+export async function getAskAIButton(userId: string): Promise<Button | null> {
+  const isEnabled = await features.check(assistantFeatureFlag, userId);
+  if (!isEnabled) {
+    return null;
+  }
+
   return {
     type: "button",
     text: {

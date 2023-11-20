@@ -1,4 +1,6 @@
+import { postCreatorFeatureFlag } from "..";
 import { slack } from "../../../slack";
+import { features } from "../../common/feature_flags";
 
 const createSocialPostShortcut = "create_social_post";
 
@@ -7,6 +9,14 @@ const createSocialPostShortcut = "create_social_post";
  */
 slack.globalShortcut(createSocialPostShortcut, async (request) => {
   const payload = request.payload;
+
+  const isEnabled = await features.check(
+    postCreatorFeatureFlag,
+    payload.user.id
+  );
+  if (!isEnabled) {
+    return;
+  }
 
   await sendGetStartedMessage(payload.user.id);
 });
