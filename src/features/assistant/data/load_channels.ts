@@ -24,7 +24,6 @@ export async function loadSlackChannels(
     console.log("SYNCING CHANNELS", targetChannels, channels);
 
     for (let [channelId, channel] of channels) {
-
       if (!targetChannels.includes(channel.name ?? "*")) {
         continue;
       }
@@ -37,7 +36,7 @@ export async function loadSlackChannels(
       while (hasMore) {
         const response = await slack.client.conversations.history({
           channel: channelId,
-          oldest: (Date.now() / 1000 - ONE_DAY * 90).toString(),
+          oldest: (Date.now() / 1000 - ONE_DAY * 30).toString(),
           inclusive: true,
           cursor: currentCursor,
         });
