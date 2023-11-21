@@ -125,7 +125,7 @@ export async function addPostToContentCalendar(
       database_id: contentCalendarDatabaseId,
     },
     properties: {
-      Title: {
+      title: {
         type: "title",
         title: [
           {
