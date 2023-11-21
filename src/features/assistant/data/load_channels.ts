@@ -42,7 +42,7 @@ export async function loadSlackChannels(
       while (hasMore) {
         const response = await slack.client.conversations.history({
           channel: channelId,
-          oldest: (Date.now() - ONE_DAY * 90).toString(),
+          oldest: (Date.now() - ONE_DAY * 90 * 1000).toString(),
           inclusive: true,
           cursor: currentCursor,
         });
