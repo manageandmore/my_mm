@@ -21,6 +21,7 @@ export type SyncChannelInfo = {
 
 export async function loadSlackChannels(
   targetChannels: string[],
+  botUserId: string,
   report?: (info: SyncChannelInfo) => Promise<void>
 ) {
   try {
@@ -52,6 +53,10 @@ export async function loadSlackChannels(
 
         for (let message of response.messages ?? []) {
           if (message.subtype != null) {
+            continue;
+          }
+
+          if (message.text!.includes(`<@${botUserId}>`)) {
             continue;
           }
 

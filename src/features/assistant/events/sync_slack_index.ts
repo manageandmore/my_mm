@@ -18,9 +18,13 @@ export async function syncSlackIndex(request: SyncCommandRequest) {
 
     const indexedChannels = channelsTag ? channelsTag.split(";") : [];
 
-    await loadSlackChannels(indexedChannels, async (report) => {
-      reports.push(report);
-    });
+    await loadSlackChannels(
+      indexedChannels,
+      request.context.botUserId!,
+      async (report) => {
+        reports.push(report);
+      }
+    );
   } catch (e) {
     await request.context.respond({
       response_type: "ephemeral",
