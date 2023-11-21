@@ -21,11 +21,7 @@ export async function loadSlackChannels(
 
     const users = new Map<string, User>();
 
-    console.log("SYNCING CHANNELS", targetChannels, channels);
-
     for (let [channelId, channel] of channels) {
-      console.log("CHANNEL", channelId, channel.name);
-
       if (!targetChannels.includes(channel.name ?? "*")) {
         continue;
       }
@@ -41,9 +37,8 @@ export async function loadSlackChannels(
           oldest: (Date.now() / 1000 - ONE_DAY * 30).toString(),
           inclusive: true,
           cursor: currentCursor,
+          limit: 500,
         });
-
-        console.log("MESSAGES", response.has_more, response.messages?.length);
 
         hasMore = response.has_more ?? false;
         currentCursor = response.response_metadata?.next_cursor;
@@ -89,15 +84,24 @@ export async function loadSlackChannels(
 }
 
 export async function getPublicChannels() {
-  const response = await slack.client.conversations.list({
-    exclude_archived: true,
-    types: "public_channel",
-  });
-
   let channels = new Map<string, Channel>();
 
-  for (let channel of response.channels ?? []) {
-    channels.set(channel.id!, channel);
+  let hasMore = true;
+  let nextCursor: string | undefined = undefined;
+
+  while (hasMore) {
+    const response = await slack.client.conversations.list({
+      exclude_archived: true,
+      cursor: nextCursor,
+      types: "public_channel",
+    });
+
+    nextCursor = response.response_metadata?.next_cursor;
+    hasMore = !!nextCursor;
+
+    for (let channel of response.channels ?? []) {
+      channels.set(channel.id!, channel);
+    }
   }
 
   return channels;

@@ -70,7 +70,7 @@ async function triggerAssistant(
     {
       type: "section",
       text: {
-        type: "plain_text",
+        type: "mrkdwn",
         text: results.text,
       },
     },
@@ -106,14 +106,15 @@ async function triggerAssistant(
     }
 
     if (elements.length > 0) {
-      elements.unshift({
-        type: "plain_text",
-        text: "Learn more:",
-      });
-
       blocks.push({
         type: "context",
-        elements: elements,
+        elements: [
+          {
+            type: "plain_text",
+            text: "Learn more:",
+          },
+          elements[0],
+        ],
       });
     }
   }
