@@ -27,7 +27,7 @@ anyMessage(async (request) => {
 
   const isIndexed =
     indexedChannels != false &&
-    indexedChannels.split(",").includes(channelName);
+    indexedChannels.split(";").includes(channelName);
 
   if (!isIndexed) {
     return;

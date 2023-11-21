@@ -16,7 +16,7 @@ export const assistantFeatureFlag = features.register({
     {
       name: "IndexedChannels",
       description:
-        "Specify slack channels where all new messages should be indexed automatically, separated by comma.",
+        "Specify slack channels where all new messages should be indexed automatically, separated by semicolon.",
       value: "string",
     },
   ],
