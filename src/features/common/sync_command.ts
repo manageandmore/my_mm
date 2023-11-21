@@ -23,6 +23,11 @@ type SubCommand = {
 
 const subcommands: SubCommand[] = [
   {
+    command: "help",
+    help: "Displays this message.",
+    run: showHelp,
+  },
+  {
     command: "notion-index",
     help: "🧠 Sync the notion index for the mm assistant.",
     run: syncNotionIndex,
@@ -82,3 +87,23 @@ slack.command(
     }
   }
 );
+
+async function showHelp(request: SyncCommandRequest) {
+  request.context.respond({
+    response_type: "ephemeral",
+    text: `Supported subcommands are:`,
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text:
+            `Usage: '/sync <subcommand>'. Supported subcommands are:\n` +
+            `${subcommands
+              .map((c) => ` - *${c.command}*: ${c.help}`)
+              .join("\n")}`,
+        },
+      },
+    ],
+  });
+}

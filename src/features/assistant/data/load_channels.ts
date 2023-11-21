@@ -24,6 +24,8 @@ export async function loadSlackChannels(
     console.log("SYNCING CHANNELS", targetChannels, channels);
 
     for (let [channelId, channel] of channels) {
+      console.log("CHANNEL", channelId, channel.name);
+
       if (!targetChannels.includes(channel.name ?? "*")) {
         continue;
       }
@@ -40,6 +42,8 @@ export async function loadSlackChannels(
           inclusive: true,
           cursor: currentCursor,
         });
+
+        console.log("MESSAGES", response.has_more, response.messages?.length);
 
         hasMore = response.has_more ?? false;
         currentCursor = response.response_metadata?.next_cursor;

@@ -27,7 +27,7 @@ features:
     - command: /sync
       url: https://manageandmore.vercel.app/api/events
       description: Sync data from notion.
-      usage_hint: "[notion-index, feature-flags, roles]"
+      usage_hint: "[help]"
       should_escape: true
 oauth_config:
   scopes:
