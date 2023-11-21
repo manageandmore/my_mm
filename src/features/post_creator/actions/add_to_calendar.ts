@@ -6,6 +6,7 @@ import {
   RichTextSectionEmoji,
   RichTextSectionLink,
   RichTextSectionText,
+  ViewStateSelectedOption,
 } from "slack-edge";
 import { slack } from "../../../slack";
 import { getContentSchedulerModal } from "../views/content_scheduler_modal";
@@ -17,6 +18,7 @@ import {
 import { ONE_DAY } from "../../common/time_utils";
 import { BlockObjectRequest } from "@notionhq/client/build/src/api-endpoints";
 import { RichTextItemRequest } from "../../../notion";
+import { getUserById } from "../../common/id_utils";
 
 export const addToCalendarAction = "add_to_content_calendar";
 
@@ -70,6 +72,8 @@ slack.viewSubmission(
       state.content?.content.rich_text_value.elements ?? []
     );
 
+    const user = await getUserById(payload.user.id);
+
     const page = await addPostToContentCalendar({
       title: options.title ?? "",
       date: state.date!.date.selected_date,
@@ -77,6 +81,11 @@ slack.viewSubmission(
         (o) => o.text.text
       ),
       ips: state.ips!.ips.selected_options.map((o) => o.text.text),
+      user: {
+        id: payload.user.id,
+        name: user?.real_name ?? user?.name ?? "Unknown",
+      },
+      assignee: state.assignee!.assignee.selected_options.map((o) => o.value),
       content: [
         ...content,
         {
@@ -123,8 +132,9 @@ interface ContentSchedulerModalState {
     content: { rich_text_value: { elements: RichTextElement[] } };
   };
   date?: { date: { selected_date: string } };
-  channels?: { channels: { selected_options: PlainTextOption[] } };
-  ips?: { ips: { selected_options: PlainTextOption[] } };
+  channels?: { channels: { selected_options: ViewStateSelectedOption[] } };
+  ips?: { ips: { selected_options: ViewStateSelectedOption[] } };
+  assignee?: { assignee: { selected_options: ViewStateSelectedOption[] } };
 }
 
 type RichTextElement = AnyRichTextBlockElement | RichTextSectionElement;
@@ -133,7 +143,6 @@ function validateState(
   state: ContentSchedulerModalState
 ): { [blockId: string]: string } | null {
   const date = state.date?.date.selected_date;
-  const channels = state.channels?.channels.selected_options ?? [];
 
   if (date == null) {
     return {
@@ -147,9 +156,17 @@ function validateState(
     };
   }
 
+  const channels = state.channels?.channels.selected_options ?? [];
   if (channels.length == 0) {
     return {
       channels: "Select at least one channel.",
+    };
+  }
+
+  const assignees = state.assignee?.assignee.selected_options ?? [];
+  if (assignees?.length == 0) {
+    return {
+      assignee: "Assign a responsible person.",
     };
   }
 
@@ -213,7 +230,7 @@ function pageBlocksFromRichText(
   return blocks;
 }
 
-function richTextBlocksFromElement(
+export function richTextBlocksFromElement(
   element: RichTextElement
 ): RichTextItemRequest[] {
   if (element.type == "rich_text_section") {

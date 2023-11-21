@@ -4,10 +4,15 @@ import {
   PageObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 import { DatabaseRow, Property, notion } from "../../../notion";
-import { notionEnv } from "../../../constants";
+import { currentUrl, notionEnv } from "../../../constants";
 import { queryScholarProfile } from "../../profile/query";
 import { Prop } from "../../../utils";
-import { getScholarIdFromUserId } from "../../common/id_utils";
+import {
+  getScholarIdFromUserId,
+  getUserIdForEmail,
+} from "../../common/id_utils";
+import { features } from "../../common/feature_flags";
+import { postCreatorFeatureFlag } from "..";
 
 const contentCalendarDatabaseId =
   notionEnv == "production"
@@ -20,6 +25,7 @@ type ContentCalendarOptions = {
   channels: string[];
   ips: string[];
   user: { id: string; name: string };
+  assignee: string[];
   content: BlockObjectRequest[];
 };
 
@@ -36,9 +42,33 @@ export async function getContentCalendarInfo() {
   const channelProp = response.properties.Channel as MultiSelectPropertyConfig;
   const ipProp = response.properties.IP as MultiSelectPropertyConfig;
 
+  const responsiblePersonsTag = features.read(postCreatorFeatureFlag).tags
+    .ResponsiblePerson;
+
+  const assignees = responsiblePersonsTag
+    ? (
+        await Promise.all(
+          responsiblePersonsTag.split(";").map(async (p) => {
+            try {
+              var userId = await getUserIdForEmail(p);
+              var scholarId = await getScholarIdFromUserId(userId);
+              var profile = await queryScholarProfile(scholarId);
+
+              return profile.person
+                ? { name: profile.name, person: profile.person! }
+                : null;
+            } catch (e) {
+              return null;
+            }
+          })
+        )
+      ).filter((id): id is { name: string; person: string } => id != null)
+    : [];
+
   return {
     channels: channelProp.multi_select.options.map((o) => o.name),
-    ips: channelProp.multi_select.options.map((o) => o.name),
+    ips: ipProp.multi_select.options.map((o) => o.name),
+    assignees: assignees,
   };
 }
 
@@ -51,6 +81,43 @@ export async function addPostToContentCalendar(
     const profile = await queryScholarProfile(scholarId);
     personId = profile.person;
   } catch (e) {}
+
+  let content = <BlockObjectRequest[]>[
+    {
+      type: "callout",
+      callout: {
+        color: "gray_background",
+        icon: {
+          external: {
+            url: `https://${currentUrl}/assets/icon-small.png`,
+          },
+        },
+        rich_text: [
+          {
+            type: "text",
+            text: { content: "Created with " },
+            annotations: { italic: true },
+          },
+          {
+            type: "text",
+            text: { content: "My MM" },
+            annotations: { bold: true, italic: true },
+          },
+          {
+            type: "text",
+            text: { content: " by " },
+            annotations: { italic: true },
+          },
+          {
+            type: "text",
+            text: { content: options.user.name },
+            annotations: { bold: true, italic: true },
+          },
+        ],
+      },
+    },
+    ...options.content,
+  ];
 
   const response = await notion.pages.create({
     parent: {
@@ -87,7 +154,10 @@ export async function addPostToContentCalendar(
       },
       "Responsible Person": {
         type: "people",
-        people: [...(personId ? [{ id: personId }] : [])],
+        people: [
+          ...(personId ? [{ id: personId }] : []),
+          ...options.assignee.map((id) => ({ id })),
+        ],
       },
       Status: {
         type: "status",
@@ -96,7 +166,7 @@ export async function addPostToContentCalendar(
         },
       },
     },
-    children: options.content,
+    children: content,
   });
   return response as PageObjectResponse;
 }

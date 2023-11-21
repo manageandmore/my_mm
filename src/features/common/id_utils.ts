@@ -92,8 +92,7 @@ export async function getUserIdFromScholarId(
 
   try {
     // Find the slack user by its email.
-    const response = await slack.client.users.lookupByEmail({ email: email });
-    const userId = response.user!.id!;
+    const userId = await getUserIdForEmail(email);
 
     // Cache the associated userId.
     await cache.set(`userId:${scholarId}`, userId);
@@ -149,4 +148,9 @@ async function getEmailForScholar(scholarId: string): Promise<string | null> {
     console.log(`Cannot find scholar entry with id ${scholarId}`, e);
     return null;
   }
+}
+
+export async function getUserIdForEmail(email: string) {
+  const response = await slack.client.users.lookupByEmail({ email: email });
+  return response.user!.id!;
 }
