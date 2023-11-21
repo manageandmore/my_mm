@@ -9,6 +9,7 @@ export interface ScholarProfile {
   generation: string;
   status: string;
   credits: number;
+  person?: string;
   url?: string;
 }
 
@@ -23,6 +24,7 @@ export type ScholarRow = DatabaseRow<{
   Generation: Property<"number">;
   Status: Property<"select">;
   "Community Credits": RollupProperty<"number">;
+  Person: Property<"people">;
   Roles: Property<"multi_select">;
 }>;
 
@@ -50,6 +52,7 @@ export async function queryScholarProfile(
       generation: props.Generation.number?.toString() ?? "Unknown",
       status: props.Status.select?.name ?? "Unknown",
       credits: props["Community Credits"].rollup.number ?? 0,
+      person: props["Person"].people.shift()?.id,
       url: response.url,
     };
   } catch (e) {

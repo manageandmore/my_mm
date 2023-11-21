@@ -14,7 +14,8 @@ export type ContentSchedulerModalOptions = {
  * @returns The modal view.
  */
 export function getContentSchedulerModal(
-  options: PostCreatorOptions
+  options: PostCreatorOptions,
+  info: { channels: string[]; ips: string[] }
 ): ModalView {
   const previewImageUrl = getPostImageUrl({ ...options, size: 200 });
 
@@ -86,6 +87,21 @@ export function getContentSchedulerModal(
       },
       {
         type: "section",
+        block_id: "ips",
+        text: {
+          type: "mrkdwn",
+          text: "Tag an IP",
+        },
+        accessory: {
+          type: "multi_static_select",
+          action_id: "ips",
+          options: info.ips.map((ip) => ({
+            text: { type: "plain_text", text: ip },
+          })),
+        },
+      },
+      {
+        type: "section",
         block_id: "channels",
         text: {
           type: "mrkdwn",
@@ -94,22 +110,9 @@ export function getContentSchedulerModal(
         accessory: {
           type: "multi_static_select",
           action_id: "channels",
-          options: [
-            {
-              text: {
-                type: "plain_text",
-                text: "Instagram",
-              },
-              value: "instagram",
-            },
-            {
-              text: {
-                type: "plain_text",
-                text: "LinkedIn",
-              },
-              value: "linkedin",
-            },
-          ],
+          options: info.channels.map((c) => ({
+            text: { type: "plain_text", text: c },
+          })),
         },
       },
     ],

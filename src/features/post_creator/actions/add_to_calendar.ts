@@ -10,7 +10,10 @@ import {
 import { slack } from "../../../slack";
 import { getContentSchedulerModal } from "../views/content_scheduler_modal";
 import { PostCreatorOptions, getPostImageUrl } from "../image_utils";
-import { addPostToContentCalendar } from "../data/add_post";
+import {
+  addPostToContentCalendar,
+  getContentCalendarInfo,
+} from "../data/add_post";
 import { ONE_DAY } from "../../common/time_utils";
 import { BlockObjectRequest } from "@notionhq/client/build/src/api-endpoints";
 import { RichTextItemRequest } from "../../../notion";
@@ -27,9 +30,11 @@ slack.action(addToCalendarAction, async (request) => {
     (payload.actions[0] as ButtonAction).value
   ) as PostCreatorOptions;
 
+  let info = await getContentCalendarInfo();
+
   await slack.client.views.open({
     trigger_id: payload.trigger_id,
-    view: getContentSchedulerModal(options),
+    view: getContentSchedulerModal(options, info),
   });
 });
 
@@ -71,6 +76,7 @@ slack.viewSubmission(
       channels: state.channels!.channels.selected_options.map(
         (o) => o.text.text
       ),
+      ips: state.ips!.ips.selected_options.map((o) => o.text.text),
       content: [
         ...content,
         {
@@ -118,6 +124,7 @@ interface ContentSchedulerModalState {
   };
   date?: { date: { selected_date: string } };
   channels?: { channels: { selected_options: PlainTextOption[] } };
+  ips?: { ips: { selected_options: PlainTextOption[] } };
 }
 
 type RichTextElement = AnyRichTextBlockElement | RichTextSectionElement;
