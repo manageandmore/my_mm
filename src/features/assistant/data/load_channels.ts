@@ -1,16 +1,7 @@
-import { notion } from "../../../notion";
 import { getVectorStore } from "../ai/chain";
-import { notionToken } from "../../../constants";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { Document } from "langchain/dist/document";
-import { QueryResult } from "@vercel/postgres";
-import { VercelPostgres } from "langchain/vectorstores/vercel_postgres";
-import { LoaderStats, NotionAPILoader } from "./notion_loader";
-import yaml from "js-yaml";
 import { slack } from "../../../slack";
 import { ONE_DAY } from "../../common/time_utils";
 import { getMessageDocumentId, messageToDocument } from "./message_loader";
-import { ReportInfo } from "./load_pages";
 import { Channel } from "slack-web-api-client/dist/client/generated-response/ConversationsListResponse";
 import { User, getUserById } from "../../common/id_utils";
 
@@ -30,7 +21,10 @@ export async function loadSlackChannels(
 
     const users = new Map<string, User>();
 
+    console.log("SYNCING CHANNELS", targetChannels, channels);
+
     for (let [channelId, channel] of channels) {
+
       if (!targetChannels.includes(channel.name ?? "*")) {
         continue;
       }

@@ -13,9 +13,8 @@ export async function syncSlackIndex(request: SyncCommandRequest) {
   let reports: SyncChannelInfo[] = [];
 
   try {
-    const channelsTag = await features.read(assistantFeatureFlag).tags
-      .IndexedChannels;
-
+    const channelsTag =
+      features.read(assistantFeatureFlag).tags.IndexedChannels;
     const indexedChannels = channelsTag ? channelsTag.split(";") : [];
 
     await loadSlackChannels(
@@ -49,7 +48,7 @@ export async function syncSlackIndex(request: SyncCommandRequest) {
         type: "section",
         text: {
           type: "plain_text",
-          text: "✅ Finished syncing assistant index.",
+          text: "✅ Finished syncing slack index.",
           emoji: true,
         },
       },
