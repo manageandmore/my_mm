@@ -1,9 +1,11 @@
 import { slack } from "../../slack";
 import { notion } from "../../notion";
 import { ScholarRow } from "../profile/query";
-import { User } from "slack-web-api-client/dist/client/generated-response/UsersLookupByEmailResponse";
+import { User as SlackUser } from "slack-web-api-client/dist/client/generated-response/UsersLookupByEmailResponse";
 import { notionEnv } from "../../constants";
 import { cache } from "../../utils";
+
+export type User = SlackUser;
 
 /** The id of the scholars database in notion. */
 export const scholarsDatabaseId =

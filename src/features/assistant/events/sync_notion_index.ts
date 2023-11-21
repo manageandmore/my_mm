@@ -5,7 +5,7 @@ import { SyncCommandRequest } from "../../common/sync_command";
 export async function syncNotionIndex(request: SyncCommandRequest) {
   await request.context.respond({
     response_type: "ephemeral",
-    text: "♻️ Syncing assistant index...",
+    text: "♻️ Syncing notion index...",
   });
 
   let reports: ReportInfo[] = [];
@@ -17,7 +17,7 @@ export async function syncNotionIndex(request: SyncCommandRequest) {
   } catch (e) {
     await request.context.respond({
       response_type: "ephemeral",
-      text: `🚫 Error syncing assistant index: ${e}`,
+      text: `🚫 Error syncing notion index: ${e}`,
     });
     return;
   }
@@ -25,7 +25,7 @@ export async function syncNotionIndex(request: SyncCommandRequest) {
   await request.context.respond({
     response_type: "ephemeral",
     replace_original: true,
-    text: "✅ Finished syncing assistant index.",
+    text: "✅ Finished syncing notion index.",
     blocks: [
       ...reports.map<AnyMessageBlock>((report) =>
         report.type == "update"

@@ -3,6 +3,7 @@ import { slack } from "../../slack";
 import { features } from "./feature_flags";
 import { syncNotionIndex } from "../assistant/events/sync_notion_index";
 import { refreshRoles } from "./role_utils";
+import { syncSlackIndex } from "../assistant/events/sync_slack_index";
 
 export type SyncCommandRequest = SlackRequestWithRespond<
   SlackAppEnv,
@@ -35,6 +36,11 @@ const subcommands: SubCommand[] = [
     command: "roles",
     help: "👥 Refreshes the roles for all users.",
     run: refreshRoles,
+  },
+  {
+    command: "slack-index",
+    help: "🧠 Sync all messages in the indexed slack channels from the past 90 days for the mm assistant.",
+    run: syncSlackIndex,
   },
 ];
 

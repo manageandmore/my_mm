@@ -3,6 +3,54 @@ import { slack } from "../../../slack";
 import { getVectorStore } from "../ai/chain";
 import { getUserById } from "../../common/id_utils";
 import { ButtonAction } from "slack-edge";
+import {
+  getMessageDocumentId,
+  messageToDocument,
+} from "../data/message_loader";
+import { anyMessage } from "../../common/message_handlers";
+import { getPublicChannels } from "../data/load_channels";
+import { features } from "../../common/feature_flags";
+import { assistantFeatureFlag } from "..";
+
+anyMessage(async (request) => {
+  const payload = request.payload;
+
+  const channels = await getPublicChannels();
+  const channelName = channels.get(payload.channel)?.name;
+
+  if (channelName == null) {
+    return;
+  }
+
+  const indexedChannels = await features.read(assistantFeatureFlag).tags
+    .IndexedChannels;
+
+  const isIndexed =
+    indexedChannels != false &&
+    indexedChannels.split(",").includes(channelName);
+
+  if (!isIndexed) {
+    return;
+  }
+
+  const vectorStore = await getVectorStore();
+
+  const documentId = await getMessageDocumentId(payload.channel, payload.ts);
+
+  const user = await getUserById(payload.user ?? "");
+  const document = await messageToDocument({
+    channel: { id: payload.channel, name: channelName },
+    user: {
+      id: payload.user,
+      name: user?.real_name ?? user?.name,
+    },
+    text: payload.text,
+    ts: payload.ts,
+    autoIndexed: true,
+  });
+
+  await vectorStore.addDocuments([document], { ids: [documentId] });
+});
 
 const addToAssistantShortcut = "add_to_assistant";
 
@@ -33,12 +81,12 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
     });
   }
 
-  const documentId = await toUUID(
-    payload.channel.id + ":" + payload.message_ts
-  );
-
   const vectorStore = await getVectorStore();
 
+  const documentId = await getMessageDocumentId(
+    payload.channel.id,
+    payload.message_ts
+  );
   const query = await vectorStore.client.query(
     `SELECT ${vectorStore.idColumnName} FROM ${vectorStore.tableName} WHERE ${vectorStore.idColumnName} = $1`,
     [documentId]
@@ -77,42 +125,17 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
     return;
   }
 
-  const user = await getUserById(payload.message.user ?? "");
-  const timestamp = new Date(Number(payload.message_ts) * 1000).toISOString();
-
-  const link = await slack.client.chat.getPermalink({
-    message_ts: payload.message_ts,
-    channel: payload.channel.id,
-  });
-
-  let title = payload.message.text!.split("\n")[0].trim();
-  if (title.length > 30) {
-    title = title.substring(0, 30).trim() + "...";
-  }
-  title = title
-    .replaceAll("<!here>", "@here")
-    .replaceAll("<!channel>", "@channel");
-  title = `#${payload.channel.name} - ${title}`;
-
   await vectorStore.delete({ ids: [documentId] });
 
-  const header = `---
-  Type: Slack Message
-  Channel: ${payload.channel.name}
-  Author: ${user?.real_name ?? user?.name ?? "Unknown"}
-  Timestamp: ${timestamp}
-  ---`;
-
-  const document = new Document({
-    pageContent: header + "\n" + payload.message.text!,
-    metadata: {
-      type: "slack.message",
-      message_ts: payload.message_ts,
-      channel: payload.channel,
-      user: payload.message.user,
-      link: link.permalink,
-      title: title,
+  const user = await getUserById(payload.message.user ?? "");
+  const document = await messageToDocument({
+    channel: payload.channel,
+    user: {
+      id: payload.message.user,
+      name: user?.real_name ?? user?.name,
     },
+    text: payload.message.text!,
+    ts: payload.message_ts,
   });
 
   await vectorStore.addDocuments([document], { ids: [documentId] });
@@ -157,17 +180,3 @@ slack.action(removeFromAssistantAction, async (request) => {
     text: "🧠 I successfully removed the message from my knowledge index.",
   });
 });
-
-async function toUUID(id: string): Promise<string> {
-  let digest = await crypto.subtle.digest(
-    "SHA-1",
-    new TextEncoder().encode(id)
-  );
-  let hash = [...new Uint8Array(digest)]
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-  return `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(
-    12,
-    16
-  )}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
-}

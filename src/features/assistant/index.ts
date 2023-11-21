@@ -13,5 +13,11 @@ export const assistantFeatureFlag = features.register({
       description: "Response with a message to unauthorized users.",
       value: "string",
     },
+    {
+      name: "IndexedChannels",
+      description:
+        "Specify slack channels where all new messages should be indexed automatically, separated by comma.",
+      value: "string",
+    },
   ],
 } as const);
