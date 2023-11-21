@@ -77,7 +77,7 @@ Below is the table of all existing features and their documentation:
 
 # Development
 
-We use Github for managing the development process. The repository is hosted here: https://github.com/schultek/mm_app. Every change has to be made in a Pull Request to either the `staging` or `main` branch. We use issues for tracking bugs and new features.
+We use Github for managing the development process. The repository is hosted here: https://github.com/schultek/my_mm. Every change has to be made in a Pull Request to either the `staging` or `main` branch. We use issues for tracking bugs and new features.
 
 ## Ground Rules
 
