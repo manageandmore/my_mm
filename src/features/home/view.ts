@@ -1,190 +1,148 @@
-import { HomeTabView } from "slack-edge";
-import { openWishlistAction } from "../wishlist/actions/open_wishlist";
+import { AnyHomeTabBlock, Button, HomeTabView } from "slack-edge";
+import { CreditsLeaderboardItem } from "../community_credits/query_leaderboard";
+import { getOpenWishlistButton } from "../wishlist/views/open_wishlist_button";
+import { getSkillsSection } from "../skill_interface/views/skills_section";
+import { getProfileSection } from "../profile/profile_section";
+import { getCreditsLeaderboardSection } from "../community_credits/leaderboard_section";
+import { SkillListPerLevel } from "../skill_interface/data/query_skills";
+import { scholarsDatabaseId } from "../common/id_utils";
+import { getAskAIButton } from "../assistant/events/ask_ai_action";
+import { getCreatePostButton } from "../post_creator/actions/create_post_action";
 
 /** Interface for the data used to hydrate the home view. */
 export interface HomeOptions {
-  name: string
-  status: string
-  generation: string
-  ip: string
-  ep: string
-  communityCredits: number
-  skills: string[]
+  name: string;
+  status: string;
+  generation: string;
+  ip: string;
+  ep: string;
+  communityCredits: number;
+  url?: string;
+  creditsLeaderboard: CreditsLeaderboardItem[];
+  skillList: SkillListPerLevel;
 }
 
 /**
  * Constructs the home view with the current user data.
- * 
+ *
  * @param options The user data needed to fill out the view.
  * @returns The home view as a set of structured blocks.
  */
-export function getHomeView(options: HomeOptions): HomeTabView {
+export async function getHomeView(
+  userId: string,
+  options: HomeOptions
+): Promise<HomeTabView> {
   return {
-    type: 'home',
+    type: "home",
+    blocks: [
+      ...getProfileSection(options),
+      ...getSkillsSection(options.skillList),
+      ...getCreditsLeaderboardSection(options.creditsLeaderboard),
+      {
+        type: "divider",
+      },
+      {
+        type: "actions",
+        elements: [
+          await getAskAIButton(userId),
+          await getCreatePostButton(userId),
+          getOpenWishlistButton(),
+        ].filter((b): b is Button => b != null),
+      },
+      {
+        type: "divider",
+      },
+      ...getHomeFooter(),
+    ],
+  };
+}
+
+function getHomeFooter(): AnyHomeTabBlock[] {
+  return [
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "Made with ❤️ and 🍕 by your *IP Digital*",
+        },
+      ],
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "<https://github.com/schultek/my_mm|See the code>",
+        },
+        {
+          type: "mrkdwn",
+          text: "<https://github.com/schultek/my_mm/issues|Report an issue>",
+        },
+      ],
+    },
+  ];
+}
+
+export function getHomeErrorView(errorMsg: string): HomeTabView {
+  return {
+    type: "home",
     blocks: [
       {
-        "type": "header",
-        "text": {
-          "type": "plain_text",
-          "text": options.name,
-          "emoji": true
-        }
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: "🚫 Sorry, there was an error.",
+        },
       },
       {
-        "type": "divider"
-      },
-      {
-        "type": "section",
-        "fields": [
+        type: "context",
+        elements: [
           {
-            "type": "mrkdwn",
-            "text": `*👤 Status :*\n${options.status}\n`
+            type: "mrkdwn",
+            text:
+              "We're sorry but something went wrong while loading your profile. " +
+              "Maybe your profile wasn't added to the scholar notion database yet. " +
+              `You can find it <https://www.notion.so/${scholarsDatabaseId}|here>. If so please contact Program Management.`,
           },
-          {
-            "type": "mrkdwn",
-            "text": `*⏳ Generation:*\n${options.generation}`
-          },
-          {
-            "type": "mrkdwn",
-            "text": `*📒 Internal Project:*\n${options.ip}`
-          },
-          {
-            "type": "mrkdwn",
-            "text": `*🚀 External Project:*\n${options.ep}`
-          },
-          {
-            "type": "mrkdwn",
-            "text": `*⭐️ Community Credits:*\n${options.communityCredits}/6`
-          },
-          {
-            "type": "mrkdwn",
-            "text": "*🏆 Liga:*\n Credit Warrior"
-          },
-          {
-            "type": "mrkdwn",
-            "text": "*🕶️ Skills:*"
-          }
         ],
-        "accessory": {
-          "type": "image",
-          "image_url": "https://www.befunky.com/images/wp/wp-2013-08-featured1.png?auto=avif,webp&format=jpg&width=500&crop=16:9",
-          "alt_text": "calendar thumbnail"
-        }
       },
       {
-        "type": "actions",
-        "elements": [
-          {
-            "type": "button",
-            "text": {
-              "type": "plain_text",
-              "text": "Barking",
-              "emoji": true
-            },
-            "value": "barking"
-          },
-          {
-            "type": "button",
-            "text": {
-              "type": "plain_text",
-              "text": "Sleeping",
-              "emoji": true
-            },
-            "value": "sleep"
-          },
-          {
-            "type": "button",
-            "text": {
-              "type": "plain_text",
-              "text": "Being cute",
-              "emoji": true
-            },
-            "value": "cute"
-          },
-          {
-            "type": "button",
-            "text": {
-              "type": "plain_text",
-              "text": "Doing Nothing",
-              "emoji": true
-            },
-            "value": "nothing"
-          }
-        ]
+        type: "divider",
       },
       {
-        "type": "header",
-        "text": {
-          "type": "plain_text",
-          "text": "Community Credits Leaderboard",
-          "emoji": true
-        }
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "The specific error is:",
+          },
+        ],
       },
       {
-        "type": "divider"
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `_${errorMsg}_`,
+        },
       },
       {
-        "type": "section",
-        "fields": [
+        type: "context",
+        elements: [
           {
-            "type": "mrkdwn",
-            "text": "👑 *Name*"
+            type: "mrkdwn",
+            text:
+              "If you can't identify the problem, report this to your IP Digital by clicking the following link: " +
+              `<https://github.com/schultek/mm_app/issues/new?label=bug&title=Home%20screen%20error&body=${encodeURIComponent(
+                errorMsg
+              )}|Report error>.`,
           },
-          {
-            "type": "mrkdwn",
-            "text": "⭐️ *Points*"
-          },
-          {
-            "type": "mrkdwn",
-            "text": "<fakeLink.toUserProfiles.com| Almo>"
-          },
-          {
-            "type": "mrkdwn",
-            "text": "13"
-          },
-          {
-            "type": "mrkdwn",
-            "text": "<fakeLink.toUserProfiles.com| Kilian>"
-          },
-          {
-            "type": "mrkdwn",
-            "text": "3"
-          },
-          {
-            "type": "mrkdwn",
-            "text": "<fakeLink.toUserProfiles.com| Samuel>"
-          },
-          {
-            "type": "mrkdwn",
-            "text": "0"
-          },
-          {
-            "type": "mrkdwn",
-            "text": "<fakeLink.toUserProfiles.com| Liana>"
-          },
-          {
-            "type": "mrkdwn",
-            "text": "-1"
-          }
-        ]
+        ],
       },
       {
-        "type": "divider"
+        type: "divider",
       },
-      {
-        "type": "actions",
-        "elements": [
-          {
-            "type": "button",
-            "text": {
-              "type": "plain_text",
-              "text": "🎁 Open Wishlist",
-              "emoji": true
-            },
-            "action_id": openWishlistAction
-          }
-        ]
-      },
-    ]
+      ...getHomeFooter(),
+    ],
   };
 }

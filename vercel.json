@@ -1,0 +1,10 @@
+{
+  "crons": [{
+    "path": "/api/sync",
+    "schedule": "0 2 * * *"
+  }],
+  "rewrites": [{
+    "source": "/assets/:path",
+    "destination": "/assets/:path"
+  }]
+}

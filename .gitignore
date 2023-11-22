@@ -1,6 +1,8 @@
 .vercel
 .bruno
+.DS_Store
 node_modules
 .env
 .env.*
 dist/
+util_scripts/*.json

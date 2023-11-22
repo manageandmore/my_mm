@@ -1,3 +1,3 @@
-import './actions/open_wishlist'
-import './actions/vote_suggestion'
-import './actions/new_suggestion'
+import "./events/open_wishlist";
+import "./events/vote_suggestion";
+import "./events/new_suggestion";

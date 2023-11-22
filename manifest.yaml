@@ -1,49 +1,56 @@
 display_information:
   name: My MM
-  description: One app to rule them all!
+  description: The internal MM app to make you more productive.
   background_color: "#1b5069"
-  long_description: "✌️ Hello beautiful people of ManageAndMore.\r
-
-    \r
-
-    Here you find everything you need, from community credits to skills.\r
-
-    \r
-
-    \r
-
-    We will add more features over the semester, so stay tuned!..."
+  long_description: "✌️ Hello beautiful people of ManageAndMore.\n\n
+    Here you find everything you need, from your profile, to community credits and skills.
+    You can also ask our AI assistant for information from notion or slack.\n\n
+    We will add more features over the semester, so stay tuned..."
 features:
   app_home:
     home_tab_enabled: true
-    messages_tab_enabled: false
-    messages_tab_read_only_enabled: true
+    messages_tab_enabled: true
+    messages_tab_read_only_enabled: false
   bot_user:
     display_name: My MM
-    always_online: false
+    always_online: true
   shortcuts:
-    - name: Create an event
+    - name: Add to assistant
+      type: message
+      callback_id: add_to_assistant
+      description: Adds this message to the knowledge index of the My MM assistant.
+    - name: Create Social Media Post
       type: global
-      callback_id: create_event
-      description: Creates an event entry in notion
+      callback_id: create_social_post
+      description: Adds a new social post to the content calendar.
+  slash_commands:
+    - command: /sync
+      url: https://manageandmore.vercel.app/api/events
+      description: Sync data from notion.
+      usage_hint: "[help]"
+      should_escape: true
 oauth_config:
   scopes:
-    user:
-      - users.profile:read
-      - users:read
     bot:
       - app_mentions:read
       - channels:read
+      - channels:history
       - chat:write
+      - chat:write.customize
       - commands
+      - files:read
+      - im:history
       - users:read
       - users:read.email
+      - reactions:write
 settings:
   event_subscriptions:
     request_url: https://manageandmore.vercel.app/api/events
     bot_events:
       - app_home_opened
       - app_mention
+      - message.channels
+      - message.im
   interactivity:
     is_enabled: true
     request_url: https://manageandmore.vercel.app/api/events
