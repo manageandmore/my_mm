@@ -89,7 +89,7 @@ slack.command(
 );
 
 async function showHelp(request: SyncCommandRequest) {
-  request.context.respond({
+  await request.context.respond({
     response_type: "ephemeral",
     text: `Supported subcommands are:`,
     blocks: [

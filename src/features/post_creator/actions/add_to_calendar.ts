@@ -77,6 +77,10 @@ slack.viewSubmission(
     const page = await addPostToContentCalendar({
       title: options.title ?? "",
       date: state.date!.date.selected_date,
+      fileUrl: getPostImageUrl(
+        { ...options, size: 1200 },
+        { encode: true, download: true }
+      ),
       channels: state.channels!.channels.selected_options.map(
         (o) => o.text.text
       ),
@@ -92,12 +96,17 @@ slack.viewSubmission(
           type: "image",
           image: {
             external: {
-              url: getPostImageUrl(
-                { ...options, size: 1200 },
-                { encode: true }
-              ),
+              url: getPostImageUrl({ ...options, size: 600 }, { encode: true }),
             },
-            caption: [{ type: "text", text: { content: options.title ?? "" } }],
+            caption: [
+              {
+                type: "text",
+                text: {
+                  content:
+                    "Preview Image - For full resolution see attached file.",
+                },
+              },
+            ],
           },
         },
       ],

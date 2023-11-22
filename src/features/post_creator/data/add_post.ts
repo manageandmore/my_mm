@@ -22,6 +22,7 @@ const contentCalendarDatabaseId =
 type ContentCalendarOptions = {
   title: string;
   date: string;
+  fileUrl: string;
   channels: string[];
   ips: string[];
   user: { id: string; name: string };
@@ -164,6 +165,15 @@ export async function addPostToContentCalendar(
         status: {
           name: "Not started",
         },
+      },
+      "Files & media": {
+        type: "files",
+        files: [
+          {
+            external: { url: options.fileUrl },
+            name: options.title,
+          },
+        ],
       },
     },
     children: content,
