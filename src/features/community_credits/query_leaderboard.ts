@@ -10,10 +10,9 @@ export interface CreditsLeaderboardItem {
 
 /** function queries notion for the top 3 entries of the credit leaderboard */
 export async function queryCreditsLeaderboard(
-  user_id: string
+  scholarId: string
 ): Promise<[CreditsLeaderboardItem[], number]> {
   try {
-    const scholarId = await getScholarIdFromUserId(user_id);
     const response = await notion.databases.query({
       database_id: scholarsDatabaseId,
       filter: {

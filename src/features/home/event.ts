@@ -41,9 +41,9 @@ slack.event("app_home_opened", async (request) => {
 export async function updateHomeViewForUser(userId: string) {
   const scholarId = await getScholarIdFromUserId(userId);
 
-  const [profile, leaderboard, skillList] = await Promise.all([
+  const [profile, [leaderboard, rank], skillList] = await Promise.all([
     queryScholarProfile(scholarId),
-    queryCreditsLeaderboard(),
+    queryCreditsLeaderboard(scholarId),
     querySkillListForHomeView(scholarId),
   ]);
 
@@ -57,6 +57,7 @@ export async function updateHomeViewForUser(userId: string) {
       ep: profile.ep,
       communityCredits: profile.credits,
       url: profile.url,
+      rank: rank,
       creditsLeaderboard: leaderboard,
       skillList: skillList,
     }),
