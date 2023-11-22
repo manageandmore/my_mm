@@ -1,5 +1,5 @@
 import { notion } from "../../notion";
-import { scholarsDatabaseId } from "../common/id_utils";
+import { getScholarIdFromUserId, scholarsDatabaseId } from "../common/id_utils";
 import { ScholarRow } from "../profile/query";
 
 /** Interface for one Item of Credits Leaderboard */
@@ -9,10 +9,11 @@ export interface CreditsLeaderboardItem {
 }
 
 /** function queries notion for the top 3 entries of the credit leaderboard */
-export async function queryCreditsLeaderboard(): Promise<
-  CreditsLeaderboardItem[]
-> {
+export async function queryCreditsLeaderboard(
+  user_id: string
+): Promise<[CreditsLeaderboardItem[], number]> {
   try {
+    const scholarId = await getScholarIdFromUserId(user_id);
     const response = await notion.databases.query({
       database_id: scholarsDatabaseId,
       filter: {
@@ -27,19 +28,33 @@ export async function queryCreditsLeaderboard(): Promise<
           direction: "descending",
         },
       ],
-      page_size: 3,
     });
 
-    return (response.results as ScholarRow[]).map((result) => {
-      const props = result.properties;
-
-      return {
-        name: props.Name.title[0].plain_text,
-        credits: props["Community Credits"].rollup.number ?? 0,
-      };
-    });
+    /** find the index of the scholar in the leaderboard
+     * if the scholar is not in the leaderboard, return the rank as 100*/
+    let rank = 100;
+    let top3Scholars: CreditsLeaderboardItem[] = [];
+    let scholars = response.results as ScholarRow[];
+    console.log("scholars", scholars);
+    console.log("length", scholars.length);
+    for (let i = 0; i < scholars.length; i++) {
+      if (i < 3) {
+        top3Scholars.push({
+          name: scholars[i].properties.Name.title[0].plain_text,
+          credits:
+            scholars[i].properties["Community Credits"].rollup.number ?? 0,
+        });
+      }
+      if (response.results[i].id === scholarId) {
+        rank = i + 1;
+      }
+      if (i >= 3 && rank < 100) {
+        break;
+      }
+    }
+    return [top3Scholars, rank];
   } catch (e) {
     console.error("Error fetching credits leaderboard", e);
-    return [];
+    return [[], 100];
   }
 }

@@ -8,6 +8,7 @@ export interface ProfileOptions {
   ip: string;
   ep: string;
   communityCredits: number;
+  rank: number;
   url?: string;
 }
 
@@ -39,7 +40,8 @@ export function getProfileSection(options: ProfileOptions): AnyHomeTabBlock[] {
           text:
             `*👤 Status* · ${options.status}\n` +
             `*⭐️ Community Credits* · ${options.communityCredits}/6\n` +
-            "*🏆 Liga* · Credit Warrior",
+            `*🥇 Rank* · ${options.rank}\n` +
+            `*🏆 Liga* · Credit Warrior`,
         },
       ],
       accessory:
