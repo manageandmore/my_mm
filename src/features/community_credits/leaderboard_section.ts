@@ -1,9 +1,31 @@
-import { AnyHomeTabBlock } from "slack-edge";
+import { AnyHomeTabBlock, StarRemovedEvent } from "slack-edge";
 import { CreditsLeaderboardItem } from "./query_leaderboard";
 
 export function getCreditsLeaderboardSection(
-  leaderboard: CreditsLeaderboardItem[]
+  leaderboard: CreditsLeaderboardItem[], userName: string, rank: number, userCredits: number
 ): AnyHomeTabBlock[] {
+  let leaderboardNameList = "";
+  let leaderboardCreditsList = "";
+
+  for (let i = 0; i < 3; i++) {
+    if (leaderboard[i].name === userName) {
+      leaderboardNameList += `*${i+1}. ${leaderboard[i].name}*`;
+      leaderboardCreditsList += `*${userCredits}*`;
+    } else {
+      leaderboardNameList += `${i+1}. ${leaderboard[i].name}`;
+      leaderboardCreditsList += `${leaderboard[i].credits}`;
+    }
+    leaderboardNameList += `\n`;
+    leaderboardCreditsList += `\n`;
+  }
+  if (rank > 3) {
+    if (rank > 4) {
+      leaderboardNameList += `...\n`;
+      leaderboardCreditsList += `...\n`;
+    }
+    leaderboardNameList += `*${rank}. ${userName}*`;
+    leaderboardCreditsList += `*${userCredits}*`;
+  }
   return [
     {
       type: "header",
@@ -29,27 +51,11 @@ export function getCreditsLeaderboardSection(
         },
         {
           type: "mrkdwn",
-          text: `${leaderboard[0].name}`,
+          text: leaderboardNameList,
         },
         {
           type: "mrkdwn",
-          text: `${leaderboard[0].credits}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `${leaderboard[1].name}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `${leaderboard[1].credits}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `${leaderboard[2].name}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `${leaderboard[2].credits}`,
+          text: leaderboardCreditsList,
         },
       ],
     },

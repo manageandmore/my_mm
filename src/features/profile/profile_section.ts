@@ -40,8 +40,7 @@ export function getProfileSection(options: ProfileOptions): AnyHomeTabBlock[] {
           text:
             `*👤 Status* · ${options.status}\n` +
             `*⭐️ Community Credits* · ${options.communityCredits}/6\n` +
-            `*🥇 Rank* · ${options.rank}\n` +
-            `*🏆 Liga* · Credit Warrior`,
+            `*🥇 Rank* · ${options.rank}`, 
         },
       ],
       accessory:

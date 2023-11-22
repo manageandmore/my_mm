@@ -1,3 +1,4 @@
+```
 .vercel
 .bruno
 .DS_Store
@@ -6,3 +7,5 @@ node_modules
 .env.*
 dist/
 util_scripts/*.json
+token.json
+```
