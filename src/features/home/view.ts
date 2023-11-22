@@ -17,6 +17,7 @@ export interface HomeOptions {
   ip: string;
   ep: string;
   communityCredits: number;
+  rank: number;
   url?: string;
   creditsLeaderboard: CreditsLeaderboardItem[];
   skillList: SkillListPerLevel;
