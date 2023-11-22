@@ -26,7 +26,7 @@ features:
   slash_commands:
     - command: /sync
       url: https://manageandmore.vercel.app/api/events
-      description: Sync data from notion.
+      description: Only for admins
       usage_hint: "[help]"
       should_escape: true
 oauth_config:
