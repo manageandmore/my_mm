@@ -13,7 +13,7 @@ features:
     messages_tab_read_only_enabled: false
   bot_user:
     display_name: My MM
-    always_online: false
+    always_online: true
   shortcuts:
     - name: Add to assistant
       type: message
