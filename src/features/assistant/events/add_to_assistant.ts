@@ -15,6 +15,14 @@ import { assistantFeatureFlag } from "..";
 anyMessage(async (request) => {
   const payload = request.payload;
 
+  if (payload.subtype == "bot_message") {
+    return;
+  }
+
+  if (payload.text.includes(`<@${request.context.botUserId}>`)) {
+    return;
+  }
+
   const channels = await getPublicChannels();
   const channelName = channels.get(payload.channel)?.name;
 

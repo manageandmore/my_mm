@@ -44,7 +44,7 @@ export async function loadSlackChannels(
         currentCursor = response.response_metadata?.next_cursor;
 
         for (let message of response.messages ?? []) {
-          if (message.subtype != null) {
+          if (message.subtype == "bot_message") {
             continue;
           }
 
