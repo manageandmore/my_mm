@@ -17,6 +17,7 @@ export interface HomeOptions {
   ip: string;
   ep: string;
   communityCredits: number;
+  rank: number;
   url?: string;
   creditsLeaderboard: CreditsLeaderboardItem[];
   skillList: SkillListPerLevel;
@@ -37,7 +38,7 @@ export async function getHomeView(
     blocks: [
       ...getProfileSection(options),
       ...getSkillsSection(options.skillList),
-      ...getCreditsLeaderboardSection(options.creditsLeaderboard),
+      ...getCreditsLeaderboardSection(options.creditsLeaderboard, options.name, options.rank, options.communityCredits),
       {
         type: "divider",
       },
