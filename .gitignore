@@ -1,4 +1,3 @@
-
 .vercel
 .bruno
 .DS_Store
@@ -8,4 +7,3 @@ node_modules
 dist/
 util_scripts/*.json
 token.json
-```
