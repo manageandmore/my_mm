@@ -38,7 +38,12 @@ export async function getHomeView(
     blocks: [
       ...getProfileSection(options),
       ...getSkillsSection(options.skillList),
-      ...getCreditsLeaderboardSection(options.creditsLeaderboard, options.name, options.rank, options.communityCredits),
+      ...getCreditsLeaderboardSection(
+        options.creditsLeaderboard,
+        options.name,
+        options.rank,
+        options.communityCredits
+      ),
       {
         type: "divider",
       },
@@ -74,11 +79,11 @@ function getHomeFooter(): AnyHomeTabBlock[] {
       elements: [
         {
           type: "mrkdwn",
-          text: "<https://github.com/schultek/my_mm|See the code>",
+          text: "<https://github.com/manageandmore/my_mm|See the code>",
         },
         {
           type: "mrkdwn",
-          text: "<https://github.com/schultek/my_mm/issues|Report an issue>",
+          text: "<https://github.com/manageandmore/my_mm/issues|Report an issue>",
         },
       ],
     },
@@ -134,7 +139,7 @@ export function getHomeErrorView(errorMsg: string): HomeTabView {
             type: "mrkdwn",
             text:
               "If you can't identify the problem, report this to your IP Digital by clicking the following link: " +
-              `<https://github.com/schultek/mm_app/issues/new?label=bug&title=Home%20screen%20error&body=${encodeURIComponent(
+              `<https://github.com/manageandmore/my_mm/issues/new?label=bug&title=Home%20screen%20error&body=${encodeURIComponent(
                 errorMsg
               )}|Report error>.`,
           },
