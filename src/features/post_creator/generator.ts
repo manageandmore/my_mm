@@ -22,26 +22,23 @@ interface PostOptions {
 export async function generatePostImage(
   options: PostOptions
 ): Promise<Response> {
-  let image: ArrayBuffer | string = options.image;
+  let image: string | ArrayBuffer = options.image;
   if (options.file != null) {
     const response = await slack.client.files.info({ file: options.file });
     const imageUrl = response.file?.url_private;
 
     if (imageUrl != null) {
-      image = await fetch(response.file!.url_private!, {
+      image = await fetch(imageUrl, {
         headers: { Authorization: `Bearer ${slackBotToken}` },
       }).then((res) => res.arrayBuffer());
     }
   }
 
-  const headers: HeadersInit = options.download
-    ? {
-        "Content-Disposition": `attachment; filename="${options.title.replaceAll(
-          " ",
-          "_"
-        )}.png"`,
-      }
-    : {};
+  const headers: HeadersInit = { "Content-Type": "image/png" };
+  if (options.download) {
+    const filename = options.title.replaceAll(" ", "_");
+    headers["Content-Disposition"] = `attachment; filename="${filename}.png"`;
+  }
 
   const [mmLogo, utumLogo, workSansRegular, workSansBold] = await Promise.all([
     fetch(new URL("../../../assets/mm_logo.png", import.meta.url)).then((res) =>
