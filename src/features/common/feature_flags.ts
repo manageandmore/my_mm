@@ -224,6 +224,9 @@ class FeatureFlags {
       );
     }
     let roles = this.read(ref).roles;
+    if (roles.length == 0) {
+      return true;
+    }
     let userRoles = await getRolesForUser(userId);
     return roles?.some((r) => userRoles.includes(r)) ?? false;
   }

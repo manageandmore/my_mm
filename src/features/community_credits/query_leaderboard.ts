@@ -34,8 +34,7 @@ export async function queryCreditsLeaderboard(
     let rank = 100;
     let top3Scholars: CreditsLeaderboardItem[] = [];
     let scholars = response.results as ScholarRow[];
-    console.log("scholars", scholars);
-    console.log("length", scholars.length);
+
     for (let i = 0; i < scholars.length; i++) {
       if (i < 3) {
         top3Scholars.push({
