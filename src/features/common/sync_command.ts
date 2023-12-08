@@ -1,5 +1,6 @@
 import {
   ButtonAction,
+  MessageItem,
   SlackAppEnv,
   SlackRequestWithRespond,
   SlashCommand,
@@ -142,20 +143,33 @@ async function sendAnnouncement(request: SyncCommandRequest) {
     blocks: [
       {
         type: "section",
-        block_id: sendAnnouncementAction,
         text: {
           type: "mrkdwn",
-          text: `Announcement for channel <#${channel.id}|${channel.name}>:\n\n${message}`,
+          text: `Announcement for channel <#${channel.id}|${channel.name}>:`,
         },
-        accessory: {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "Send",
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: message,
+        },
+      },
+      {
+        type: "actions",
+        block_id: sendAnnouncementAction,
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "Send",
+            },
+            action_id: sendAnnouncementAction,
+            value: JSON.stringify({ channel, message }),
+            style: "primary",
           },
-          action_id: sendAnnouncementAction,
-          value: JSON.stringify({ channel, message }),
-        },
+        ],
       },
     ],
   });
@@ -181,10 +195,12 @@ function validateAnnouncementArgs(text: string) {
     return null;
   }
 
-  message = message.replace(
-    /<([^|]*)(\|[^>]*)?>\s&lt;([^\s]*)&gt;/,
-    (_, link, __, label) => `<${link}|${label}>`
-  );
+  message = message
+    .replace(
+      /<([^|]*)(\|[^>]*)?>\s&lt;([^\s]*)&gt;/,
+      (_, link, __, label) => `<${link}|${label}>`
+    )
+    .replace("@channel", "<!channel>");
 
   return { channel: match.groups as { id: string; name: string }, message };
 }
@@ -196,10 +212,25 @@ slack.action(sendAnnouncementAction, async (request) => {
   if (value == null) {
     return;
   }
+
   var { channel, message } = JSON.parse(value);
 
   await slack.client.chat.postMessage({
     channel: channel.id,
     text: message,
+  });
+
+  await request.context.respond!({
+    replace_original: true,
+    text: `Announcement sent to channel #${channel.name}`,
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `Announcement sent to channel <#${channel.id}|${channel.name}>.`,
+        },
+      },
+    ],
   });
 });
