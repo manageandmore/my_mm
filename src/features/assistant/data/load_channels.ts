@@ -16,6 +16,8 @@ export async function loadSlackChannels(
   report?: (info: SyncChannelInfo) => Promise<void>
 ) {
   try {
+    console.log("SYNCING CHANNEsL", targetChannels);
+
     const vectorStore = await getVectorStore();
     const channels = await getPublicChannels();
 
