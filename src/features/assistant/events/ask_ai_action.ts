@@ -7,6 +7,9 @@ import { assistantFeatureFlag } from "..";
 const askAIAction = "ask_ai_action";
 
 slack.action(askAIAction, async (request) => {
+  var tag = features.read(assistantFeatureFlag).tags.IndexedChannels || null;
+  var channels = tag?.split(";") ?? [];
+
   await slack.client.views.open({
     trigger_id: request.payload.trigger_id,
     view: {
@@ -39,9 +42,14 @@ slack.action(askAIAction, async (request) => {
             {
               type: "mrkdwn",
               text:
-                "The assistant is still in preview and has a limited knowledge about information from Notion and Slack.\n" +
-                `• To add or remove a **notion page** to the ai index, check <https://www.notion.so/${assistantIndexDatabaseId}|this database>.\n` +
-                '• To add or remove a **slack message** to the ai index, open the message context menu (tap "...") and select "Add to assistant". ' +
+                "The assistant is still in preview and has a limited knowledge about information from Notion and Slack.\n\n" +
+                "Information from Notion is added only for specific pages:\n" +
+                `• To add or remove a *notion page* to the ai index, check <https://www.notion.so/${assistantIndexDatabaseId}|this database>.\n\n` +
+                "Information from Slack is added in two ways:\n" +
+                `• All new messages posted any channel of ${channels.join(
+                  " or "
+                )} are automatically added.\n` +
+                '• To add or remove an additional *slack message* to the ai index, open the message context menu (tap "..." on the message) and select "Add to assistant". ' +
                 "The assistant will react with a 🧠 emoji to every message it indexed.",
             },
           ],

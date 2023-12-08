@@ -15,10 +15,7 @@ const cronSecret = process.env.CRON_SECRET;
  *
  * This route is called by a cron job each day at 2 AM.
  *  */
-export default async function events(
-  request: Request,
-  context: RequestContext
-) {
+export default async function sync(request: Request, context: RequestContext) {
   if (request.headers.get("Authorization") !== `Bearer ${cronSecret}`) {
     return new Response("Unauthorized", { status: 401 });
   }
