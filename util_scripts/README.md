@@ -2,6 +2,16 @@
 **newGenerationToNotion.py**
 This script can be used to add a new generation to the notion scholar database. Result should be double-checked (see if user attribute for each entry appears automatically in notion database).
 
+**HOW TO USE**
+
+1. Create a .env file in your clone of the repository with this structure:
+
+```env
+NOTION_SECRET_API_KEY = "<notion_secret_api_key>"
+```
+
+2. Execute the python script.
+
 **Scripts to transfer data from google sheets to notion**
 
 **HOW TO USE** (should never be necessary unless all entries have been deleted on notion
