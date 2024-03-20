@@ -1,3 +1,6 @@
+**Helpful scripts**
+**newGenerationToNotion.py**
+This script can be used to add a new generation to the notion scholar database. Result should be double-checked (see if user attribute for each entry appears automatically in notion database).
 
 **Scripts to transfer data from google sheets to notion**
 
@@ -16,7 +19,7 @@ SLACK_SIGNING_SECRET="<slack_signing_secret>"
 
 3. Make sure you have generated a credentials.json file with your google credentials and placed it in the util_scripts folder
 4. Run scholarsToNotion.py
-2. Run creditEntriesToNotion.py
+5. Run creditEntriesToNotion.py
 
 **creditEntriesToNotion.py**
 Tranfers all credit entries from all sheets into a notion database entry, where each entry represents a one credit entry.
@@ -24,9 +27,8 @@ Tranfers all credit entries from all sheets into a notion database entry, where 
 **scholarsToNotion.py**
 Tranfers all scholars found based on entries from the credit google sheets into a scholar entry on the notion scholars database. (Email is auto-generated based on first and last name)
 
-
-
 **TO-DO**
+
 - Add tqdm progress bar to upload script
 - somehow prevent multiple entries for multiple uploads
 - improve speed of script
