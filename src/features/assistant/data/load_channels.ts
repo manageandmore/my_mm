@@ -26,6 +26,8 @@ export async function loadSlackChannels(
         continue;
       }
 
+      console.log("SYNCING CHANNEL", channel.name);
+
       let hasMore = true;
       let currentCursor: string | undefined = undefined;
 
