@@ -16,6 +16,8 @@ export async function loadSlackChannels(
   report?: (info: SyncChannelInfo) => Promise<void>
 ) {
   try {
+    console.log("SYNCING CHANNEsL", targetChannels);
+
     const vectorStore = await getVectorStore();
     const channels = await getPublicChannels();
 
@@ -25,6 +27,8 @@ export async function loadSlackChannels(
       if (!targetChannels.includes(channel.name ?? "*")) {
         continue;
       }
+
+      console.log("SYNCING CHANNEL", channel.name);
 
       let hasMore = true;
       let currentCursor: string | undefined = undefined;
