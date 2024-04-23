@@ -27,7 +27,7 @@ The **My MM** app is an internal tool for and by Manage And More. Its goal is to
 
 The tool comes in form of a custom **Slack App**, which lives inside the official Manage And More slack workspace. This way it can integrate into the existing workflow of a scholar without the need for logging into _yet another tool_. Internally, we can thereby leverage the existing authentication system, platforms (mobile and desktop apps) and UI surfaces.
 
-For datastorage we integrate into the official Manage And More notion workspace. We effectively use notion as a database for the app. This has the advantage that we have no additional service to maintain and everyone has access to the stored data. This is especially important for if the app would be unavailable at some point that the data will still be accessible. Also it means the app is not required to implement full data handling capabilities (create, edit, delete) for all features, but instead can implement a subset and rely on manual notion editing for the rest (e.g. create new information through the app, but allow to edit through notion).
+For data storage we integrate into the official Manage And More notion workspace. We effectively use notion as a database for the app. This has the advantage that we have no additional service to maintain and everyone has access to the stored data. This is especially important for if the app would be unavailable at some point that the data will still be accessible. Also it means the app is not required to implement full data handling capabilities (create, edit, delete) for all features, but instead can implement a subset and rely on manual notion editing for the rest (e.g. create new information through the app, but allow to edit through notion).
 
 The app is built in a modular way to encompass several independent use-cases. It uses a feature based approach to be easily maintainable and extendable in the future.
 
@@ -207,7 +207,9 @@ vercel deploy --prod
 
 # Deployment
 
-We have two deployment environments for the app:
+We have three deployment environments for the app:
+
+**Development** is your own environment you set up above which you can use during development to quickly iterate on your personal changes without affecting the other developers. To deploy to this environment, run `vercel deploy --prod`.
 
 **Staging** is for testing new changes in an environment that is similar to production, but in a separate slack and notion workspace. To deploy to staging, push commits to the **staging** branch of this git repository.
 

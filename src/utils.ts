@@ -33,7 +33,8 @@ class Cache {
   async delAll(...args: Parameters<typeof kv.keys>) {
     let [key, ...rest] = args;
     let keys = await kv.keys(cachePrefix + key, ...rest);
-    return kv.del(...keys);
+    if (keys.length == 0) return;
+    await kv.del(...keys);
   }
 }
 
