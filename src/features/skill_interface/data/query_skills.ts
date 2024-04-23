@@ -119,8 +119,13 @@ export async function getSkillsByLevel(
   const skillListByLevel =
     skillList.items?.filter(
       (item: { skillLevel: string }) => item.skillLevel === level
-    ) ?? [];
-  return skillListByLevel.map((item: { skillName: string }) => item.skillName);
+    ).map((item: { skillName: string }) => item.skillName) ?? [];
+
+  if (skillListByLevel.length == 0) {
+    skillListByLevel.push('/');
+  }
+
+  return skillListByLevel;
 }
 
 /**

@@ -1,1 +1,0 @@
-import "./sync_command";

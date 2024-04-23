@@ -5,7 +5,6 @@ import { features } from "../src/features/common/feature_flags";
 
 // Import all features that register events, shortcuts or actions
 import "../src/features/assistant/index";
-import "../src/features/common/index";
 import "../src/features/community_credits/index";
 import "../src/features/home/index";
 import "../src/features/post_creator/index";

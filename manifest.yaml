@@ -23,12 +23,6 @@ features:
       type: global
       callback_id: create_social_post
       description: Adds a new social post to the content calendar.
-  slash_commands:
-    - command: /sync
-      url: https://manageandmore.vercel.app/api/events
-      description: Only for admins
-      usage_hint: "[help]"
-      should_escape: true
 oauth_config:
   scopes:
     bot:

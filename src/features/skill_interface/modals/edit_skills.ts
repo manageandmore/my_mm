@@ -98,7 +98,7 @@ function getSkillItem(item: SkillItem, skillList: SkillItems): AnyModalBlock[] {
       block_id: item.id,
       text: {
         type: "mrkdwn",
-        text: `*${item.skillName}*`,
+        text: `*${item.skillName}* \`${item.skillLevel}\``,
       },
       accessory: getDeleteButton(item.id, skillList),
     },

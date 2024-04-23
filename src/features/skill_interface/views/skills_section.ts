@@ -3,46 +3,27 @@ import { SkillListPerLevel } from "../data/query_skills";
 import { editSkillItemsAction } from "../events/edit_skills";
 
 export function getSkillsSection(skills: SkillListPerLevel): AnyHomeTabBlock[] {
+  
+  
   return [
-    {
-      type: "header",
-      text: {
-        type: "plain_text",
-        text: "Skills",
-        emoji: true,
-      },
-    },
-    {
-      type: "divider",
-    },
     {
       type: "section",
       text: {
         type: "mrkdwn",
         text:
-          `🧑‍🏫 *Beginner*: ${(skills.beginner || ["/"])
-            .map((s) => `\`${s}\``)
-            .join(" · ")}\n` +
-          `🦸 *Intermediate*: ${(skills.intermediate || ["/"])
-            .map((s) => `\`${s}\``)
-            .join(" · ")}\n` +
-          `🥷 *Expert*: ${(skills.expert || ["/"])
-            .map((s) => `\`${s}\``)
-            .join(" · ")}\n`,
+          `🥋 *Skills*: `+
+          `\`Beginner\` ${skills.beginner.join(", ")} · `+
+          `\`Intermediate\` ${skills.intermediate.join(", ")} · `+
+          `\`Expert\` ${skills.expert.join(", ")}`,
       },
-    },
-    {
-      type: "actions",
-      elements: [
-        {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "✨ Edit Skills",
-          },
-          action_id: editSkillItemsAction,
+      accessory: {
+        type: "button",
+        action_id: editSkillItemsAction,
+        text: {
+          type: "plain_text",
+          text: "Edit",
         },
-      ],
+      }
     },
   ];
 }
