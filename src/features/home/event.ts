@@ -1,6 +1,6 @@
 import { queryScholarProfile } from "../profile/query";
 import { slack } from "../../slack";
-import { getHomeErrorView, getHomeView } from "./view";
+import { getHomeErrorView, getHomeView } from "./views/home";
 import { features } from "../common/feature_flags";
 import { homeFeatureFlag } from ".";
 import { queryCreditsLeaderboard } from "../community_credits/query_leaderboard";

@@ -11,8 +11,8 @@ import {
 } from "@notionhq/client/build/src/api-endpoints";
 import { Prop, cache, hash } from "../../utils";
 import { ONE_DAY } from "./time_utils";
-import { SyncCommandRequest } from "./sync_command";
 import { notionEnv } from "../../constants";
+import { AdminActionRequest } from "../home/admin";
 
 /** The id of the feature flags database in notion. */
 const featureFlagsDatabaseId =
@@ -228,16 +228,11 @@ class FeatureFlags {
       return true;
     }
     let userRoles = await getRolesForUser(userId);
-    return roles?.some((r) => userRoles.includes(r)) ?? false;
+    return roles.some((r) => userRoles.includes(r)) ?? false;
   }
 
-  async sync(request: SyncCommandRequest) {
+  public async refresh() {
     await this.loadFeatureFlags();
-
-    await request.context.respond({
-      response_type: "ephemeral",
-      text: "⛳️ Successfully updated all feature flags.",
-    });
   }
 
   private async getCurrentHash(): Promise<string> {

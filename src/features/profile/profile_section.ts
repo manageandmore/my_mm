@@ -23,24 +23,38 @@ export function getProfileSection(options: ProfileOptions): AnyHomeTabBlock[] {
       },
     },
     {
-      type: "divider",
+      type: "context",
+      elements: [{
+        type: "mrkdwn",
+        text: "Your profile information at a glance. Backed by our central notion database of all scholars."
+      }]
     },
     {
       type: "section",
       fields: [
         {
           type: "mrkdwn",
-          text:
-            `*⏳ Generation* · ${options.generation}\n` +
-            `*📒 Internal Project* · ${options.ip}\n` +
-            `*🚀 External Project* · ${options.ep}`,
+          text: `*⏳ Generation* · G${options.generation}`,
         },
         {
           type: "mrkdwn",
-          text:
-            `*👤 Status* · ${options.status}\n` +
-            `*⭐️ Community Credits* · ${options.communityCredits}/6\n` +
-            `*🥇 Rank* · ${options.rank}`, 
+          text: `*👤 Status* · ${options.status}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*📒 Internal Project* · ${options.ip}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*🚀 External Project* · ${options.ep}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*⭐️ Community Credits* · ${options.communityCredits}/6`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*🥇 Rank* · ${options.rank}`,
         },
       ],
       accessory:

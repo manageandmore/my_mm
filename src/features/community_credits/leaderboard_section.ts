@@ -4,28 +4,26 @@ import { CreditsLeaderboardItem } from "./query_leaderboard";
 export function getCreditsLeaderboardSection(
   leaderboard: CreditsLeaderboardItem[], userName: string, rank: number, userCredits: number
 ): AnyHomeTabBlock[] {
-  let leaderboardNameList = "";
-  let leaderboardCreditsList = "";
+
+  let rows: [number | null, string, number][] = [];
 
   for (let i = 0; i < 3; i++) {
-    if (leaderboard[i].name === userName) {
-      leaderboardNameList += `*${i+1}. ${leaderboard[i].name}*`;
-      leaderboardCreditsList += `*${userCredits}*`;
-    } else {
-      leaderboardNameList += `${i+1}. ${leaderboard[i].name}`;
-      leaderboardCreditsList += `${leaderboard[i].credits}`;
-    }
-    leaderboardNameList += `\n`;
-    leaderboardCreditsList += `\n`;
+    if (i >= leaderboard.length) break;
+    rows.push([i+1, leaderboard[i].name, leaderboard[i].credits]);
+  }
+  if (rank > 4) {
+    rows.push([null, '...', 0]);
   }
   if (rank > 3) {
-    if (rank > 4) {
-      leaderboardNameList += `...\n`;
-      leaderboardCreditsList += `...\n`;
-    }
-    leaderboardNameList += `*${rank}. ${userName}*`;
-    leaderboardCreditsList += `*${userCredits}*`;
+    rows.push([rank, userName, userCredits]);
   }
+
+  let table = rows.map(([r, n, c]) => {
+    var str = `${r != null ? `${r}.    |     ${c > 9 ? '' : ' '}${c}${c > 9 ? '' : ' '}   ` : '        |     ...    '} |  ${n}`;
+    if (n == userName) str = `*${str}*`;
+    return str;
+  }).join('\n');
+
   return [
     {
       type: "header",
@@ -36,28 +34,18 @@ export function getCreditsLeaderboardSection(
       },
     },
     {
-      type: "divider",
+      type: "context",
+      elements: [{
+        type: "mrkdwn",
+        text: "Leaderboard of community credits across all scholars. Can you make it to the top three?"
+      }]
     },
     {
       type: "section",
-      fields: [
-        {
-          type: "mrkdwn",
-          text: "👑 *Name*",
-        },
-        {
-          type: "mrkdwn",
-          text: "⭐️ *Credits*",
-        },
-        {
-          type: "mrkdwn",
-          text: leaderboardNameList,
-        },
-        {
-          type: "mrkdwn",
-          text: leaderboardCreditsList,
-        },
-      ],
+      text: {
+        type: "mrkdwn",
+        text: "_ ⭐️ | Credits | Name_\n" + table
+      },
     },
   ];
 }
