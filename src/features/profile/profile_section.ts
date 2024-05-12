@@ -42,11 +42,11 @@ export function getProfileSection(options: ProfileOptions): AnyHomeTabBlock[] {
         },
         {
           type: "mrkdwn",
-          text: `*📒 Internal Project* · ${options.ip}`,
+          text: `*📒 Area* · ${options.ip}`,
         },
         {
           type: "mrkdwn",
-          text: `*🚀 External Project* · ${options.ep}`,
+          text: `*🚀 Innovation Project* · ${options.ep}`,
         },
         {
           type: "mrkdwn",
