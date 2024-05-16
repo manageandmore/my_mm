@@ -1,4 +1,4 @@
-import { DatabaseRow, notion, Property, RollupProperty } from "../../notion";
+import { DatabaseRow, FormulaProperty, notion, Property, RollupProperty } from "../../notion";
 
 /** The interface for a user profile in the scholars database. */
 export interface ScholarProfile {
@@ -10,6 +10,7 @@ export interface ScholarProfile {
   status: string;
   credits: number;
   person?: string;
+  projects: {id?: string; name: string}[];
   url?: string;
 }
 
@@ -26,6 +27,8 @@ export type ScholarRow = DatabaseRow<{
   "Community Credits": RollupProperty<"number">;
   Person: Property<"people">;
   Roles: Property<"multi_select">;
+  Projects: FormulaProperty<"string">;
+  "Project IDs": FormulaProperty<"string">;
 }>;
 
 /**
@@ -43,6 +46,7 @@ export async function queryScholarProfile(
     })) as ScholarRow;
 
     const props = response.properties;
+    console.log(props);
 
     return {
       name: props.Name.title[0].plain_text,
@@ -53,6 +57,7 @@ export async function queryScholarProfile(
       status: props.Status.select?.name ?? "Unknown",
       credits: props["Community Credits"].rollup.number ?? 0,
       person: props["Person"].people.shift()?.id,
+      projects: props.Projects.formula.string?.split(",").map((name, index) => ({name: name.trim(), id: props["Project IDs"].formula.string?.split(",")[index]?.trim()})) ?? [],
       url: response.url,
     };
   } catch (e) {

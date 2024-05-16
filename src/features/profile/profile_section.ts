@@ -67,5 +67,13 @@ export function getProfileSection(options: ProfileOptions): AnyHomeTabBlock[] {
         },
       ],
     },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text:
+          `🎯 *Projects* · `+ (options.projects.length > 0 ? options.projects.map((p) => p.id != undefined ? `<https://www.notion.so/${p.id}|${p.name}>` : p.name).join(' | ') : '/'),
+      },
+    },
   ];
 }
