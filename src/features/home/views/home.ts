@@ -1,11 +1,8 @@
 import { AnyHomeTabBlock, Button, HomeTabView } from "slack-edge";
 import { CreditsLeaderboardItem } from "../../community_credits/query_leaderboard";
-import {
-  getOpenWishlistButton,
-  getWishlistSection,
-} from "../../wishlist/views/open_wishlist_button";
+import { getWishlistSection } from "../../wishlist/views/open_wishlist_button";
 import { getSkillsSection } from "../../skill_interface/views/skills_section";
-import { getProfileSection } from "../../profile/profile_section";
+import { ProfileOptions, getProfileSection } from "../../profile/profile_section";
 import { getCreditsLeaderboardSection } from "../../community_credits/leaderboard_section";
 import { SkillListPerLevel } from "../../skill_interface/data/query_skills";
 import { scholarsDatabaseId } from "../../common/id_utils";
@@ -14,18 +11,10 @@ import { getCreatePostButton } from "../../post_creator/actions/create_post_acti
 import { getAdminSection } from "../admin";
 
 /** Interface for the data used to hydrate the home view. */
-export interface HomeOptions {
-  name: string;
-  status: string;
-  generation: string;
-  ip: string;
-  ep: string;
-  communityCredits: number;
-  rank: number;
-  url?: string;
+export type HomeOptions = ProfileOptions & {
   creditsLeaderboard: CreditsLeaderboardItem[];
   skillList: SkillListPerLevel;
-}
+};
 
 /**
  * Constructs the home view with the current user data.
@@ -49,7 +38,7 @@ export async function getHomeView(
         options.creditsLeaderboard,
         options.name,
         options.rank,
-        options.communityCredits
+        options.credits
       ),
       {
         type: "divider",
@@ -146,10 +135,7 @@ export function getHomeErrorView(errorMsg: string): HomeTabView {
           {
             type: "mrkdwn",
             text:
-              "If you can't identify the problem, report this to your IP Digital by clicking the following link: " +
-              `<https://github.com/manageandmore/my_mm/issues/new?label=bug&title=Home%20screen%20error&body=${encodeURIComponent(
-                errorMsg
-              )}|Report error>.`,
+              "If you can't identify the problem, report this to your Area Infrastructure by messaging us on slack!",
           },
         ],
       },

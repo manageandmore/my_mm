@@ -44,6 +44,12 @@ export type ArrayRollupProperty<T extends RollupArrayType> =
     rollup: { array: Extract<AnyArrayRollupProperty, { type: T }>[] };
   };
 
+type AnyFormulaProperty = Prop<Property<"formula">, "formula">;
+export type FormulaType = Prop<AnyFormulaProperty, "type">;
+export type FormulaProperty<T extends FormulaType> = Property<"formula"> & {
+  formula: Extract<AnyFormulaProperty, {type: T}>;
+}
+
 export type RichTextItemRequest = (UpdateDatabaseParameters extends {
   description?: infer T;
 }

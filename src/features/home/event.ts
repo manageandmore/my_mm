@@ -40,13 +40,7 @@ export async function updateHomeViewForUser(userId: string) {
   await slack.client.views.publish({
     user_id: userId,
     view: await getHomeView(userId, {
-      name: profile.name,
-      generation: profile.generation,
-      status: profile.status,
-      ip: profile.ip,
-      ep: profile.ep,
-      communityCredits: profile.credits,
-      url: profile.url,
+      ...profile,
       rank: rank,
       creditsLeaderboard: leaderboard,
       skillList: skillList,
