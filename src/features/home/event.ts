@@ -2,7 +2,6 @@ import { queryScholarProfile } from "../profile/query";
 import { slack } from "../../slack";
 import { getHomeErrorView, getHomeView } from "./views/home";
 import { features } from "../common/feature_flags";
-import { homeFeatureFlag } from ".";
 import { queryCreditsLeaderboard } from "../community_credits/query_leaderboard";
 import { querySkillListForHomeView } from "../skill_interface/data/query_skills";
 import { timeDisplay } from "../common/time_utils";
@@ -18,15 +17,6 @@ slack.event("app_home_opened", async (request) => {
   const event = request.payload;
 
   try {
-    let isEnabled = await features.check(homeFeatureFlag, event.user);
-    if (!isEnabled) {
-      await setCountdownView(
-        event.user,
-        features.read(homeFeatureFlag).tags.Countdown || null
-      );
-      return;
-    }
-
     await updateHomeViewForUser(event.user);
   } catch (e) {
     console.log(e);
@@ -61,27 +51,5 @@ export async function updateHomeViewForUser(userId: string) {
       creditsLeaderboard: leaderboard,
       skillList: skillList,
     }),
-  });
-}
-
-async function setCountdownView(userId: string, countdown: string | null) {
-  await slack.client.views.publish({
-    user_id: userId,
-    view: {
-      type: "home",
-      blocks: [
-        {
-          type: "header",
-          text: {
-            type: "plain_text",
-            text:
-              countdown != null
-                ? `✨ Coming soon - ${timeDisplay(countdown)} ✨`
-                : "🥷 Nothing here yet",
-            emoji: true,
-          },
-        },
-      ],
-    },
   });
 }

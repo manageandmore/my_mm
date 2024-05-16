@@ -93,10 +93,6 @@ function getHomeFooter(): AnyHomeTabBlock[] {
           type: "mrkdwn",
           text: "<https://github.com/manageandmore/my_mm|See the code>",
         },
-        {
-          type: "mrkdwn",
-          text: "<https://github.com/manageandmore/my_mm/issues|Report an issue>",
-        },
       ],
     },
   ];
