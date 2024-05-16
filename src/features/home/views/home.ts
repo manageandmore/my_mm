@@ -82,7 +82,7 @@ function getHomeFooter(): AnyHomeTabBlock[] {
       elements: [
         {
           type: "mrkdwn",
-          text: "Made with ❤️ and 🍕 by your *IP Digital*",
+          text: "Made with ❤️ and 🍕 by your *Infrastructure Area*",
         },
       ],
     },
