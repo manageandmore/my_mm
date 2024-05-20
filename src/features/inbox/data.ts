@@ -127,10 +127,15 @@ export async function createInboxEntry(
     var responseNote = timeLeft != null ? ` - You have ${timeLeft} to respond` : '';
 
     for (var recipient of recipients) {
-      await slack.client.chat.postMessage({
+      var r = await slack.client.chat.postMessage({
         channel: recipient,
         text: `📬 New Inbox Message${responseNote}:\n${entry.description}`,
       });
+
+      if (r.ok == false && r.error == "rate_limited") {
+        console.error("App got rate-limited while sending out messages.", r);
+        break;
+      }
     }
   }
 }
