@@ -190,7 +190,7 @@ export async function loadReceivedInboxEntries(
  */
 export async function resolveInboxEntry(options: {
   messageTs: string;
-  sender: string;
+  senderId: string;
   userId: string;
   action: InboxAction;
 }): Promise<void> {
@@ -208,11 +208,11 @@ export async function resolveInboxEntry(options: {
 
   // Get the current sent entries for the sender.
   var sentInbox =
-    (await cache.hget<SentInboxEntry[]>("inbox:sent", options.sender)) ?? [];
+    (await cache.hget<SentInboxEntry[]>("inbox:sent", options.senderId)) ?? [];
 
   // Add the resolution of the user to the target entry.
   await cache.hset("inbox:sent", { 
-    [options.sender]: sentInbox.map((e) => {
+    [options.senderId]: sentInbox.map((e) => {
       if (e.message.ts == options.messageTs) {
         return {
           ...e,
