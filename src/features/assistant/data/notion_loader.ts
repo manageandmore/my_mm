@@ -508,7 +508,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
         this.notionClient.databases.query,
         {
           database_id: id,
-          page_size: 50,
+          page_size: 100,
         }
       )) {
         console.log("LOADED ENTRY", i++);
