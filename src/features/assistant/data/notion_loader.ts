@@ -518,6 +518,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
           this.loadDatabaseEntry(page);
         }
       }
+      console.log("DONE LOADING");
     } catch (e) {
       console.log(e);
       // TODO: Catch and report api request errors
