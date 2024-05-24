@@ -49,6 +49,7 @@ export async function syncNotionIndex(
 
     await done(reportToBlocks());
   } catch (e) {
+    console.error(e);
     await error([
       {
         type: "section",
