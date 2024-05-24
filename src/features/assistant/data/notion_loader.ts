@@ -503,6 +503,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
    */
   private async loadDatabaseEntries(id: string) {
     try {
+      var i = 0;
       for await (const page of iteratePaginatedAPI(
         this.notionClient.databases.query,
         {
@@ -510,7 +511,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
           page_size: 50,
         }
       )) {
-        console.log("LOADED ENTRY", page, this.loadRowsAsPages);
+        console.log("LOADED ENTRY", i++);
         if (this.loadRowsAsPages) {
           this.addToQueue(page.id);
         } else if (isPage(page)) {
