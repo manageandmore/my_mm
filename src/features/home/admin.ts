@@ -53,7 +53,7 @@ export async function getAdminSection(
           },
           action_id: createAnnouncementAction,
         },
-      ]
+      ],
     },
     {
       type: "actions",
@@ -133,7 +133,6 @@ slack.action(
   async (request) => {
     await processAdminAction(request, async (_, done) => {
       await refreshRoles();
-      
 
       await done([
         {
@@ -176,7 +175,11 @@ slack.action(
       },
     });
 
-    await fetch(`https://${currentUrl}/api/sync`, {method: "POST", body: JSON.stringify({'viewId': view.view?.id})});
+    await fetch(`https://${currentUrl}/api/sync`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+      body: JSON.stringify({ viewId: view.view?.id }),
+    });
   }
 );
 
