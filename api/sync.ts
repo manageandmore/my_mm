@@ -1,5 +1,6 @@
 import { loadNotionPages } from "../src/features/assistant/data/load_pages";
 import { RequestContext } from "@vercel/edge";
+import { checkAndTriggerOverdueInboxReminders } from "../src/features/inbox/data";
 
 /**
  * Configures the vercel deployment to use the edge runtime.
@@ -21,5 +22,6 @@ export default async function sync(request: Request, context: RequestContext) {
   }
 
   context.waitUntil(loadNotionPages());
+  context.waitUntil(checkAndTriggerOverdueInboxReminders());
   return new Response("Sync started.");
 }
