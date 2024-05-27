@@ -14,6 +14,8 @@ import { features } from "../common/feature_flags";
 import { refreshRoles } from "../common/role_utils";
 import { createAnnouncementAction } from "./announcement";
 import { currentUrl } from "../../constants";
+import { syncWebsite } from "../assistant/events/sync_website";
+import { Task, runTask } from "../common/utils";
 
 export type AdminActionRequest = SlackRequestWithOptionalRespond<
   SlackAppEnv,
@@ -94,9 +96,17 @@ export async function getAdminSection(
           },
           action_id: syncSlackMessagesAction,
         },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "🌐 Refresh Website Content",
+            emoji: true,
+          },
+          action_id: syncWebsiteAction,
+        },
       ],
     },
-
     {
       type: "divider",
     },
@@ -109,7 +119,7 @@ slack.action(
   refreshFeatureFlagsAction,
   async (_) => {},
   async (request) => {
-    await processAdminAction(request, async (_, done) => {
+    await runAdminTask(request, async (_, done) => {
       await features.refresh();
 
       await done([
@@ -131,7 +141,7 @@ slack.action(
   refreshUserRolesAction,
   async (_) => {},
   async (request) => {
-    await processAdminAction(request, async (_, done) => {
+    await runAdminTask(request, async (_, done) => {
       await refreshRoles();
 
       await done([
@@ -189,19 +199,23 @@ slack.action(
   syncSlackMessagesAction,
   async (_) => {},
   async (request) => {
-    await processAdminAction(request, syncSlackIndex(request));
+    await runAdminTask(request, syncSlackIndex(request));
   }
 );
 
-export type AdminModalCallback = (blocks: AnyModalBlock[]) => Promise<void>;
+const syncWebsiteAction = "sync_website_action";
 
-export async function processAdminAction(
+slack.action(
+  syncWebsiteAction,
+  async (_) => {},
+  async (request) => {
+    await runAdminTask(request, syncWebsite);
+  }
+);
+
+export async function runAdminTask(
   request: AdminActionRequest,
-  run: (
-    update: AdminModalCallback,
-    done: AdminModalCallback,
-    error: AdminModalCallback
-  ) => Promise<void>
+  task: Task,
 ) {
   const view = await slack.client.views.open({
     trigger_id: request.payload.trigger_id,
@@ -225,7 +239,7 @@ export async function processAdminAction(
     },
   });
 
-  const update = (title: string) => async (blocks: AnyModalBlock[]) => {
+  await runTask(task, async (title, blocks) => {
     await slack.client.views.update({
       view_id: view.view!.id,
       view: {
@@ -237,7 +251,5 @@ export async function processAdminAction(
         blocks: blocks,
       },
     });
-  };
-
-  await run(update("🌀 Running"), update("✅ Done"), update("❌ Error"));
+  });
 }

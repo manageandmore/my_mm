@@ -5,9 +5,10 @@ import { notionEnv, notionToken } from "../../../constants";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { Document } from "langchain/dist/document";
 import { QueryResult } from "@vercel/postgres";
-import { VercelPostgres } from "langchain/vectorstores/vercel_postgres";
 import { LoaderStats, NotionAPILoader } from "./notion_loader";
 import yaml from "js-yaml";
+import { toMap } from "../../common/utils";
+import { VercelPostgres } from "@langchain/community/vectorstores/vercel_postgres";
 
 export const assistantIndexDatabaseId =
   notionEnv == "production"
@@ -74,8 +75,6 @@ export async function loadNotionPages(
         target.type == "page" ? target.page.id : target.database.id;
       let existingLastEdited = existingTimestamps.get(targetId);
       existingTimestamps.delete(targetId);
-
-      console.log("LOADING NOTION TARGET", target);
 
       let options: LoadingOptions =
         targetType == "page"
@@ -174,13 +173,6 @@ async function queryNotionDocuments(
   );
 }
 
-function toMap<T, K, V>(
-  entries: T[],
-  key: (e: T) => K,
-  val: (e: T) => V
-): Map<K, V> {
-  return entries.reduce((map, e) => map.set(key(e), val(e)), new Map<K, V>());
-}
 
 async function deleteNotionDocuments(
   vectorStore: VercelPostgres,
@@ -199,8 +191,8 @@ async function deleteNotionDocuments(
 }
 
 const textSplitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 500,
-  chunkOverlap: 50,
+  chunkSize: 2000,
+  chunkOverlap: 0,
 });
 
 interface LoadingOptions {
@@ -244,7 +236,7 @@ async function loadPage(
   return { docs, stats: loader.stats };
 }
 
-function addHeader(doc: Document, header: Record<string, string>) {
+export function addHeader(doc: Document, header: Record<string, string>) {
   if (doc.pageContent == null) {
     doc.pageContent = "";
   }

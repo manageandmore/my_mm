@@ -1,16 +1,13 @@
-import { AnyMessageBlock, AnyModalBlock } from "slack-edge";
+import { AnyModalBlock } from "slack-edge";
 import { features } from "../../common/feature_flags";
 import { SyncChannelInfo, loadSlackChannels } from "../data/load_channels";
 import { assistantFeatureFlag } from "..";
-import { AdminActionRequest, AdminModalCallback } from "../../home/admin";
+import { AdminActionRequest } from "../../home/admin";
+import { Task } from "../../common/utils";
 
 export const syncSlackIndex =
-  (request: AdminActionRequest) =>
-  async (
-    update: AdminModalCallback,
-    done: AdminModalCallback,
-    error: AdminModalCallback
-  ) => {
+  (request: AdminActionRequest): Task =>
+  async (update, done, error) => {
     await update([
       {
         type: "section",

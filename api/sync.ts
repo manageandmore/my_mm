@@ -3,6 +3,8 @@ import { RequestContext } from "@vercel/edge";
 import { syncNotionIndex } from "../src/features/assistant/events/sync_notion_index";
 import { AnyModalBlock } from "slack-edge";
 import { slack } from "../src/slack";
+import { syncWebsite } from "../src/features/assistant/events/sync_website";
+import { runTask } from "../src/features/common/utils";
 
 /**
  * Configures the vercel deployment to use the edge runtime.
@@ -31,7 +33,7 @@ export default async function sync(request: Request, context: RequestContext) {
   const customReadable = new ReadableStream({
     async start(controller) {
       
-      const update = (title: string) => async (blocks: AnyModalBlock[]) => {
+      const update = async (title: string, blocks: AnyModalBlock[]) => {
 
         controller.enqueue(encoder.encode(JSON.stringify(blocks)));
 
@@ -50,7 +52,11 @@ export default async function sync(request: Request, context: RequestContext) {
         }
       };
 
-      await syncNotionIndex(update("🌀 Running"), update("✅ Done"), update("❌ Error"));
+      if (!data.viewId) {
+        await runTask(syncWebsite, update);
+      }
+
+      await runTask(syncNotionIndex, update);
 
       controller.close();
     },

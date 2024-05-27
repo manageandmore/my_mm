@@ -1,12 +1,8 @@
-import { AnyMessageBlock, AnyModalBlock } from "slack-edge";
+import { AnyModalBlock } from "slack-edge";
 import { ReportInfo, loadNotionPages } from "../data/load_pages";
-import { AdminActionRequest, AdminModalCallback } from "../../home/admin";
+import { Task } from "../../common/utils";
 
-export async function syncNotionIndex(
-  update: AdminModalCallback,
-  done: AdminModalCallback,
-  error: AdminModalCallback
-) {
+export const syncNotionIndex: Task = async (update, done, error) => {
   await update([
     {
       type: "section",
@@ -48,8 +44,8 @@ export async function syncNotionIndex(
     });
 
     await done(reportToBlocks());
-  } catch (e) {
-    console.error(e);
+  } catch (e: any) {
+    console.error(e, e.message, e.errors);
     await error([
       {
         type: "section",
@@ -60,4 +56,4 @@ export async function syncNotionIndex(
       },
     ]);
   }
-}
+};

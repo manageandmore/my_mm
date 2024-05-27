@@ -1,14 +1,9 @@
 import { Document } from "langchain/dist/document";
 import { slack } from "../../../slack";
+import { toHash } from "../../common/utils";
 
 async function toUUID(id: string): Promise<string> {
-  let digest = await crypto.subtle.digest(
-    "SHA-1",
-    new TextEncoder().encode(id)
-  );
-  let hash = [...new Uint8Array(digest)]
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
+  const hash = await toHash(id);
   return `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(
     12,
     16
