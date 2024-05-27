@@ -6,10 +6,11 @@ import {
   GenericMessageEvent,
 } from "slack-edge";
 import { slack } from "../../../slack";
-import { promptAssistant } from "../ai/prompt";
+import { getFormattedSourceLink, promptAssistant } from "../ai/prompt";
 import { features } from "../../common/feature_flags";
 import { assistantFeatureFlag } from "..";
 import { anyMessage } from "../../common/message_handlers";
+import { Document } from "@langchain/core/documents";
 
 /**
  * Handles text messages sent to the app by prompting chatgpt to respond to the users message.
@@ -65,58 +66,44 @@ async function triggerAssistant(
     updateLoadingMessage(msg, n);
   }, 1000);
 
-  const results = await promptAssistant(message);
+  const result = await promptAssistant(message);
   let blocks: AnyMessageBlock[] = [
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: results.text,
+        text: result.answer.response,
       },
     },
   ];
 
-  // TODO: Find better metric for unsuccessful responses.
-  const knowsAnswer = !(results.text as string).includes("I don't know");
-
-  if (knowsAnswer && results.sourceDocuments != null) {
-    const sourceIds: string[] = [];
-    const elements: AnyTextField[] = [];
-
-    for (var doc of results.sourceDocuments) {
-      const meta = doc.metadata;
-
-      if (meta.notionId != null) {
-        if (sourceIds.includes(meta.notionId)) continue;
-
-        sourceIds.push(meta.notionId);
-        elements.push({
-          type: "mrkdwn",
-          text: `<${meta.url}|${meta.title}>`,
-        });
-      } else if (meta.type == "slack.message") {
-        if (sourceIds.includes(meta.message_ts)) continue;
-
-        sourceIds.push(meta.message_ts);
-        elements.push({
-          type: "mrkdwn",
-          text: `<${meta.link}|${meta.title}>`,
-        });
+  let learnMoreLinks: string[] = [];
+  for (let contextId of result.answer.relevant_context_ids) {
+    let doc = result.context.find(
+      (doc) => doc.metadata.context_id == contextId
+    );
+    if (doc != undefined) {
+      let link = getFormattedSourceLink(doc);
+      if (link != null && !learnMoreLinks.includes(link)) {
+        learnMoreLinks.push(link);
       }
     }
+  }
 
-    if (elements.length > 0) {
-      blocks.push({
-        type: "context",
-        elements: [
-          {
-            type: "plain_text",
-            text: "Learn more:",
-          },
-          elements[0],
-        ],
-      });
-    }
+  if (learnMoreLinks.length > 0) {
+    blocks.push({
+      type: "context",
+      elements: [
+        {
+          type: "plain_text",
+          text: "Learn more:",
+        },
+        // Pick at max. 9 links (max context elements is 10)
+        ...learnMoreLinks
+          .slice(0, 9)
+          .map<AnyTextField>((link) => ({ type: "mrkdwn", text: link })),
+      ],
+    });
   }
 
   clearInterval(interval);
@@ -124,7 +111,7 @@ async function triggerAssistant(
   await slack.client.chat.update({
     channel: msg.channel!,
     ts: msg.ts!,
-    text: results.text,
+    text: result.answer.response,
     blocks: blocks,
   });
 }

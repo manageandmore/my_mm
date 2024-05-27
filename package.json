@@ -5,12 +5,16 @@
     "tunnel": "env-cmd -x ngrok http --domain=\\$NGROK_DOMAIN 3000"
   },
   "dependencies": {
+    "@langchain/community": "^0.2.2",
+    "@langchain/core": "^0.2.0",
+    "@langchain/openai": "^0.0.33",
     "@notionhq/client": "^2.2.13",
     "@vercel/edge": "^1.1.0",
     "@vercel/kv": "^0.2.3",
     "@vercel/og": "^0.5.17",
     "@vercel/postgres": "^0.5.0",
-    "langchain": "^0.0.175",
+    "cheerio": "^1.0.0-rc.12",
+    "langchain": "^0.2.2",
     "notion-to-md": "^3.1.1",
     "openai": "^4.12.4",
     "slack-edge": "^0.5.0",
