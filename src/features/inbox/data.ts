@@ -1,8 +1,7 @@
 import { cache } from "../../utils";
 import { slack } from "../../slack";
-import { ChatPostMessageResponse } from "slack-edge";
+import { Button, ChatPostMessageResponse } from "slack-edge";
 import { asReadableDuration } from "../common/time_utils";
-import { getUser } from "@notionhq/client/build/src/api-endpoints";
 
 /** The base type for an inbox entry. */
 export type InboxEntry = {
@@ -16,11 +15,16 @@ export type InboxEntry = {
   reminders?: string[]; // list of iso timestamps, ordered by earliest to latest
 };
 
+export const messageDoneAction = "message_done";
+export const messageDismissedAction = "message_dismissed";
+
 /** The type of an inbox action. */
 export type InboxAction = {
   label: string;
   /** The style for the action button in slack. */
   style: "primary" | "danger" | null;
+  /** The action id for the action button in slack. */
+  action_id: "message_done" | "message_dismissed";
 };
 
 /** The type of a inbox entry as viewed by the user that sent it. */
@@ -194,11 +198,22 @@ export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
   //generate test inbox data; TODO: remove this
   let newEntry = {
     message: {
-      channel: "U06020CBKFH",
+      channel: "U06020CBKFH", //channel id for SJ at the moment
       ts: "1631134811.000100",
     },
     description: "test",
-    actions: [],
+    actions: [
+      {
+        label: "✅  Done",
+        style: "primary" as "primary" | "danger" | null,
+        action_id: "message_done" as "message_done" | "message_dismissed",
+      },
+      {
+        label: "🗑️ Dismiss",
+        style: "danger" as "primary" | "danger" | null,
+        action_id: "message_dismissed" as "message_done" | "message_dismissed",
+      },
+    ],
     deadline: "2024-05-29T03:05:00.000Z",
     reminders: ["2024-05-23T02:47:00.000Z"],
     senderId: "U06020CBKFH",
@@ -237,9 +252,6 @@ export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
   }
 }
 
-export const messageDoneAction = "message_done";
-export const messageDismissedAction = "message_dismissed";
-
 /**
  * Sends an inbox notification to a user.
  *
@@ -250,7 +262,7 @@ export const messageDismissedAction = "message_dismissed";
  */
 async function sendInboxNotification(
   to: string,
-  entry: InboxEntry,
+  entry: ReceivedInboxEntry,
   type: "new" | "reminder"
 ): Promise<ChatPostMessageResponse> {
   var title = type == "new" ? "New Inbox Message" : "Inbox Reminder";
@@ -268,18 +280,44 @@ async function sendInboxNotification(
         : `You have *${timeLeft}* to respond to this message`;
   }
 
+  let actionBlocks = [];
+  for (let action of entry.actions) {
+    const button: Button = {
+      type: "button",
+      text: {
+        emoji: true,
+        type: "plain_text",
+        text: action.label,
+      },
+      action_id: action.action_id,
+      value: JSON.stringify({
+        ts: entry.message.ts,
+        senderId: entry.senderId,
+        userId: to,
+        action: {
+          label: action.label,
+          style: action.style,
+        },
+      }),
+    };
+    actionBlocks.push(button);
+  }
+
   var response = await slack.client.chat.postMessage({
     channel: to,
     //text is fallback in case client doesn't support blocks
     text: `📬 ${title}${note.length > 0 ? ` | ${note}` : ""}:\n${
       entry.description
     }`,
+
     blocks: [
       {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `📬 ${title}${note.length > 0 ? ` | ${note}` : ""}:\n`,
+          text:
+            `📬 ${title}${note.length > 0 ? ` | ${note}` : ""}:\n` +
+            `<${entry.message.ts}|original message>`,
         },
       },
       {
@@ -292,50 +330,22 @@ async function sendInboxNotification(
           text: entry.description,
         },
       },
+
       {
         type: "divider",
       },
       {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: "_You can mark this message as resolved by clicking one of the buttons below. The message will be deleted from your inbox once you do._",
-        },
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "_You can mark this message as resolved by clicking one of the buttons below. The message will be deleted from your inbox once you do._",
+          },
+        ],
       },
       {
         type: "actions",
-        elements: [
-          {
-            type: "button",
-            text: {
-              emoji: true,
-              type: "plain_text",
-              text: "✅ Done",
-            },
-            action_id: messageDoneAction,
-            value: JSON.stringify({
-              ts: entry.message.ts,
-              senderId: "", //TODO needs to added but no way to get it from the entry right now
-              userId: to,
-              action: { label: "Done", style: "primary" },
-            }),
-          },
-          {
-            type: "button",
-            text: {
-              emoji: true,
-              type: "plain_text",
-              text: "🗑️ Dismiss",
-            },
-            action_id: messageDismissedAction,
-            value: JSON.stringify({
-              ts: entry.message.ts,
-              senderId: "", //TODO needs to added but no way to get it from the entry right now
-              userId: to,
-              action: { label: "Dismissed", style: "danger" },
-            }),
-          },
-        ],
+        elements: actionBlocks,
       },
     ],
   });
