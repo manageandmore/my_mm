@@ -59,6 +59,14 @@ export async function getHomeView(
         elements: [
           await getAskAIButton(userId),
           await getCreatePostButton(userId),
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "💵 Reimbursement Form",
+            },
+            url: "https://www.notion.so/manageandmore/Reimbursement-under-development-1e5023f3b8364bd3a50c6066944bc958?pvs=4",
+          },
         ].filter((b): b is Button => b != null),
       },
       {

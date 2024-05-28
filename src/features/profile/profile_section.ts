@@ -13,6 +13,15 @@ export interface ProfileOptions {
 }
 
 export function getProfileSection(options: ProfileOptions): AnyHomeTabBlock[] {
+  let rank_medal = "🎖️";
+  if (options.rank == 1) {
+    rank_medal = "🥇";
+  } else if (options.rank == 2) {
+    rank_medal = "🥈";
+  } else if (options.rank == 3) {
+    rank_medal = "🥉";
+  }
+
   return [
     {
       type: "header",
@@ -24,10 +33,12 @@ export function getProfileSection(options: ProfileOptions): AnyHomeTabBlock[] {
     },
     {
       type: "context",
-      elements: [{
-        type: "mrkdwn",
-        text: "Your profile information at a glance. Backed by our central notion database of all scholars."
-      }]
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "Your profile information at a glance. Backed by our central notion database of all scholars.",
+        },
+      ],
     },
     {
       type: "section",
@@ -54,7 +65,7 @@ export function getProfileSection(options: ProfileOptions): AnyHomeTabBlock[] {
         },
         {
           type: "mrkdwn",
-          text: `*🥇 Rank* · ${options.rank}`,
+          text: `*${rank_medal} Rank* · ${options.rank}`,
         },
       ],
       accessory:
