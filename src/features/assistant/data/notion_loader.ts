@@ -471,7 +471,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
    * Loads a Notion database object, then adds it to the completed documents array.
    * @param page The Notion database object.
    */
-  private async loadDatabaseEntry(page: PageObjectResponse) {
+  private loadDatabaseEntry(page: PageObjectResponse) {
     const pageId = page.id;
 
     if (this.checkNotEdited(pageId, page.last_edited_time)) {
@@ -507,17 +507,17 @@ export class NotionAPILoader extends BaseDocumentLoader {
         this.notionClient.databases.query,
         {
           database_id: id,
-          page_size: 50,
+          page_size: 100,
         }
       )) {
         if (this.loadRowsAsPages) {
           this.addToQueue(page.id);
         } else if (isPage(page)) {
-          await this.loadDatabaseEntry(page);
+          this.loadDatabaseEntry(page);
         }
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
       // TODO: Catch and report api request errors
     }
   }

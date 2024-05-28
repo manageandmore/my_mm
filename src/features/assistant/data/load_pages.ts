@@ -75,6 +75,8 @@ export async function loadNotionPages(
       let existingLastEdited = existingTimestamps.get(targetId);
       existingTimestamps.delete(targetId);
 
+      console.log("LOADING NOTION TARGET", target);
+
       let options: LoadingOptions =
         targetType == "page"
           ? {
