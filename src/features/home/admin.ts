@@ -22,7 +22,7 @@ export type AdminActionRequest = SlackRequestWithOptionalRespond<
 
 const adminFeatureFlag = features.register({
   label: "Admin",
-  description: "Enablesss the admin control settings on the home view.",
+  description: "Enables the admin control settings on the home view.",
 });
 
 export async function getAdminSection(

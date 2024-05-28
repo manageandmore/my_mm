@@ -36,6 +36,26 @@ class Cache {
     if (keys.length == 0) return;
     await kv.del(...keys);
   }
+
+  hset<T>(...args: Parameters<typeof kv.hset<T>>) {
+    let [key, ...rest] = args;
+    return kv.hset<T>(cachePrefix+key, ...rest);
+  }
+
+  hget<T>(...args: Parameters<typeof kv.hget<T>>) {
+    let [key, ...rest] = args;
+    return kv.hget<T>(cachePrefix+key, ...rest);
+  }
+
+  hmget<T>(...args: Parameters<typeof kv.hmget<Record<string, T>>>) {
+    let [key, ...rest] = args;
+    return kv.hmget<Record<string, T>>(cachePrefix+key, ...rest);
+  }
+
+  hgetall<T>(...args: Parameters<typeof kv.hgetall<Record<string, T>>>) {
+    let [key, ...rest] = args;
+    return kv.hgetall<Record<string, T>>(cachePrefix+key, ...rest);
+  }
 }
 
 export const cache = new Cache();
