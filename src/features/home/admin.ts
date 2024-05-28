@@ -14,6 +14,7 @@ import { features } from "../common/feature_flags";
 import { refreshRoles } from "../common/role_utils";
 import { createAnnouncementAction } from "./announcement";
 import { checkForRemindersAction } from "../inbox/events/message_response";
+import { currentUrl } from "../../constants";
 
 export type AdminActionRequest = SlackRequestWithOptionalRespond<
   SlackAppEnv,
@@ -162,7 +163,33 @@ slack.action(
   syncNotionIndexAction,
   async (_) => {},
   async (request) => {
-    await processAdminAction(request, syncNotionIndex);
+    const view = await slack.client.views.open({
+      trigger_id: request.payload.trigger_id,
+      view: {
+        type: "modal",
+        title: {
+          type: "plain_text",
+          text: "🌀 Running",
+        },
+        blocks: [
+          {
+            type: "context",
+            elements: [
+              {
+                type: "mrkdwn",
+                text: "...",
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    await fetch(`https://${currentUrl}/api/sync`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+      body: JSON.stringify({ viewId: view.view?.id }),
+    });
   }
 );
 

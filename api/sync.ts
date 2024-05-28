@@ -1,6 +1,9 @@
 import { loadNotionPages } from "../src/features/assistant/data/load_pages";
 import { RequestContext } from "@vercel/edge";
 import { checkAndTriggerOverdueInboxReminders } from "../src/features/inbox/data";
+import { syncNotionIndex } from "../src/features/assistant/events/sync_notion_index";
+import { AnyModalBlock } from "slack-edge";
+import { slack } from "../src/slack";
 
 /**
  * Configures the vercel deployment to use the edge runtime.
@@ -24,4 +27,40 @@ export default async function sync(request: Request, context: RequestContext) {
   context.waitUntil(loadNotionPages());
   context.waitUntil(checkAndTriggerOverdueInboxReminders());
   return new Response("Sync started.");
+  var data = request.method == "POST" ? await request.json() : null;
+
+  console.log("STARTED SYNC", data);
+
+  const encoder = new TextEncoder();
+  const customReadable = new ReadableStream({
+    async start(controller) {
+      
+      const update = (title: string) => async (blocks: AnyModalBlock[]) => {
+
+        controller.enqueue(encoder.encode(JSON.stringify(blocks)));
+
+        if ("viewId" in data) {
+          await slack.client.views.update({
+            view_id: data.viewId,
+            view: {
+              type: "modal",
+              title: {
+                type: "plain_text",
+                text: title,
+              },
+              blocks: blocks,
+            },
+          });
+        }
+      };
+
+      await syncNotionIndex(update("🌀 Running"), update("✅ Done"), update("❌ Error"));
+
+      controller.close();
+    },
+  });
+  
+  return new Response(customReadable, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
 }
