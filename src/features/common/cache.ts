@@ -7,7 +7,6 @@ import { cachePrefix } from "../../constants";
  * Since staging and production environments use the same underlying redis database,
  * we prefix all cache keys with the environments `cacheKey` to avoid clashes between envs.
  */
-
 class Cache {
   set<T>(...args: Parameters<typeof kv.set<T>>) {
     let [key, ...rest] = args;
