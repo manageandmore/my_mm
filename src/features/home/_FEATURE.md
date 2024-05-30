@@ -10,8 +10,9 @@ This feature manages the apps home screen for each user.
 - A list of skills for each user with a modal to add new skills.
 - A leaderboard for community credits.
 - Additional feature buttons.
+- An Admin section (only visible for Admins).
 
 ## Structure
 
 - `event.ts` contains the event handler for the _app_home_opened_ event.
-- `view.ts` contains the view code for the home screen.
+- `views/home.ts` contains the view code for the home screen.

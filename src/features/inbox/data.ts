@@ -1,4 +1,4 @@
-import { cache } from "../../utils";
+import { cache } from "../common/cache";
 import { slack } from "../../slack";
 import { Button, ChatPostMessageResponse } from "slack-edge";
 import { asReadableDuration } from "../common/time_utils";

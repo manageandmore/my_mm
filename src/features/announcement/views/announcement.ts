@@ -1,5 +1,5 @@
 import { ModalView } from "slack-edge";
-import { previewAnnouncementCallback } from "../announcement";
+import { previewAnnouncementCallback } from "../events/announcement";
 
 /**
  * Constructs the modal view for the announcement creator.

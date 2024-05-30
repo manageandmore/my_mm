@@ -7,14 +7,12 @@ import {
   SlackRequestWithOptionalRespond,
 } from "slack-edge";
 import { slack } from "../../slack";
-import { syncNotionIndex } from "../assistant/events/sync_notion_index";
-
 import { syncSlackIndex } from "../assistant/events/sync_slack_index";
 import { features } from "../common/feature_flags";
 import { refreshRoles } from "../common/role_utils";
-import { createAnnouncementAction } from "./announcement";
 import { checkForRemindersAction } from "../inbox/events/message_response";
 import { currentUrl } from "../../constants";
+import { createAnnouncementAction } from "../announcement/events/announcement";
 
 export type AdminActionRequest = SlackRequestWithOptionalRespond<
   SlackAppEnv,
@@ -106,7 +104,6 @@ export async function getAdminSection(
         },
       ],
     },
-
     {
       type: "divider",
     },

@@ -9,10 +9,10 @@ import {
   DatabaseObjectResponse,
   RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints";
-import { Prop, cache, hash } from "../../utils";
+import { Prop, hash } from "../../utils";
 import { ONE_DAY } from "./time_utils";
 import { notionEnv } from "../../constants";
-import { AdminActionRequest } from "../home/admin";
+import { cache } from "./cache";
 
 /** The id of the feature flags database in notion. */
 const featureFlagsDatabaseId =
