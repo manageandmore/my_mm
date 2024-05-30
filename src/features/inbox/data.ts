@@ -1,6 +1,6 @@
 import { cache } from "../../utils";
 import { slack } from "../../slack";
-import { ChatPostMessageResponse } from "slack-edge";
+import { Button, ChatPostMessageResponse } from "slack-edge";
 import { asReadableDuration } from "../common/time_utils";
 
 /** The base type for an inbox entry. */
@@ -15,11 +15,16 @@ export type InboxEntry = {
   reminders?: string[]; // list of iso timestamps, ordered by earliest to latest
 };
 
+export const messageDoneAction = "message_done";
+export const messageDismissedAction = "message_dismissed";
+
 /** The type of an inbox action. */
 export type InboxAction = {
   label: string;
   /** The style for the action button in slack. */
   style: "primary" | "danger" | null;
+  /** The action id for the action button in slack. */
+  action_id: "message_done" | "message_dismissed";
 };
 
 /** The type of a inbox entry as viewed by the user that sent it. */
@@ -28,9 +33,9 @@ export type SentInboxEntry = InboxEntry & {
   resolutions: { [userId: string]: InboxEntryResolution };
 };
 
-/** 
- * The type of a single users resolution of an inbox entry. 
- * 
+/**
+ * The type of a single users resolution of an inbox entry.
+ *
  * A resolution is created when a user choses an action for an received inbox entry, which is
  * then written back to the sent inbox entry.
  * */
@@ -59,12 +64,11 @@ export type CreateInboxEntryOptions = {
   enableReminders: boolean;
 };
 
-
 /**
  * Creates a new inbox entry for all members of the source [channel].
- * 
+ *
  * If [deadline] is set and [enableReminders] is true, this will set a number of reminders on a fixed schedule.
- * 
+ *
  * If [notifyOnCreate] is true, this will send a notification to all recipients.
  */
 export async function createInboxEntry(
@@ -151,7 +155,7 @@ export async function createInboxEntry(
   if (options.notifyOnCreate) {
     // Notify all recipients.
     for (var recipientId of recipientIds) {
-      var r = await sendInboxNotification(recipientId, entry, 'new');
+      var r = await sendInboxNotification(recipientId, entry, "new");
 
       // We need to track if we get rate-limited for this.
       // Sending out bursts of messages is allowed but the docs are not clear on the exact limits.
@@ -183,70 +187,51 @@ export async function loadReceivedInboxEntries(
 }
 
 /**
- * Resolves one inbox entry for a user with the chosen [action].
- * 
- * This removes the entry from the received inbox entries of the user and adds the
- * inbox resolution to the entry of the sender.
- */
-export async function resolveInboxEntry(options: {
-  messageTs: string;
-  senderId: string;
-  userId: string;
-  action: InboxAction;
-}): Promise<void> {
-  // Get the current received entries for the user.
-  var receivedInbox =
-    (await cache.hget<ReceivedInboxEntry[]>(
-      "inbox:received",
-      options.userId
-    )) ?? [];
-
-  // Remove the target entry based on the message id.
-  await cache.hset("inbox:received", { 
-    [options.userId]: receivedInbox.filter((e) => e.message.ts != options.messageTs), 
-  });
-
-  // Get the current sent entries for the sender.
-  var sentInbox =
-    (await cache.hget<SentInboxEntry[]>("inbox:sent", options.senderId)) ?? [];
-
-  // Add the resolution of the user to the target entry.
-  await cache.hset("inbox:sent", { 
-    [options.senderId]: sentInbox.map((e) => {
-      if (e.message.ts == options.messageTs) {
-        return {
-          ...e,
-          resolutions: {
-            ...e.resolutions,
-            // Sets the resolution for [userId] with the [action] and current [time].
-            [options.userId]: {
-              action: options.action,
-              time: new Date().toISOString(),
-            },
-          },
-        };
-      } else {
-        return e;
-      }
-    }),
-  });
-}
-
-/**
  * Checks all active inbox entries for overdue reminders and sends the notifications.
- * 
+ *
  * This function is idempotent as long as its not called in parallel.
  */
 export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
   var now = new Date().toISOString();
-  var inboxes = await cache.hgetall<ReceivedInboxEntry[]>("inbox:received") ?? {};
-  
-  for (var userId in inboxes) {
+  var inboxes =
+    (await cache.hgetall<ReceivedInboxEntry[]>("inbox:received")) ?? {};
+  //generate test inbox data; TODO: remove this
+  let newEntry = {
+    message: {
+      channel: "U06020CBKFH", //channel id for SJ at the moment
+      ts: "1631134811.000100",
+    },
+    description: "test",
+    actions: [
+      {
+        label: "✅  Done",
+        style: "primary" as "primary" | "danger" | null,
+        action_id: "message_done" as "message_done" | "message_dismissed",
+      },
+      {
+        label: "🗑️ Dismiss",
+        style: "danger" as "primary" | "danger" | null,
+        action_id: "message_dismissed" as "message_done" | "message_dismissed",
+      },
+    ],
+    deadline: "2024-05-29T03:05:00.000Z",
+    reminders: ["2024-05-23T02:47:00.000Z"],
+    senderId: "U06020CBKFH",
+  };
 
+  if (inboxes["U06020CBKFH"]) {
+    inboxes["U06020CBKFH"].push(newEntry);
+  } else {
+    inboxes["U06020CBKFH"] = [newEntry];
+  }
+  //end of test data
+
+  for (var userId in inboxes) {
     var entries = inboxes[userId];
     var needsUpdate = false;
 
     for (var entry of entries) {
+      console.log(entry);
       var nextReminder = entry.reminders?.at(0);
       if (nextReminder != undefined && nextReminder < now) {
         // Remove this reminder so its not triggering again.
@@ -254,13 +239,15 @@ export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
         // Mark that we need to update the inbox.
         needsUpdate = true;
 
-        await sendInboxNotification(userId, entry, 'reminder');
+        await sendInboxNotification(userId, entry, "reminder");
       }
     }
 
     // Only update the inbox if we actually triggered a reminder.
     if (needsUpdate) {
-      await cache.hset<ReceivedInboxEntry[]>("inbox:received", {[userId]: entries});
+      await cache.hset<ReceivedInboxEntry[]>("inbox:received", {
+        [userId]: entries,
+      });
     }
   }
 }
@@ -273,21 +260,94 @@ export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
  * @param type "new" for a newly created entry, or "reminder" for an inbox reminder.
  * @returns The response from slack.
  */
-async function sendInboxNotification(to: string, entry: InboxEntry, type: "new" | "reminder"): Promise<ChatPostMessageResponse> {
-
+async function sendInboxNotification(
+  to: string,
+  entry: ReceivedInboxEntry,
+  type: "new" | "reminder"
+): Promise<ChatPostMessageResponse> {
   var title = type == "new" ? "New Inbox Message" : "Inbox Reminder";
-  
+
   var note = "";
   if (entry.deadline != null) {
-    var timeLeft = asReadableDuration(Date.now() - new Date(entry.deadline!).valueOf());
+    var timeLeft = asReadableDuration(
+      new Date(entry.deadline!).valueOf() - Date.now()
+    );
 
-    note = type == "new" ? `You have ${timeLeft} to respond` : `You have ${timeLeft} to respond to this message`;
+    //TODO: deadline is not correctly inserted based on the test data
+    note =
+      type == "new"
+        ? `You have *${timeLeft}* to respond`
+        : `You have *${timeLeft}* to respond to this message`;
+  }
+
+  let actionBlocks = [];
+  for (let action of entry.actions) {
+    const button: Button = {
+      type: "button",
+      text: {
+        emoji: true,
+        type: "plain_text",
+        text: action.label,
+      },
+      action_id: action.action_id,
+      value: JSON.stringify({
+        ts: entry.message.ts,
+        senderId: entry.senderId,
+        userId: to,
+        action: {
+          label: action.label,
+          style: action.style,
+        },
+      }),
+    };
+    actionBlocks.push(button);
   }
 
   var response = await slack.client.chat.postMessage({
     channel: to,
-    text: `📬 ${title}${note.length > 0 ? ` | ${note}` : ''}:\n${entry.description}`,
-    // TODO: add blocks to make a nice message ui
+    //text is fallback in case client doesn't support blocks
+    text: `📬 ${title}${note.length > 0 ? ` | ${note}` : ""}:\n${
+      entry.description
+    }`,
+
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text:
+            `📬 ${title}${note.length > 0 ? ` | ${note}` : ""}:\n` +
+            `<${entry.message.ts}|original message>`,
+        },
+      },
+      {
+        type: "divider",
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: entry.description,
+        },
+      },
+
+      {
+        type: "divider",
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "_You can mark this message as resolved by clicking one of the buttons below. The message will be deleted from your inbox once you do._",
+          },
+        ],
+      },
+      {
+        type: "actions",
+        elements: actionBlocks,
+      },
+    ],
   });
 
   return response;

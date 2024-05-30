@@ -13,6 +13,7 @@ import { syncSlackIndex } from "../assistant/events/sync_slack_index";
 import { features } from "../common/feature_flags";
 import { refreshRoles } from "../common/role_utils";
 import { createAnnouncementAction } from "./announcement";
+import { checkForRemindersAction } from "../inbox/events/message_response";
 import { currentUrl } from "../../constants";
 
 export type AdminActionRequest = SlackRequestWithOptionalRespond<
@@ -93,6 +94,15 @@ export async function getAdminSection(
             emoji: true,
           },
           action_id: syncSlackMessagesAction,
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Check Reminders",
+            emoji: true,
+          },
+          action_id: checkForRemindersAction,
         },
       ],
     },

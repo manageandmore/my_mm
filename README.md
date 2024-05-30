@@ -50,6 +50,7 @@ The following table gives an overview of the high-level system components the ap
   - `events.ts`: Entrypoint for slack events, messages and shortcuts.
   - `social.ts`: Generates an image in a specific layout, used by the social media post generator.
   - `sync.ts`: Syncs the notion ai index to the vector database, triggered by a daily cron job.
+  - `checkReminders.ts`: Checks what overdue reminders are in inboxes and sends them to the users. Triggered daily by a cron job.
 - `src/`: Contains the source code.
   - `features/`: The features of the application in separate folders.
     - `<featurename>/`
