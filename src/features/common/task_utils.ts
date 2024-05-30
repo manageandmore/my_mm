@@ -4,6 +4,7 @@ import { syncWebsiteTask } from "../assistant/events/sync_website";
 import { syncNotionTask } from "../assistant/events/sync_notion_index";
 import { checkInboxRemindersTask } from "../inbox/check_reminders";
 import { syncSlackTask } from "../assistant/events/sync_slack_index";
+import { currentUrl } from "../../constants";
 
 export const tasks = [
   syncNotionTask,
