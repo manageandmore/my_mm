@@ -40,6 +40,7 @@ export type ReportInfo =
     };
 
 export async function loadNotionPages(
+  _: any,
   report?: (info: ReportInfo) => Promise<void>
 ) {
   try {

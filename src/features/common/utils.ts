@@ -18,21 +18,3 @@ export async function toHash(data: string) {
     .join("");
   return hash;
 }
-
-export type AnyTaskCallback = (blocks: AnyModalBlock[]) => Promise<void>;
-
-export type TaskCallback = (title: string, blocks: AnyModalBlock[]) => Promise<void>;
-
-export type Task = (
-  update: AnyTaskCallback,
-  done: AnyTaskCallback,
-  error: AnyTaskCallback
-) => Promise<void>;
-
-export async function runTask(
-  task: Task,
-  callback: TaskCallback
-) {
-  const cb = (title: string) => (blocks: AnyModalBlock[]) => callback(title, blocks);
-  await task(cb("🌀 Running"), cb("✅ Done"), cb("❌ Error"));
-}

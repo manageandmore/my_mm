@@ -1,22 +1,21 @@
 import {
   AnyHomeTabBlock,
-  AnyModalBlock,
   BlockAction,
   BlockElementAction,
   SlackAppEnv,
   SlackRequestWithOptionalRespond,
 } from "slack-edge";
 import { slack } from "../../slack";
-import { syncNotionIndex } from "../assistant/events/sync_notion_index";
-
-import { syncSlackIndex } from "../assistant/events/sync_slack_index";
 import { features } from "../common/feature_flags";
 import { refreshRoles } from "../common/role_utils";
 import { createAnnouncementAction } from "./announcement";
 import { checkForRemindersAction } from "../inbox/events/message_response";
 import { currentUrl } from "../../constants";
-import { syncWebsite } from "../assistant/events/sync_website";
-import { Task, runTask } from "../common/utils";
+import { openTaskModal, performTask, triggerTask } from "../common/task_utils";
+import { syncSlackTask } from "../assistant/events/sync_slack_index";
+import { assistantFeatureFlag } from "../assistant";
+import { syncWebsiteTask } from "../assistant/events/sync_website";
+import { syncNotionTask } from "../assistant/events/sync_notion_index";
 
 export type AdminActionRequest = SlackRequestWithOptionalRespond<
   SlackAppEnv,
@@ -129,19 +128,26 @@ slack.action(
   refreshFeatureFlagsAction,
   async (_) => {},
   async (request) => {
-    await runAdminTask(request, async (_, done) => {
-      await features.refresh();
-
-      await done([
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "⛳️ Successfully refreshed all feature flags.",
-          },
+    var viewId = await openTaskModal(request.payload.trigger_id);
+    await performTask(
+      {
+        name: "refresh feature flags",
+        run: async (_, log) => {
+          await features.refresh();
+          await log("done");
         },
-      ]);
-    });
+        display: (_) => [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: "⛳️ Successfully refreshed all feature flags.",
+            },
+          },
+        ],
+      },
+      { viewId }
+    );
   }
 );
 
@@ -151,19 +157,26 @@ slack.action(
   refreshUserRolesAction,
   async (_) => {},
   async (request) => {
-    await runAdminTask(request, async (_, done) => {
-      await refreshRoles();
-
-      await done([
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "👥 Successfully refreshed all user roles.",
-          },
+    var viewId = await openTaskModal(request.payload.trigger_id);
+    await performTask(
+      {
+        name: "refresh roles",
+        run: async (_, log) => {
+          await refreshRoles();
+          await log("done");
         },
-      ]);
-    });
+        display: (_) => [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: "👥 Successfully refreshed all user roles.",
+            },
+          },
+        ],
+      },
+      { viewId }
+    );
   }
 );
 
@@ -173,33 +186,8 @@ slack.action(
   syncNotionIndexAction,
   async (_) => {},
   async (request) => {
-    const view = await slack.client.views.open({
-      trigger_id: request.payload.trigger_id,
-      view: {
-        type: "modal",
-        title: {
-          type: "plain_text",
-          text: "🌀 Running",
-        },
-        blocks: [
-          {
-            type: "context",
-            elements: [
-              {
-                type: "mrkdwn",
-                text: "...",
-              },
-            ],
-          },
-        ],
-      },
-    });
-
-    await fetch(`https://${currentUrl}/api/sync`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
-      body: JSON.stringify({ viewId: view.view?.id }),
-    });
+    const viewId = await openTaskModal(request.payload.trigger_id);
+    await triggerTask(syncNotionTask, {viewId});
   }
 );
 
@@ -209,7 +197,16 @@ slack.action(
   syncSlackMessagesAction,
   async (_) => {},
   async (request) => {
-    await runAdminTask(request, syncSlackIndex(request));
+    const channelsTag =
+      features.read(assistantFeatureFlag).tags.IndexedChannels;
+    const indexedChannels = channelsTag ? channelsTag.split(";") : [];
+
+    var viewId = await openTaskModal(request.payload.trigger_id);
+    await triggerTask(syncSlackTask, {
+      viewId: viewId,
+      channels: indexedChannels,
+      botUserId: request.context.botUserId!,
+    });
   }
 );
 
@@ -219,47 +216,7 @@ slack.action(
   syncWebsiteAction,
   async (_) => {},
   async (request) => {
-    await runAdminTask(request, syncWebsite);
+    var viewId = await openTaskModal(request.payload.trigger_id);
+    await triggerTask(syncWebsiteTask, { viewId });
   }
 );
-
-export async function runAdminTask(
-  request: AdminActionRequest,
-  task: Task,
-) {
-  const view = await slack.client.views.open({
-    trigger_id: request.payload.trigger_id,
-    view: {
-      type: "modal",
-      title: {
-        type: "plain_text",
-        text: "🌀 Running",
-      },
-      blocks: [
-        {
-          type: "context",
-          elements: [
-            {
-              type: "mrkdwn",
-              text: "...",
-            },
-          ],
-        },
-      ],
-    },
-  });
-
-  await runTask(task, async (title, blocks) => {
-    await slack.client.views.update({
-      view_id: view.view!.id,
-      view: {
-        type: "modal",
-        title: {
-          type: "plain_text",
-          text: title,
-        },
-        blocks: blocks,
-      },
-    });
-  });
-}

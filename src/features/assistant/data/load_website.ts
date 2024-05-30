@@ -10,7 +10,9 @@ const textSplitter = new RecursiveCharacterTextSplitter({
   chunkOverlap: 0,
 });
 
-export async function loadWebsite(report?: (page: string, status: 'added' | 'updated' | 'removed' | 'skipped') => Promise<void>) {
+export type PageInfo = { page: string, status: 'added' | 'updated' | 'removed' | 'skipped' };
+
+export async function loadWebsite(_: any, report?: (data: PageInfo) => Promise<void>) {
   try {
     const vectorStore = await getVectorStore();
 
@@ -29,7 +31,7 @@ export async function loadWebsite(report?: (page: string, status: 'added' | 'upd
       existingPages.delete(page);
 
       if (hash == existingHash) {
-        await report?.(page, 'skipped');
+        await report?.({page, status: 'skipped'});
         continue;
       }
 
@@ -54,14 +56,14 @@ export async function loadWebsite(report?: (page: string, status: 'added' | 'upd
 
       await vectorStore.addDocuments(docs);
 
-      await report?.(page, existingHash ? 'updated' : 'added');
+      await report?.({page, status: existingHash ? 'updated' : 'added'});
     }
 
     for (let page of existingPages.keys()) {
       const deleted = await deleteWebsiteDocumentsForPage(vectorStore, page);
 
       console.log(`Removed ${deleted} documents for page ${page}`);
-      await report?.(page, 'removed');
+      await report?.({page, status: 'removed'});
     }
   } catch (e: any) {
     console.log("Error at syncing website", e, e.message, e.errors);
