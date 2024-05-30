@@ -1,5 +1,4 @@
-import { Document } from "langchain/dist/document";
-import { slack } from "../../../slack";
+import { anyMessage, slack } from "../../../slack";
 import { getVectorStore } from "../ai/chain";
 import { getUserById } from "../../common/id_utils";
 import { ButtonAction } from "slack-edge";
@@ -7,7 +6,6 @@ import {
   getMessageDocumentId,
   messageToDocument,
 } from "../data/message_loader";
-import { anyMessage } from "../../common/message_handlers";
 import { getPublicChannels } from "../data/load_channels";
 import { features } from "../../common/feature_flags";
 import { assistantFeatureFlag } from "..";

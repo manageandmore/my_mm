@@ -155,7 +155,7 @@ export async function createInboxEntry(
   if (options.notifyOnCreate) {
     // Notify all recipients.
     for (var recipientId of recipientIds) {
-      var r = await sendInboxNotification(recipientId, entry, "new");
+      var r = await sendInboxNotification(recipientId, { ...entry, senderId: options.message.userId }, "new");
 
       // We need to track if we get rate-limited for this.
       // Sending out bursts of messages is allowed but the docs are not clear on the exact limits.
@@ -294,10 +294,7 @@ async function sendInboxNotification(
         ts: entry.message.ts,
         senderId: entry.senderId,
         userId: to,
-        action: {
-          label: action.label,
-          style: action.style,
-        },
+        action: action,
       }),
     };
     actionBlocks.push(button);
