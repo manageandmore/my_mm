@@ -1,8 +1,7 @@
-import { AnyMessageBlock, AnyModalBlock } from "slack-edge";
-import { features } from "../../common/feature_flags";
+import { AnyModalBlock } from "slack-edge";
 import { SyncChannelInfo, loadSlackChannels } from "../data/load_channels";
-import { assistantFeatureFlag } from "..";
 import { AdminActionRequest, AdminModalCallback } from "../../home/admin";
+import { indexedChannels } from "../../../constants";
 
 export const syncSlackIndex =
   (request: AdminActionRequest) =>
@@ -34,10 +33,6 @@ export const syncSlackIndex =
     ];
 
     try {
-      const channelsTag =
-        features.read(assistantFeatureFlag).tags.IndexedChannels;
-      const indexedChannels = channelsTag ? channelsTag.split(";") : [];
-
       await loadSlackChannels(
         indexedChannels,
         request.context.botUserId!,

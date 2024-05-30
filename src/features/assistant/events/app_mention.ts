@@ -7,8 +7,6 @@ import {
 } from "slack-edge";
 import { slack } from "../../../slack";
 import { promptAssistant } from "../ai/prompt";
-import { features } from "../../common/feature_flags";
-import { assistantFeatureFlag } from "..";
 import { anyMessage } from "../../common/message_handlers";
 
 /**
@@ -46,15 +44,6 @@ async function triggerAssistant(
   event: GenericMessageEvent | AppMentionEvent,
   botUserId: string | undefined
 ) {
-  const isEnabled = await features.check(assistantFeatureFlag, event.user!);
-  if (!isEnabled) {
-    let message = features.read(assistantFeatureFlag).tags.DisabledHint;
-    if (message) {
-      await sendDisabledMessage(event.channel, event.user!, message);
-    }
-    return;
-  }
-
   const message = event.text.replaceAll(`<@${botUserId}>`, "");
 
   let n = 0;
@@ -144,18 +133,6 @@ async function triggerAssistant(
     ts: msg.ts!,
     text: results.text,
     blocks: blocks,
-  });
-}
-
-async function sendDisabledMessage(
-  channel: string,
-  userId: string,
-  message: string
-) {
-  await slack.client.chat.postEphemeral({
-    channel: channel,
-    user: userId,
-    text: message,
   });
 }
 

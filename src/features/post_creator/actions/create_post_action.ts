@@ -2,7 +2,6 @@ import { Button } from "slack-edge";
 import { slack } from "../../../slack";
 import { sendGetStartedMessage } from "./shortcut";
 import { currentUrl } from "../../../constants";
-import { features } from "../../common/feature_flags";
 import { postCreatorFeatureFlag } from "..";
 
 const createPostAction = "create_post_button_action";
@@ -71,12 +70,7 @@ slack.viewSubmission(createPostCallback, async (request) => {
 
 export async function getCreatePostButton(
   userId: string
-): Promise<Button | null> {
-  const isEnabled = await features.check(postCreatorFeatureFlag, userId);
-  if (!isEnabled) {
-    return null;
-  }
-
+): Promise<Button> {
   return {
     type: "button",
     text: {

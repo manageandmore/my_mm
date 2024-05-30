@@ -10,8 +10,7 @@ import { slack } from "../../slack";
 import { syncNotionIndex } from "../assistant/events/sync_notion_index";
 
 import { syncSlackIndex } from "../assistant/events/sync_slack_index";
-import { features } from "../common/feature_flags";
-import { refreshRoles } from "../common/role_utils";
+import { getRolesForUser, refreshRoles } from "../common/role_utils";
 import { createAnnouncementAction } from "./announcement";
 import { checkForRemindersAction } from "../inbox/events/message_response";
 import { currentUrl } from "../../constants";
@@ -21,15 +20,11 @@ export type AdminActionRequest = SlackRequestWithOptionalRespond<
   BlockAction<BlockElementAction>
 >;
 
-const adminFeatureFlag = features.register({
-  label: "Admin",
-  description: "Enables the admin control settings on the home view.",
-});
-
 export async function getAdminSection(
   userId: string
 ): Promise<AnyHomeTabBlock[]> {
-  if (!(await features.check(adminFeatureFlag, userId))) {
+  var roles = await getRolesForUser(userId);
+  if (!roles.includes("Admin")) {
     return [];
   }
 
@@ -59,15 +54,6 @@ export async function getAdminSection(
     {
       type: "actions",
       elements: [
-        {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "⛳️ Refresh Feature Flags",
-            emoji: true,
-          },
-          action_id: refreshFeatureFlagsAction,
-        },
         {
           type: "button",
           text: {
@@ -112,28 +98,6 @@ export async function getAdminSection(
     },
   ];
 }
-
-const refreshFeatureFlagsAction = "refresh_feature_flags_action";
-
-slack.action(
-  refreshFeatureFlagsAction,
-  async (_) => {},
-  async (request) => {
-    await processAdminAction(request, async (_, done) => {
-      await features.refresh();
-
-      await done([
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "⛳️ Successfully refreshed all feature flags.",
-          },
-        },
-      ]);
-    });
-  }
-);
 
 const refreshUserRolesAction = "refresh_user_roles_action";
 

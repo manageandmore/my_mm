@@ -1,15 +1,11 @@
 import { Button } from "slack-edge";
 import { slack } from "../../../slack";
 import { assistantIndexDatabaseId } from "../data/load_pages";
-import { features } from "../../common/feature_flags";
-import { assistantFeatureFlag } from "..";
+import { indexedChannels } from "../../../constants";
 
 const askAIAction = "ask_ai_action";
 
 slack.action(askAIAction, async (request) => {
-  var tag = features.read(assistantFeatureFlag).tags.IndexedChannels || null;
-  var channels = tag?.split(";") ?? [];
-
   await slack.client.views.open({
     trigger_id: request.payload.trigger_id,
     view: {
@@ -46,7 +42,7 @@ slack.action(askAIAction, async (request) => {
                 "Information from Notion is added only for specific pages:\n" +
                 `• To add or remove a *notion page* to the ai index, check <https://www.notion.so/${assistantIndexDatabaseId}|this database>.\n\n` +
                 "Information from Slack is added in two ways:\n" +
-                `• All new messages posted any channel of ${channels.join(
+                `• All new messages posted any channel of ${indexedChannels.join(
                   " or "
                 )} are automatically added.\n` +
                 '• To add or remove an additional *slack message* to the ai index, open the message context menu (tap "..." on the message) and select "Add to assistant". ' +
@@ -59,12 +55,7 @@ slack.action(askAIAction, async (request) => {
   });
 });
 
-export async function getAskAIButton(userId: string): Promise<Button | null> {
-  const isEnabled = await features.check(assistantFeatureFlag, userId);
-  if (!isEnabled) {
-    return null;
-  }
-
+export async function getAskAIButton(userId: string): Promise<Button> {
   return {
     type: "button",
     text: {

@@ -1,8 +1,6 @@
 import { slack } from "../src/slack";
 import { RequestContext } from "@vercel/edge";
 
-import { features } from "../src/features/common/feature_flags";
-
 // Import all features that register events, shortcuts or actions
 import "../src/features/assistant/index";
 import "../src/features/community_credits/index";
@@ -26,6 +24,5 @@ export default async function events(
   request: Request,
   context: RequestContext
 ) {
-  await features.initialize(context.waitUntil.bind(context));
   return await slack.run(request, context);
 }

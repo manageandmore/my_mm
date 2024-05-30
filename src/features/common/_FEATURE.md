@@ -16,14 +16,6 @@ For many features, we need to connect user data between slack and notion. On eac
 - For **Notion**, we use the id of a row in the Scholars database as the unique identifier for a user (referred to as `scholarId`).
   - _We don't work with the actual notion account of a user, because not every user is expected to have joined the notion workspace._
 
-## Feature Flags
-
-Each feature can define one or multiple **feature flags**. Feature flags can be used to manage which users have access to a specific feature, control the rollout of changes or A/B test new features.
-
-To create a feature flag, see the documentation in `./feature_flags.ts`, specifically on `class FeatureFlags`.
-
-To set a feature flag, check the `⛳️ Feature Flags` database in notion.
-
 ## Sync Command
 
 The `/sync` command is a special command only available to admin users. It is there to trigger certain actions that update the apps state.

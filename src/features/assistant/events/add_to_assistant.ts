@@ -1,4 +1,3 @@
-import { Document } from "langchain/dist/document";
 import { slack } from "../../../slack";
 import { getVectorStore } from "../ai/chain";
 import { getUserById } from "../../common/id_utils";
@@ -9,8 +8,7 @@ import {
 } from "../data/message_loader";
 import { anyMessage } from "../../common/message_handlers";
 import { getPublicChannels } from "../data/load_channels";
-import { features } from "../../common/feature_flags";
-import { assistantFeatureFlag } from "..";
+import { indexedChannels } from "../../../constants";
 
 anyMessage(async (request) => {
   const payload = request.payload;
@@ -29,14 +27,7 @@ anyMessage(async (request) => {
   if (channelName == null) {
     return;
   }
-
-  const indexedChannels = await features.read(assistantFeatureFlag).tags
-    .IndexedChannels;
-
-  const isIndexed =
-    indexedChannels != false &&
-    indexedChannels.split(";").includes(channelName);
-
+  const isIndexed = indexedChannels.includes(channelName);
   if (!isIndexed) {
     return;
   }
