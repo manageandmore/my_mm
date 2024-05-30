@@ -54,3 +54,33 @@ export function timeDisplay(date: string): string {
     `${toTime(60, ONE_HOUR, "m")}`;
   return result;
 }
+
+/**
+ * Transforms a duration in milliseconds into a human readable string.
+ * 
+ * E.g. "less than one hour", "3 hours", "one day", "2 weeks"
+ */
+export function asReadableDuration(millis: number): string {
+
+  var seconds = millis / 1000;
+  var minutes = seconds / 60;
+  var hours = minutes / 60;
+  var days = hours / 24;
+  var weeks = days / 7;
+
+  if (hours < 1) {
+    return "less than one hour";
+  } else if (hours < 2) {
+    return `one hour`;
+  } else if (days < 1) {
+    return `${Math.floor(hours)} hours`;
+  } else if (days < 2) {
+    return `one day`;
+  } else if (weeks < 1) {
+    return `${Math.floor(days)} days`;
+  } else if (weeks < 2) {
+    return "one week";
+  } else {
+    return `${Math.floor(weeks)} weeks`;
+  }
+}

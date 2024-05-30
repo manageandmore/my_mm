@@ -1,5 +1,6 @@
 import { loadNotionPages } from "../src/features/assistant/data/load_pages";
 import { RequestContext } from "@vercel/edge";
+import { checkAndTriggerOverdueInboxReminders } from "../src/features/inbox/data";
 import { syncNotionIndex } from "../src/features/assistant/events/sync_notion_index";
 import { AnyModalBlock } from "slack-edge";
 import { slack } from "../src/slack";
@@ -25,6 +26,9 @@ export default async function sync(request: Request, context: RequestContext) {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  context.waitUntil(loadNotionPages());
+  context.waitUntil(checkAndTriggerOverdueInboxReminders());
+  return new Response("Sync started.");
   var data = request.method == "POST" ? await request.json() : null;
 
   console.log("STARTED SYNC", data);

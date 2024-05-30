@@ -66,6 +66,11 @@ async function triggerAssistant(
   }, 1000);
 
   const results = await promptAssistant(message);
+
+  //check if context was used by finding CNY in the response
+  const usedContext = !(results.text as string).includes("CNY");
+  //delete CNY from the response
+  results.text = results.text.replace("CNY", "");
   let blocks: AnyMessageBlock[] = [
     {
       type: "section",
@@ -83,37 +88,50 @@ async function triggerAssistant(
     const sourceIds: string[] = [];
     const elements: AnyTextField[] = [];
 
-    for (var doc of results.sourceDocuments) {
-      const meta = doc.metadata;
+    if (usedContext) {
+      for (var doc of results.sourceDocuments) {
+        const meta = doc.metadata;
 
-      if (meta.notionId != null) {
-        if (sourceIds.includes(meta.notionId)) continue;
+        if (meta.notionId != null) {
+          if (sourceIds.includes(meta.notionId)) continue;
 
-        sourceIds.push(meta.notionId);
-        elements.push({
-          type: "mrkdwn",
-          text: `<${meta.url}|${meta.title}>`,
-        });
-      } else if (meta.type == "slack.message") {
-        if (sourceIds.includes(meta.message_ts)) continue;
+          sourceIds.push(meta.notionId);
+          elements.push({
+            type: "mrkdwn",
+            text: `<${meta.url}|${meta.title}>`,
+          });
+        } else if (meta.type == "slack.message") {
+          if (sourceIds.includes(meta.message_ts)) continue;
 
-        sourceIds.push(meta.message_ts);
-        elements.push({
-          type: "mrkdwn",
-          text: `<${meta.link}|${meta.title}>`,
+          sourceIds.push(meta.message_ts);
+          elements.push({
+            type: "mrkdwn",
+            text: `<${meta.link}|${meta.title}>`,
+          });
+        }
+      }
+
+      if (elements.length > 0) {
+        blocks.push({
+          type: "context",
+          elements: [
+            {
+              type: "plain_text",
+              text: "Learn more:",
+            },
+            elements[0],
+          ],
         });
       }
-    }
-
-    if (elements.length > 0) {
+    } else {
+      //add note that context wasn't helpful
       blocks.push({
         type: "context",
         elements: [
           {
             type: "plain_text",
-            text: "Learn more:",
+            text: "I couldn't find any relevant context from MM slack or notion.",
           },
-          elements[0],
         ],
       });
     }

@@ -6,6 +6,7 @@ import { getVectorStore, model } from "./chain";
 const template = `You are a smart and casual ai assistant.
 Use the following pieces of context to respond to the prompt at the end.
 If you don't know the answer, just say that you don't know, don't try to make up an answer.
+If the context is not helpful or not in any way related to the question/answer, add "CNY" at the end of the response as last words but nothing else.
 Use three sentences maximum and keep the answer as concise as possible.
 {context}
 Prompt: {question}
