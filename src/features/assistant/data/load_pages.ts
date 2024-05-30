@@ -5,9 +5,9 @@ import { notionEnv, notionToken } from "../../../constants";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { Document } from "langchain/dist/document";
 import { QueryResult } from "@vercel/postgres";
-import { VercelPostgres } from "langchain/vectorstores/vercel_postgres";
 import { LoaderStats, NotionAPILoader } from "./notion_loader";
 import yaml from "js-yaml";
+import { VercelPostgres } from "@langchain/community/vectorstores/vercel_postgres";
 
 export const assistantIndexDatabaseId =
   notionEnv == "production"
