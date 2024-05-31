@@ -6,11 +6,11 @@ import {
   GenericMessageEvent,
 } from "slack-edge";
 import { slack } from "../../../slack";
-import { getFormattedSourceLink, promptAssistant } from "../ai/prompt";
 import { features } from "../../common/feature_flags";
 import { assistantFeatureFlag } from "..";
 import { anyMessage } from "../../common/message_handlers";
 import { Document } from "@langchain/core/documents";
+import { promptAssistant } from "../ai/chain";
 
 /**
  * Handles text messages sent to the app by prompting chatgpt to respond to the users message.
@@ -72,25 +72,13 @@ async function triggerAssistant(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: result.answer.response,
+        text: result.response,
       },
     },
   ];
 
-  let learnMoreLinks: string[] = [];
-  for (let contextId of result.answer.relevant_context_ids) {
-    let doc = result.context.find(
-      (doc) => doc.metadata.context_id == contextId
-    );
-    if (doc != undefined) {
-      let link = getFormattedSourceLink(doc);
-      if (link != null && !learnMoreLinks.includes(link)) {
-        learnMoreLinks.push(link);
-      }
-    }
-  }
 
-  if (learnMoreLinks.length > 0) {
+  if (result.learnMore.length > 0) {
     blocks.push({
       type: "context",
       elements: [
@@ -99,7 +87,7 @@ async function triggerAssistant(
           text: "Learn more:",
         },
         // Pick at max. 9 links (max context elements is 10)
-        ...learnMoreLinks
+        ...result.learnMore
           .slice(0, 9)
           .map<AnyTextField>((link) => ({ type: "mrkdwn", text: link })),
       ],
@@ -111,7 +99,7 @@ async function triggerAssistant(
   await slack.client.chat.update({
     channel: msg.channel!,
     ts: msg.ts!,
-    text: result.answer.response,
+    text: result.response,
     blocks: blocks,
   });
 }
