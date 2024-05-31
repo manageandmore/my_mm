@@ -1,5 +1,5 @@
-import { cache } from "../../../utils";
 import { slack } from "../../../slack";
+import { cache } from "../../common/cache";
 import {
   InboxAction,
   ReceivedInboxEntry,
@@ -18,10 +18,7 @@ slack.event(messageDoneAction, async (request) => {
     messageTs: actionData.ts,
     senderId: actionData.senderId,
     userId: actionData.userId,
-    action: {
-      label: actionData.action.actionLabel,
-      style: actionData.action.Style,
-    },
+    action: actionData.action,
   });
 });
 

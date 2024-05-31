@@ -1,4 +1,4 @@
-import { DatabaseRow, notion, Property, RollupProperty } from "../../notion";
+import { DatabaseRow, notion, Property, RollupProperty } from "../../../notion";
 
 /** The interface for a user profile in the scholars database. */
 export interface ScholarProfile {

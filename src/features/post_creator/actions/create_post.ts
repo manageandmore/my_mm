@@ -1,9 +1,8 @@
 import { ButtonAction, DataSubmissionView, FileItem } from "slack-edge";
-import { slack } from "../../../slack";
+import { anyMessage, slack } from "../../../slack";
 import { getPostCreatorModal } from "../views/post_creator_modal";
 import { addToCalendarAction } from "./add_to_calendar";
 import { PostCreatorOptions, getPostImageUrl } from "../image_utils";
-import { anyMessage } from "../../common/message_handlers";
 import { features } from "../../common/feature_flags";
 import { postCreatorFeatureFlag } from "..";
 

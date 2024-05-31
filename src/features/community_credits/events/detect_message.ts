@@ -1,12 +1,6 @@
-/**
- * Detects messages containing keywords related to community credits and prompts the user to post them in the community credits channel.
- * @param request - The Slack message request.
- * @returns A Slack message with a button to create a post in the community credits channel.
- */
-import { ButtonAction, DataSubmissionView, FileItem } from "slack-edge";
-import { slack } from "../../slack";
-import { getUserById } from "../common/id_utils";
-import { anyMessage } from "../common/message_handlers";
+import { ButtonAction } from "slack-edge";
+import { anyMessage, slack } from "../../../slack";
+import { getUserById } from "../../common/id_utils";
 
 const communityCreditsRegexPattern =
   /\b(?:community\s*[-]?credits?|community\s*[-]?points?|credits?|helper\s*points?|helferpunkte?)\b/i;
@@ -25,6 +19,11 @@ const getCommunityCreditsChannelId = async () => {
     });
 };
 
+/**
+ * Detects messages containing keywords related to community credits and prompts the user to post them in the community credits channel.
+ * @param request - The Slack message request.
+ * @returns A Slack message with a button to create a post in the community credits channel.
+ */
 anyMessage(async (request) => {
   const payload = request.payload;
 

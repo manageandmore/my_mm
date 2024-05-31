@@ -1,9 +1,9 @@
 import { slack } from "../../slack";
 import { notion } from "../../notion";
-import { ScholarRow } from "../profile/query";
 import { User as SlackUser } from "slack-web-api-client/dist/client/generated-response/UsersLookupByEmailResponse";
 import { notionEnv } from "../../constants";
-import { cache } from "../../utils";
+import { cache } from "./cache";
+import { ScholarRow } from "../home/data/query_profile";
 
 export type User = SlackUser;
 

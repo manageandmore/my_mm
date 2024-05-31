@@ -5,11 +5,9 @@ import {
   ChatPostMessageResponse,
   GenericMessageEvent,
 } from "slack-edge";
-import { slack } from "../../../slack";
+import { anyMessage, slack } from "../../../slack";
 import { features } from "../../common/feature_flags";
 import { assistantFeatureFlag } from "..";
-import { anyMessage } from "../../common/message_handlers";
-import { Document } from "@langchain/core/documents";
 import { promptAssistant } from "../ai/chain";
 
 /**

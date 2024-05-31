@@ -1,4 +1,4 @@
-import { SlackApp } from "slack-edge";
+import { MessageEventHandler, SlackApp, SlackAppEnv } from "slack-edge";
 import { slackSigningSecret, slackBotToken } from "./constants";
 
 /**
@@ -10,4 +10,19 @@ export const slack = new SlackApp({
     SLACK_BOT_TOKEN: slackBotToken,
     SLACK_LOGGING_LEVEL: "DEBUG",
   },
+});
+
+/**
+ * Helper method to register multiple independent message handlers.
+ *
+ * Needed because [slack.anyMessage] can only be used once.
+ */
+export function anyMessage(handler: MessageEventHandler<SlackAppEnv>) {
+  handlers.push(handler);
+}
+
+const handlers: MessageEventHandler<SlackAppEnv>[] = [];
+
+slack.anyMessage(async (request) => {
+  await Promise.all(handlers.map((h) => h(request)));
 });

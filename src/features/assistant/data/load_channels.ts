@@ -10,9 +10,13 @@ export type SyncChannelInfo = {
   messages: number;
 };
 
+export type SyncChannelOptions = {
+  channels: string[];
+  botUserId: string;
+};
+
 export async function loadSlackChannels(
-  targetChannels: string[],
-  botUserId: string,
+  options: SyncChannelOptions,
   report?: (info: SyncChannelInfo) => Promise<void>
 ) {
   try {
@@ -22,7 +26,7 @@ export async function loadSlackChannels(
     const users = new Map<string, User>();
 
     for (let [channelId, channel] of channels) {
-      if (!targetChannels.includes(channel.name ?? "*")) {
+      if (!options.channels.includes(channel.name ?? "*")) {
         continue;
       }
 
@@ -48,7 +52,7 @@ export async function loadSlackChannels(
             continue;
           }
 
-          if (message.text!.includes(`<@${botUserId}>`)) {
+          if (message.text!.includes(`<@${options.botUserId}>`)) {
             continue;
           }
 
