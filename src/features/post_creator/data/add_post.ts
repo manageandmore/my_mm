@@ -3,9 +3,8 @@ import {
   GetDatabaseResponse,
   PageObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
-import { DatabaseRow, Property, notion } from "../../../notion";
+import { notion } from "../../../notion";
 import { currentUrl, notionEnv } from "../../../constants";
-import { queryScholarProfile } from "../../profile/query";
 import { Prop } from "../../../utils";
 import {
   getScholarIdFromUserId,
@@ -13,6 +12,7 @@ import {
 } from "../../common/id_utils";
 import { features } from "../../common/feature_flags";
 import { postCreatorFeatureFlag } from "..";
+import { queryScholarProfile } from "../../home/data/query_profile";
 
 const contentCalendarDatabaseId =
   notionEnv == "production"

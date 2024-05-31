@@ -1,5 +1,5 @@
 import { ModalView } from "slack-edge";
-import { newSkillItemAction } from "../events/add_skill";
+import { newSkillItemCallback } from "../events/add_skill";
 
 /**
  * Constructs the modal for adding a skill to the skill database.
@@ -9,7 +9,7 @@ import { newSkillItemAction } from "../events/add_skill";
 export function getNewSkillModal(): ModalView {
   return {
     type: "modal",
-    callback_id: newSkillItemAction,
+    callback_id: newSkillItemCallback,
     title: {
       type: "plain_text",
       text: "New Skill",

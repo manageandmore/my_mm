@@ -23,11 +23,3 @@ Each feature can define one or multiple **feature flags**. Feature flags can be 
 To create a feature flag, see the documentation in `./feature_flags.ts`, specifically on `class FeatureFlags`.
 
 To set a feature flag, check the `⛳️ Feature Flags` database in notion.
-
-## Sync Command
-
-The `/sync` command is a special command only available to admin users. It is there to trigger certain actions that update the apps state.
-
-This is mainly needed because the notion api does not support notifying an application if some data in notion changes. Therefore the app has to query for changes itself on a per request or timely basis.
-
-Because we want to reduce the computation load and cache certain data, we do this very infrequently. Therefore by using the `/sync` command an admin can force an update of this data.

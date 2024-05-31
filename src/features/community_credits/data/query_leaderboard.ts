@@ -1,6 +1,6 @@
-import { notion } from "../../notion";
-import { getScholarIdFromUserId, scholarsDatabaseId } from "../common/id_utils";
-import { ScholarRow } from "../profile/query";
+import { notion } from "../../../notion";
+import { scholarsDatabaseId } from "../../common/id_utils";
+import { ScholarRow } from "../../home/data/query_profile";
 
 /** Interface for one Item of Credits Leaderboard */
 export interface CreditsLeaderboardItem {
