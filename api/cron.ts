@@ -1,9 +1,8 @@
 import { RequestContext } from "@vercel/edge";
-import { syncNotionTask } from "../src/features/assistant/events/sync_notion_index";
-
 import { runTasks } from "../src/features/common/task_utils";
+import { syncNotionTask } from "../src/features/assistant/loaders/load_pages";
+import { syncWebsiteTask } from "../src/features/assistant/loaders/load_website";
 import { checkInboxRemindersTask } from "../src/features/inbox/check_reminders";
-import { syncWebsiteTask } from "../src/features/assistant/events/sync_website";
 
 /**
  * Configures the vercel deployment to use the edge runtime.
@@ -17,7 +16,7 @@ const cronSecret = process.env.CRON_SECRET;
 /**
  * Handler for the /api/sync route.
  *
- * This route is called by a cron job each day at 2 AM.
+ * This route is called by a cron job each day at 11:30 AM.
  *  */
 export default async function sync(request: Request, context: RequestContext) {
   if (request.headers.get("Authorization") !== `Bearer ${cronSecret}`) {

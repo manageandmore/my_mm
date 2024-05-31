@@ -1,5 +1,3 @@
-import { AnyModalBlock } from "slack-edge";
-
 export function toMap<T, K, V>(
   entries: T[],
   key: (e: T) => K,
@@ -17,4 +15,12 @@ export async function toHash(data: string) {
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
   return hash;
+}
+
+export async function toUUID(id: string): Promise<string> {
+  const hash = await toHash(id);
+  return `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(
+    12,
+    16
+  )}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
 }
