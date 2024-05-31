@@ -8,14 +8,13 @@ import {
 import { slack } from "../../slack";
 import { features } from "../common/feature_flags";
 import { refreshRoles } from "../common/role_utils";
-import { createAnnouncementAction } from "./announcement";
 import { checkForRemindersAction } from "../inbox/events/message_response";
-import { currentUrl } from "../../constants";
 import { openTaskModal, performTask, triggerTask } from "../common/task_utils";
 import { syncSlackTask } from "../assistant/events/sync_slack_index";
 import { assistantFeatureFlag } from "../assistant";
 import { syncWebsiteTask } from "../assistant/events/sync_website";
 import { syncNotionTask } from "../assistant/events/sync_notion_index";
+import { createAnnouncementAction } from "../announcement/events/announcement";
 
 export type AdminActionRequest = SlackRequestWithOptionalRespond<
   SlackAppEnv,

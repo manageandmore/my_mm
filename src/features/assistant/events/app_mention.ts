@@ -5,11 +5,10 @@ import {
   ChatPostMessageResponse,
   GenericMessageEvent,
 } from "slack-edge";
-import { slack } from "../../../slack";
+import { anyMessage, slack } from "../../../slack";
 import { promptAssistant } from "../ai/prompt";
 import { features } from "../../common/feature_flags";
 import { assistantFeatureFlag } from "..";
-import { anyMessage } from "../../common/message_handlers";
 
 /**
  * Handles text messages sent to the app by prompting chatgpt to respond to the users message.

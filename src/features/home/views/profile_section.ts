@@ -1,5 +1,5 @@
 import { AnyHomeTabBlock } from "slack-edge";
-import { ScholarProfile } from "./query";
+import { ScholarProfile } from "../data/query_profile";
 
 /** Interface for the data used to hydrate the profile section. */
 export type ProfileOptions = ScholarProfile & {
