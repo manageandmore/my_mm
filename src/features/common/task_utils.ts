@@ -1,10 +1,10 @@
 import { AnyModalBlock } from "slack-edge";
 import { slack } from "../../slack";
-import { syncWebsiteTask } from "../assistant/events/sync_website";
-import { syncNotionTask } from "../assistant/events/sync_notion_index";
 import { checkInboxRemindersTask } from "../inbox/check_reminders";
-import { syncSlackTask } from "../assistant/events/sync_slack_index";
 import { currentUrl } from "../../constants";
+import { syncNotionTask } from "../assistant/loaders/load_pages";
+import { syncWebsiteTask } from "../assistant/loaders/load_website";
+import { syncSlackTask } from "../assistant/loaders/load_channels";
 
 export const tasks = [
   syncNotionTask,

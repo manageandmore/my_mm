@@ -1,14 +1,10 @@
-import { anyMessage, slack } from "../../../slack";
+import { anyMessage, getPublicChannels, slack } from "../../../slack";
 import { getVectorStore } from "../ai/chain";
 import { getUserById } from "../../common/id_utils";
 import { ButtonAction } from "slack-edge";
-import {
-  getMessageDocumentId,
-  messageToDocument,
-} from "../data/message_loader";
-import { getPublicChannels } from "../data/load_channels";
 import { features } from "../../common/feature_flags";
 import { assistantFeatureFlag } from "..";
+import { getMessageDocumentId, messageToDocument } from "../loaders/load_channels";
 
 anyMessage(async (request) => {
   const payload = request.payload;

@@ -41,6 +41,7 @@ Respond only in valid JSON using the format {{"response": "Your helpful response
 The "response" property contains your response to the users question, and the "relevant_context_ids" property contains the ids of all the context pieces that are relevant to your response. 
 Include ids from all pieces that are relevant for your response (probably multiple pieces), but don't include ids from unrelated pieces. If none of the context is relevant make this an empty array.
 
+The current date and time is: {time}
 The users question is:
 {input}
 `;
@@ -48,7 +49,7 @@ The users question is:
 async function getChain() {
   // construct a new chain for our assistant
   return RunnablePassthrough.assign<
-    { input: string },
+    { input: string, time: string },
     { context: DocumentInterface<Record<string, any>>[] }
   >({
     context: RunnableSequence.from([
@@ -103,7 +104,7 @@ export async function promptAssistant(prompt: string): Promise<{
   const chain = await getChain();
 
   // invoke the chain with the users prompt
-  const result = await chain.invoke({ input: prompt });
+  const result = await chain.invoke({ input: prompt, time: new Date().toISOString() });
 
   // find all relevant context documents and transform into links
   let learnMoreLinks: string[] = [];

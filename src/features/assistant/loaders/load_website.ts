@@ -4,6 +4,21 @@ import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/
 import { QueryResult } from "@vercel/postgres";
 import { toHash, toMap } from "../../common/utils";
 import { VercelPostgres } from "@langchain/community/vectorstores/vercel_postgres";
+import { Task } from "../../common/task_utils";
+
+export const syncWebsiteTask: Task<PageInfo> = {
+  name: "website sync",
+  run: loadWebsite,
+  display(data) {
+    return [{
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `Page ${data.page}: ${data.status}`,
+      },
+    }];
+  }
+}
 
 const textSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 2000,

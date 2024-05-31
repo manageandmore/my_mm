@@ -1,9 +1,24 @@
 import { getVectorStore } from "../ai/chain";
-import { slack } from "../../../slack";
+import { getPublicChannels, slack } from "../../../slack";
 import { ONE_DAY } from "../../common/time_utils";
-import { getMessageDocumentId, messageToDocument } from "./message_loader";
-import { Channel } from "slack-web-api-client/dist/client/generated-response/ConversationsListResponse";
 import { User, getUserById } from "../../common/id_utils";
+import { toHash, toUUID } from "../../common/utils";
+import { Document } from "@langchain/core/documents";
+import { Task, TaskOptions } from "../../common/task_utils";
+
+export const syncSlackTask: Task<SyncChannelInfo, SyncChannelOptions & TaskOptions> = {
+  name: "sync slack",
+  run: loadSlackChannels,
+  display(data) {
+    return [{
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `Completed loading ${data.messages} messages from channel #${data.channel}`,
+      },
+    }];
+  }
+}
 
 export type SyncChannelInfo = {
   channel: string;
@@ -87,26 +102,57 @@ export async function loadSlackChannels(
   }
 }
 
-export async function getPublicChannels() {
-  let channels = new Map<string, Channel>();
+export async function getMessageDocumentId(
+  channelId: string,
+  messageTs: string
+) {
+  return toUUID(channelId + ":" + messageTs);
+}
 
-  let hasMore = true;
-  let nextCursor: string | undefined = undefined;
+type Message = {
+  channel: { id: string; name: string };
+  user: { id?: string; name?: string };
+  text: string;
+  ts: string;
+  autoIndexed?: boolean;
+};
 
-  while (hasMore) {
-    const response = await slack.client.conversations.list({
-      exclude_archived: true,
-      cursor: nextCursor,
-      types: "public_channel",
-    });
+export async function messageToDocument(
+  message: Message
+): Promise<Document<Record<string, any>>> {
+  const timestamp = new Date(Number(message.ts) * 1000).toISOString();
 
-    nextCursor = response.response_metadata?.next_cursor;
-    hasMore = !!nextCursor;
+  const link = await slack.client.chat.getPermalink({
+    message_ts: message.ts,
+    channel: message.channel.id,
+  });
 
-    for (let channel of response.channels ?? []) {
-      channels.set(channel.id!, channel);
-    }
+  let title = message.text!.split("\n")[0].trim();
+  if (title.length > 30) {
+    title = title.substring(0, 30).trim() + "...";
   }
+  title = title
+    .replaceAll("<!here>", "@here")
+    .replaceAll("<!channel>", "@channel");
+  title = `#${message.channel.name} - ${title}`;
 
-  return channels;
+  const header = `---
+  Type: Slack Message
+  Channel: ${message.channel.name}
+  Author: ${message.user.name ?? ""}
+  Timestamp: ${timestamp}
+  ---`;
+
+  return new Document({
+    pageContent: header + "\n" + message.text!,
+    metadata: {
+      type: "slack.message",
+      message_ts: message.ts,
+      channel: message.channel,
+      user: message.user,
+      link: link.permalink,
+      title: title,
+      slackAutoIndexed: message.autoIndexed ?? false,
+    },
+  });
 }
