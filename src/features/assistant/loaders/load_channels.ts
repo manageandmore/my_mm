@@ -2,23 +2,31 @@ import { getVectorStore } from "../ai/chain";
 import { getPublicChannels, slack } from "../../../slack";
 import { ONE_DAY } from "../../common/time_utils";
 import { User, getUserById } from "../../common/id_utils";
-import { toHash, toUUID } from "../../common/utils";
+import { toUUID } from "../../common/utils";
 import { Document } from "@langchain/core/documents";
 import { Task, TaskOptions } from "../../common/task_utils";
 
-export const syncSlackTask: Task<SyncChannelInfo, SyncChannelOptions & TaskOptions> = {
+/**
+ * Background task that syncs all messages from the indexed channels of the last 30 days.
+ */
+export const syncSlackTask: Task<
+  SyncChannelInfo,
+  SyncChannelOptions & TaskOptions
+> = {
   name: "sync slack",
   run: loadSlackChannels,
   display(data) {
-    return [{
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: `Completed loading ${data.messages} messages from channel #${data.channel}`,
+    return [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `Completed loading ${data.messages} messages from channel #${data.channel}`,
+        },
       },
-    }];
-  }
-}
+    ];
+  },
+};
 
 export type SyncChannelInfo = {
   channel: string;
@@ -30,7 +38,10 @@ export type SyncChannelOptions = {
   botUserId: string;
 };
 
-export async function loadSlackChannels(
+/**
+ * Syncs all messages from the indexed channels of the last 30 days.
+ */
+async function loadSlackChannels(
   options: SyncChannelOptions,
   report?: (info: SyncChannelInfo) => Promise<void>
 ) {
@@ -50,6 +61,7 @@ export async function loadSlackChannels(
 
       let messagesAdded = 0;
 
+      // Load the paginated messages from the last 30 days in this channel.
       while (hasMore) {
         const response = await slack.client.conversations.history({
           channel: channelId,
@@ -63,10 +75,12 @@ export async function loadSlackChannels(
         currentCursor = response.response_metadata?.next_cursor;
 
         for (let message of response.messages ?? []) {
+          // Ignore bot messages.
           if (message.subtype == "bot_message") {
             continue;
           }
 
+          // Ignore messages that mentions this app.
           if (message.text!.includes(`<@${options.botUserId}>`)) {
             continue;
           }
@@ -77,6 +91,7 @@ export async function loadSlackChannels(
             users.get(message.user ?? "") ??
             (await getUserById(message.user ?? ""));
 
+          // Prepare the document.
           var document = await messageToDocument({
             text: message.text!,
             ts: message.ts!,
@@ -85,6 +100,7 @@ export async function loadSlackChannels(
             autoIndexed: true,
           });
 
+          // Add it to the vector database.
           await vectorStore.addDocuments([document], { ids: [documentId] });
 
           messagesAdded++;
@@ -102,6 +118,9 @@ export async function loadSlackChannels(
   }
 }
 
+/**
+ * Returns a unique id for a message.
+ */
 export async function getMessageDocumentId(
   channelId: string,
   messageTs: string
@@ -117,6 +136,9 @@ type Message = {
   autoIndexed?: boolean;
 };
 
+/**
+ * Constructs the database document for a message.
+ */
 export async function messageToDocument(
   message: Message
 ): Promise<Document<Record<string, any>>> {

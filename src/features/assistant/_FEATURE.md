@@ -13,6 +13,6 @@ This feature provides an ai assistant for scholars to ask questions about inform
 
 ## Structure
 
-- `ai/prompt.ts` contains all the model and prompt setup for the ai, using langchain.
-- `data/` contains the various vector db loaders for slack and notion.
+- `ai/chain.ts` contains all the model and prompt setup for the ai, using langchain.
 - `events/` contains the entrypoints for the user events.
+- `loaders/` contains the various vector db loaders for slack, notion and the website.

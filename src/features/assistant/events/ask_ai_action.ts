@@ -6,6 +6,9 @@ import { assistantIndexDatabaseId } from "../loaders/load_pages";
 
 const askAIAction = "ask_ai_action";
 
+/**
+ * Show an explanation modal when clicking the "Ask Assistant" feature button.
+ */
 slack.action(askAIAction, async (request) => {
   var tag = features.read(assistantFeatureFlag).tags.IndexedChannels || null;
   var channels = tag?.split(";") ?? [];

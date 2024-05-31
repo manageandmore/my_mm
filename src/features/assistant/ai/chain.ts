@@ -104,7 +104,7 @@ export async function promptAssistant(prompt: string): Promise<{
   const chain = await getChain();
 
   // invoke the chain with the users prompt
-  const result = await chain.invoke({ input: prompt, time: new Date().toISOString() });
+  const result = await chain.invoke({ input: prompt, time: new Date().toLocaleString() });
 
   // find all relevant context documents and transform into links
   let learnMoreLinks: string[] = [];

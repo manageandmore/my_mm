@@ -41,6 +41,11 @@ slack.event("app_mention", async (request) => {
   await triggerAssistant(payload, request.context.botUserId);
 });
 
+/**
+ * Shared message for triggering the assistant and generating a response.
+ * 
+ * This is executed for both direct messages to the app and mentions of the app in channels.
+ */
 async function triggerAssistant(
   event: GenericMessageEvent | AppMentionEvent,
   botUserId: string | undefined
@@ -49,19 +54,43 @@ async function triggerAssistant(
   if (!isEnabled) {
     let message = features.read(assistantFeatureFlag).tags.DisabledHint;
     if (message) {
-      await sendDisabledMessage(event.channel, event.user!, message);
+      await slack.client.chat.postEphemeral({
+        channel: event.channel,
+        user: event.user!,
+        text: message,
+      });
     }
     return;
   }
 
   const message = event.text.replaceAll(`<@${botUserId}>`, "");
 
-  let n = 0;
-  const msg = await createLoadingMessage(event.channel);
+  // Display animating dots ('...') while the response is loading.
+  const msg = await slack.client.chat.postMessage({
+    channel: event.channel,
+    text: "...",
+    blocks: [
+      {
+        type: "context",
+        elements: [{ type: "plain_text", text: "." }],
+      },
+    ],
+  });;
 
+  let n = 0;
   const interval = setInterval(() => {
     n = (n + 1) % 3;
-    updateLoadingMessage(msg, n);
+    slack.client.chat.update({
+      channel: msg.channel!,
+      ts: msg.ts!,
+      text: "...",
+      blocks: [
+        {
+          type: "context",
+          elements: [{ type: "plain_text", text: "...".substring(0, n + 1) }],
+        },
+      ],
+    });
   }, 1000);
 
   const result = await promptAssistant(message);
@@ -75,7 +104,7 @@ async function triggerAssistant(
     },
   ];
 
-
+  // If given, add links to the relevant sources.
   if (result.learnMore.length > 0) {
     blocks.push({
       type: "context",
@@ -84,8 +113,8 @@ async function triggerAssistant(
           type: "plain_text",
           text: "Learn more:",
         },
-        // Pick at max. 9 links (max context elements is 10)
         ...result.learnMore
+          // Pick at max. 9 links (max context elements is 10)
           .slice(0, 9)
           .map<AnyTextField>((link) => ({ type: "mrkdwn", text: link })),
       ],
@@ -94,51 +123,11 @@ async function triggerAssistant(
 
   clearInterval(interval);
 
+  // Send the response.
   await slack.client.chat.update({
     channel: msg.channel!,
     ts: msg.ts!,
     text: result.response,
     blocks: blocks,
-  });
-}
-
-async function sendDisabledMessage(
-  channel: string,
-  userId: string,
-  message: string
-) {
-  await slack.client.chat.postEphemeral({
-    channel: channel,
-    user: userId,
-    text: message,
-  });
-}
-
-async function createLoadingMessage(
-  channel: string
-): Promise<ChatPostMessageResponse> {
-  return slack.client.chat.postMessage({
-    channel: channel,
-    text: "...",
-    blocks: [
-      {
-        type: "context",
-        elements: [{ type: "plain_text", text: "." }],
-      },
-    ],
-  });
-}
-
-async function updateLoadingMessage(msg: ChatPostMessageResponse, n: number) {
-  return slack.client.chat.update({
-    channel: msg.channel!,
-    ts: msg.ts!,
-    text: "...",
-    blocks: [
-      {
-        type: "context",
-        elements: [{ type: "plain_text", text: "...".substring(0, n + 1) }],
-      },
-    ],
   });
 }
