@@ -1,7 +1,7 @@
-import { VercelPostgres } from "langchain/vectorstores/vercel_postgres";
+
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { notionEnv, openaiToken } from "../../../constants";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { VercelPostgres } from "@langchain/community/vectorstores/vercel_postgres";
 
 const embeddings = new OpenAIEmbeddings({
   openAIApiKey: openaiToken,

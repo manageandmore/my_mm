@@ -1,7 +1,7 @@
 import { RetrievalQAChain } from "langchain/chains";
-import { ChainValues } from "langchain/dist/schema";
-import { PromptTemplate } from "langchain/prompts";
 import { getVectorStore, model } from "./chain";
+import { ChainValues } from "@langchain/core/utils/types";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const template = `You are a smart and casual ai assistant.
 Use the following pieces of context to respond to the prompt at the end.

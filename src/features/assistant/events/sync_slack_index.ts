@@ -1,62 +1,16 @@
-import { AnyMessageBlock, AnyModalBlock } from "slack-edge";
-import { features } from "../../common/feature_flags";
-import { SyncChannelInfo, loadSlackChannels } from "../data/load_channels";
-import { assistantFeatureFlag } from "..";
-import { AdminActionRequest, AdminModalCallback } from "../../home/admin";
+import { SyncChannelInfo, SyncChannelOptions, loadSlackChannels } from "../data/load_channels";
+import { TaskOptions, Task } from "../../common/task_utils";
 
-export const syncSlackIndex =
-  (request: AdminActionRequest) =>
-  async (
-    update: AdminModalCallback,
-    done: AdminModalCallback,
-    error: AdminModalCallback
-  ) => {
-    await update([
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: "♻️ Syncing slack index...",
-        },
+export const syncSlackTask: Task<SyncChannelInfo, SyncChannelOptions & TaskOptions> = {
+  name: "sync slack",
+  run: loadSlackChannels,
+  display(data) {
+    return [{
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `Completed loading ${data.messages} messages from channel #${data.channel}`,
       },
-    ]);
-
-    let reports: SyncChannelInfo[] = [];
-
-    const reportToBlocks = () => [
-      ...reports.map<AnyModalBlock>((report) => ({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `Completed loading ${report.messages} messages from channel #${report.channel}`,
-        },
-      })),
-    ];
-
-    try {
-      const channelsTag =
-        features.read(assistantFeatureFlag).tags.IndexedChannels;
-      const indexedChannels = channelsTag ? channelsTag.split(";") : [];
-
-      await loadSlackChannels(
-        indexedChannels,
-        request.context.botUserId!,
-        async (report) => {
-          reports.push(report);
-          await update(reportToBlocks());
-        }
-      );
-
-      await done(reportToBlocks());
-    } catch (e) {
-      await error([
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `🚫 Error syncing slack index: ${e}`,
-          },
-        },
-      ]);
-    }
-  };
+    }];
+  }
+}
