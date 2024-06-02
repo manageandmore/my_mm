@@ -273,6 +273,12 @@ class FeatureFlags {
     }
 
     // Caches the feature flags with an expiration of one day.
+
+    // Log the relevant information to Vercel console
+    console.log("Caching feature flags");
+    console.log(Array.from(this.features.entries()));
+    console.log(await this.getCurrentHash());
+    console.log(currentHash);
     await cache.set(
       "feature-flags",
       {
