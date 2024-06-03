@@ -1,19 +1,20 @@
 import {
   AnyHomeTabBlock,
-  AnyModalBlock,
   BlockAction,
   BlockElementAction,
   SlackAppEnv,
   SlackRequestWithOptionalRespond,
 } from "slack-edge";
 import { slack } from "../../slack";
-import { syncNotionIndex } from "../assistant/events/sync_notion_index";
-
-import { syncSlackIndex } from "../assistant/events/sync_slack_index";
 import { features } from "../common/feature_flags";
 import { refreshRoles } from "../common/role_utils";
-import { createAnnouncementAction } from "./announcement";
-import { currentUrl } from "../../constants";
+import { checkForRemindersAction } from "../inbox/events/message_response";
+import { openTaskModal, performTask, triggerTask } from "../common/task_utils";
+import { assistantFeatureFlag } from "../assistant";
+import { createAnnouncementAction } from "../announcement/events/announcement";
+import { syncNotionTask } from "../assistant/loaders/load_pages";
+import { syncSlackTask } from "../assistant/loaders/load_channels";
+import { syncWebsiteTask } from "../assistant/loaders/load_website";
 
 export type AdminActionRequest = SlackRequestWithOptionalRespond<
   SlackAppEnv,
@@ -22,7 +23,7 @@ export type AdminActionRequest = SlackRequestWithOptionalRespond<
 
 const adminFeatureFlag = features.register({
   label: "Admin",
-  description: "Enablesss the admin control settings on the home view.",
+  description: "Enables the admin control settings on the home view.",
 });
 
 export async function getAdminSection(
@@ -94,9 +95,26 @@ export async function getAdminSection(
           },
           action_id: syncSlackMessagesAction,
         },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "🌐 Refresh Website Content",
+            emoji: true,
+          },
+          action_id: syncWebsiteAction,
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "⏰ Check Reminders",
+            emoji: true,
+          },
+          action_id: checkForRemindersAction,
+        },
       ],
     },
-
     {
       type: "divider",
     },
@@ -109,19 +127,26 @@ slack.action(
   refreshFeatureFlagsAction,
   async (_) => {},
   async (request) => {
-    await processAdminAction(request, async (_, done) => {
-      await features.refresh();
-
-      await done([
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "⛳️ Successfully refreshed all feature flags.",
-          },
+    var viewId = await openTaskModal(request.payload.trigger_id);
+    await performTask(
+      {
+        name: "refresh feature flags",
+        run: async (_, log) => {
+          await features.refresh();
+          await log("done");
         },
-      ]);
-    });
+        display: (_) => [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: "⛳️ Successfully refreshed all feature flags.",
+            },
+          },
+        ],
+      },
+      { viewId }
+    );
   }
 );
 
@@ -131,19 +156,26 @@ slack.action(
   refreshUserRolesAction,
   async (_) => {},
   async (request) => {
-    await processAdminAction(request, async (_, done) => {
-      await refreshRoles();
-
-      await done([
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "👥 Successfully refreshed all user roles.",
-          },
+    var viewId = await openTaskModal(request.payload.trigger_id);
+    await performTask(
+      {
+        name: "refresh roles",
+        run: async (_, log) => {
+          await refreshRoles();
+          await log("done");
         },
-      ]);
-    });
+        display: (_) => [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: "👥 Successfully refreshed all user roles.",
+            },
+          },
+        ],
+      },
+      { viewId }
+    );
   }
 );
 
@@ -153,33 +185,8 @@ slack.action(
   syncNotionIndexAction,
   async (_) => {},
   async (request) => {
-    const view = await slack.client.views.open({
-      trigger_id: request.payload.trigger_id,
-      view: {
-        type: "modal",
-        title: {
-          type: "plain_text",
-          text: "🌀 Running",
-        },
-        blocks: [
-          {
-            type: "context",
-            elements: [
-              {
-                type: "mrkdwn",
-                text: "...",
-              },
-            ],
-          },
-        ],
-      },
-    });
-
-    await fetch(`https://${currentUrl}/api/sync`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
-      body: JSON.stringify({ viewId: view.view?.id }),
-    });
+    const viewId = await openTaskModal(request.payload.trigger_id);
+    await triggerTask(syncNotionTask, {viewId});
   }
 );
 
@@ -189,55 +196,26 @@ slack.action(
   syncSlackMessagesAction,
   async (_) => {},
   async (request) => {
-    await processAdminAction(request, syncSlackIndex(request));
+    const channelsTag =
+      features.read(assistantFeatureFlag).tags.IndexedChannels;
+    const indexedChannels = channelsTag ? channelsTag.split(";") : [];
+
+    var viewId = await openTaskModal(request.payload.trigger_id);
+    await triggerTask(syncSlackTask, {
+      viewId: viewId,
+      channels: indexedChannels,
+      botUserId: request.context.botUserId!,
+    });
   }
 );
 
-export type AdminModalCallback = (blocks: AnyModalBlock[]) => Promise<void>;
+const syncWebsiteAction = "sync_website_action";
 
-export async function processAdminAction(
-  request: AdminActionRequest,
-  run: (
-    update: AdminModalCallback,
-    done: AdminModalCallback,
-    error: AdminModalCallback
-  ) => Promise<void>
-) {
-  const view = await slack.client.views.open({
-    trigger_id: request.payload.trigger_id,
-    view: {
-      type: "modal",
-      title: {
-        type: "plain_text",
-        text: "🌀 Running",
-      },
-      blocks: [
-        {
-          type: "context",
-          elements: [
-            {
-              type: "mrkdwn",
-              text: "...",
-            },
-          ],
-        },
-      ],
-    },
-  });
-
-  const update = (title: string) => async (blocks: AnyModalBlock[]) => {
-    await slack.client.views.update({
-      view_id: view.view!.id,
-      view: {
-        type: "modal",
-        title: {
-          type: "plain_text",
-          text: title,
-        },
-        blocks: blocks,
-      },
-    });
-  };
-
-  await run(update("🌀 Running"), update("✅ Done"), update("❌ Error"));
-}
+slack.action(
+  syncWebsiteAction,
+  async (_) => {},
+  async (request) => {
+    var viewId = await openTaskModal(request.payload.trigger_id);
+    await triggerTask(syncWebsiteTask, { viewId });
+  }
+);

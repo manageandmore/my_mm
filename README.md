@@ -50,6 +50,7 @@ The following table gives an overview of the high-level system components the ap
   - `events.ts`: Entrypoint for slack events, messages and shortcuts.
   - `social.ts`: Generates an image in a specific layout, used by the social media post generator.
   - `sync.ts`: Syncs the notion ai index to the vector database, triggered by a daily cron job.
+  - `checkReminders.ts`: Checks what overdue reminders are in inboxes and sends them to the users. Triggered daily by a cron job.
 - `src/`: Contains the source code.
   - `features/`: The features of the application in separate folders.
     - `<featurename>/`
@@ -64,20 +65,21 @@ The following table gives an overview of the high-level system components the ap
 
 Below is the table of all existing features and their documentation:
 
-| Feature           | Description                                        | Documentation                                            |
-| ----------------- | -------------------------------------------------- | -------------------------------------------------------- |
-| Common            | Common functionality shared across other features. | [FEATURE.md](./src/features/common/_FEATURE.md)          |
-| Home              | The apps home screen.                              | [FEATURE.md](./src/features/home/_FEATURE.md)            |
-| Profile           | The profile of a user.                             | _TODO_                                                   |
-| Assistant         | The ai assistant for asking questions.             | _TODO_                                                   |
-| Skill Interface   | Managing the skills of a user.                     | [FEATURE.md](./src/features/skill_interface/_FEATURE.md) |
-| Community Credits | Credit leaderboard and channel management.         | _TODO_                                                   |
-| Wishlist          | New feature suggestions.                           | [FEATURE.md](./src/features/wishlist/_FEATURE.md)        |
-| Post Creator      | Social media post creation.                        | [FEATURE.md](./src/features/post_creator/_FEATURE.md)    |
+| Feature           | Description                                        | Documentation                                              |
+| ----------------- | -------------------------------------------------- | ---------------------------------------------------------- |
+| Common            | Common functionality shared across other features. | [FEATURE.md](./src/features/common/_FEATURE.md)            |
+| Home              | The apps home screen.                              | [FEATURE.md](./src/features/home/_FEATURE.md)              |
+| Assistant         | The ai assistant for asking questions.             | [FEATURE.md](./src/features/assistant/_FEATURE.md)         |
+| Skill Interface   | Managing the skills of a user.                     | [FEATURE.md](./src/features/skill_interface/_FEATURE.md)   |
+| Community Credits | Credit leaderboard and channel management.         | [FEATURE.md](./src/features/community_credits/_FEATURE.md) |
+| Wishlist          | New feature suggestions.                           | [FEATURE.md](./src/features/wishlist/_FEATURE.md)          |
+| Post Creator      | Social media post creation.                        | [FEATURE.md](./src/features/post_creator/_FEATURE.md)      |
+| Announcements     | App announcements.                                 | [FEATURE.md](./src/features/announcement/_FEATURE.md)      |
+| Inbox             | Inbox and RSVP management.                         | [FEATURE.md](./src/features/inbox/_FEATURE.md)             |
 
 # Development
 
-We use Github for managing the development process. The repository is hosted here: https://github.com/schultek/my_mm. Every change has to be made in a Pull Request to either the `staging` or `main` branch. We use issues for tracking bugs and new features.
+We use Github for managing the development process. The repository is hosted here: https://github.com/manageandmore/my_mm. Every change has to be made in a Pull Request to either the `staging` or `main` branch.
 
 ## Ground Rules
 

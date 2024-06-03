@@ -2,8 +2,8 @@ import {
   AnyRichTextBlockElement,
   ButtonAction,
 } from "slack-edge";
-import { slack } from "../../slack";
-import { getAnnouncementCreatorModal } from "./views/announcement";
+import { getAnnouncementCreatorModal } from "../views/announcement";
+import { slack } from "../../../slack";
 
 export const createAnnouncementAction = "create_announcement_action";
 
@@ -77,6 +77,9 @@ slack.viewSubmission(
 
 const sendAnnouncementAction = "send_announcement_action";
 
+/**
+ * Sends the announcement to the target channel.
+ */
 slack.action(sendAnnouncementAction, async (request) => {
   var value = (request.payload.actions[0] as ButtonAction).value;
   if (value == null) {
@@ -85,6 +88,7 @@ slack.action(sendAnnouncementAction, async (request) => {
 
   var { channel, message } = JSON.parse(value);
 
+  // Send the announcement.
   await slack.client.chat.postMessage({
     channel: channel,
     text: "📢 New announcement from @MyMM",
@@ -96,6 +100,7 @@ slack.action(sendAnnouncementAction, async (request) => {
     ]
   });
 
+  // Update the users preview message to prevent repeated sending.
   await request.context.respond!({
     replace_original: true,
     text: `Announcement sent to channel <#${channel}>`,
