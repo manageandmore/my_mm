@@ -1,6 +1,6 @@
 import { AnyModalBlock } from "slack-edge";
 import { slack } from "../../slack";
-import { checkInboxRemindersTask } from "../inbox/check_reminders";
+import { checkInboxRemindersTask } from "../inbox/events/check_reminders";
 import { currentUrl } from "../../constants";
 import { syncNotionTask } from "../assistant/loaders/load_pages";
 import { syncWebsiteTask } from "../assistant/loaders/load_website";
@@ -21,16 +21,18 @@ export type TaskRequest = {
 export type TaskOptions = {
   viewId?: string;
   log?: (data: any) => void;
-}
+};
 
 export type Task<T = any, O extends TaskOptions = TaskOptions> = {
   name: string;
   run: (options: O, log: (data: T) => Promise<void>) => Promise<void>;
   display: (data: T) => AnyModalBlock[];
-}
+};
 
-export async function performTask<T, O extends TaskOptions>(task: Task<T, O>, options: O): Promise<void> {
-
+export async function performTask<T, O extends TaskOptions>(
+  task: Task<T, O>,
+  options: O
+): Promise<void> {
   const renderView = async (title: string, blocks: AnyModalBlock[]) => {
     if (options.viewId == null) return;
     await slack.client.views.update({
@@ -44,9 +46,9 @@ export async function performTask<T, O extends TaskOptions>(task: Task<T, O>, op
         blocks: blocks,
       },
     });
-  }  
+  };
 
-  options.log?.({task: task.name, status: "starting"});
+  options.log?.({ task: task.name, status: "starting" });
   await renderView("🌀 Running", [
     {
       type: "section",
@@ -66,11 +68,11 @@ export async function performTask<T, O extends TaskOptions>(task: Task<T, O>, op
       await renderView("🌀 Running", blocks);
     });
 
-    options.log?.({task: task.name, status: "done"});
+    options.log?.({ task: task.name, status: "done" });
     await renderView("✅ Done", blocks);
   } catch (e: any) {
     console.error(e, e.message, e.errors);
-    options.log?.({task: task.name, status: "error", error: e});
+    options.log?.({ task: task.name, status: "error", error: e });
     await renderView("❌ Error", [
       {
         type: "section",
@@ -109,35 +111,37 @@ export async function openTaskModal(triggerId: string) {
   return view.view?.id;
 }
 
-export async function triggerTask<T, O extends TaskOptions>(task: Task<T, O>, options: O) {
+export async function triggerTask<T, O extends TaskOptions>(
+  task: Task<T, O>,
+  options: O
+) {
   await fetch(`https://${currentUrl}/api/task`, {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
-    body: JSON.stringify({ tasks: [{name: task.name, options}] }),
+    body: JSON.stringify({ tasks: [{ name: task.name, options }] }),
   });
 }
 
 export function runTasks(requests: TaskRequest[]): Response {
-
   const encoder = new TextEncoder();
   const customReadable = new ReadableStream({
     async start(controller) {
-
       for (var request of requests) {
         var task = tasks.find((t) => t.name == request.name);
         if (task) {
           await performTask(task as Task, {
             ...(request.options ?? {}),
-            log: (data) => controller.enqueue(encoder.encode(JSON.stringify(data))),
+            log: (data) =>
+              controller.enqueue(encoder.encode(JSON.stringify(data))),
           });
         }
       }
-      
+
       controller.close();
     },
   });
-  
+
   return new Response(customReadable, {
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    headers: { "Content-Type": "text/html; charset=utf-8" },
   });
 }

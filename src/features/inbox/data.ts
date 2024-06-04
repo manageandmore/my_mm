@@ -32,6 +32,7 @@ export type SentInboxEntry = InboxEntry & {
   recipientIds: string[];
   resolutions: { [userId: string]: InboxEntryResolution };
 };
+//TODO: change this? 2000 character limit for values may be reached with this
 
 /**
  * The type of a single users resolution of an inbox entry.
@@ -41,7 +42,7 @@ export type SentInboxEntry = InboxEntry & {
  * */
 export type InboxEntryResolution = {
   action: InboxAction;
-  time: string; // iso timestamp
+  timestamp: string; // iso timestamp
 };
 
 /** The type of an inbox entry as viewed by the user that received it. */
@@ -155,7 +156,11 @@ export async function createInboxEntry(
   if (options.notifyOnCreate) {
     // Notify all recipients.
     for (var recipientId of recipientIds) {
-      var r = await sendInboxNotification(recipientId, { ...entry, senderId: options.message.userId }, "new");
+      var r = await sendInboxNotification(
+        recipientId,
+        { ...entry, senderId: options.message.userId },
+        "new"
+      );
 
       // We need to track if we get rate-limited for this.
       // Sending out bursts of messages is allowed but the docs are not clear on the exact limits.
