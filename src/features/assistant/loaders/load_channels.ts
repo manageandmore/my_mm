@@ -103,6 +103,16 @@ async function loadSlackChannels(
           // Add it to the vector database.
           await vectorStore.addDocuments([document], { ids: [documentId] });
 
+          try {
+            await slack.client.reactions.add({
+              channel: channelId,
+              timestamp: message.ts,
+              name: "brain",
+            });
+          } catch (_) {
+            // fails when already reacted - ignore
+          }
+
           messagesAdded++;
         }
       }

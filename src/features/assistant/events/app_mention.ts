@@ -56,6 +56,7 @@ async function triggerAssistant(
     if (message) {
       await slack.client.chat.postEphemeral({
         channel: event.channel,
+        thread_ts: event.thread_ts,
         user: event.user!,
         text: message,
       });
