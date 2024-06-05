@@ -35,18 +35,22 @@ export async function performTask<T, O extends TaskOptions>(
 ): Promise<void> {
   const renderView = async (title: string, blocks: AnyModalBlock[]) => {
     if (options.viewId == null) return;
-    await slack.client.views.update({
-      view_id: options.viewId,
-      view: {
-        type: "modal",
-        title: {
-          type: "plain_text",
-          text: title,
+    try {
+      await slack.client.views.update({
+        view_id: options.viewId,
+        view: {
+          type: "modal",
+          title: {
+            type: "plain_text",
+            text: title,
+          },
+          blocks: blocks,
         },
-        blocks: blocks,
-      },
-    });
-  };
+      });
+    } catch (_) {
+      // ignore view errors
+    }
+  }  
 
   options.log?.({ task: task.name, status: "starting" });
   await renderView("🌀 Running", [

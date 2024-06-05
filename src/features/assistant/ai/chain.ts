@@ -130,11 +130,11 @@ function getFormattedSourceLink(doc: Document): string | null {
   const meta = doc.metadata;
 
   if (meta.notionId != null) {
-    return `<${meta.url}|${meta.title}>`;
+    return `<${meta.url} | ${meta.title}>`;
   } else if (meta.type == "slack.message") {
-    return `<${meta.link}|${meta.title}>`;
+    return `<${meta.link} | ${meta.title}>`;
   } else if (meta.type == "website.page") {
-    return `<${meta.url}|manageandmore.de${meta.page}>`;
+    return `<${meta.url} | manageandmore.de${meta.page}>`;
   } else {
     return null;
   }

@@ -56,6 +56,7 @@ async function triggerAssistant(
     if (message) {
       await slack.client.chat.postEphemeral({
         channel: event.channel,
+        thread_ts: event.thread_ts,
         user: event.user!,
         text: message,
       });
@@ -68,6 +69,7 @@ async function triggerAssistant(
   // Display animating dots ('...') while the response is loading.
   const msg = await slack.client.chat.postMessage({
     channel: event.channel,
+    thread_ts: event.thread_ts,
     text: "...",
     blocks: [
       {
