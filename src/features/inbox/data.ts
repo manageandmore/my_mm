@@ -15,9 +15,6 @@ export type InboxEntry = {
   reminders?: string[]; // list of iso timestamps, ordered by earliest to latest
 };
 
-export const messageDoneAction = "message_done";
-export const messageDismissedAction = "message_dismissed";
-
 /** The type of an inbox action. */
 export type InboxAction = {
   label: string;
@@ -26,6 +23,19 @@ export type InboxAction = {
   /** The action id for the action button in slack. */
   action_id: "message_done" | "message_dismissed";
 };
+
+export const messageDoneAction: InboxAction = {
+  label: "✅  Done",
+  style: "primary",
+  action_id: "message_done",
+};
+export const messageDismissedAction: InboxAction = {
+  label: "🗑️ Dismiss",
+  style: "danger",
+  action_id: "message_dismissed",
+};
+
+export const responseActions = [messageDoneAction, messageDismissedAction];
 
 /** The type of a inbox entry as viewed by the user that sent it. */
 export type SentInboxEntry = InboxEntry & {
@@ -102,7 +112,7 @@ export async function createInboxEntry(
     });
     recipientIds.push(...(response.members ?? []));
     nextCursor = response.response_metadata?.next_cursor;
-  } while (nextCursor != null);
+  } while (nextCursor != null && nextCursor != "");
 
   const entry: InboxEntry = {
     message: {
@@ -114,6 +124,7 @@ export async function createInboxEntry(
     deadline: options.deadline,
     reminders: reminders,
   };
+  console.log("new entry", entry);
 
   // Get the current sent entries for the sender.
   const entries =
@@ -178,6 +189,20 @@ export async function loadSentInboxEntries(
 ): Promise<SentInboxEntry[]> {
   var entries = await cache.hget<SentInboxEntry[]>("inbox:sent", userId);
   return entries ?? [];
+}
+
+/** Deletes a sent inbox entry for a user. */
+export async function deleteSentInboxEntry(
+  userId: string,
+  entryToBeDeleted: SentInboxEntry
+): Promise<void> {
+  const oldEntries: SentInboxEntry[] = await loadSentInboxEntries(userId);
+  const newEntries = oldEntries.filter(
+    (e) => JSON.stringify(e) !== JSON.stringify(entryToBeDeleted)
+  );
+  await cache.hset<SentInboxEntry[]>("inbox:sent", {
+    [userId]: newEntries,
+  });
 }
 
 /** Loads all received inbox entries for a user. */
@@ -296,8 +321,7 @@ async function sendInboxNotification(
       },
       action_id: action.action_id,
       value: JSON.stringify({
-        ts: entry.message.ts,
-        senderId: entry.senderId,
+        entry: entry,
         userId: to,
         action: action,
       }),

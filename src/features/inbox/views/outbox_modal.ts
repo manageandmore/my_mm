@@ -1,6 +1,7 @@
 import { AnyModalBlock, ModalView, Button } from "slack-edge";
 import { SentInboxEntry } from "../data";
 import { viewSentMessageAction } from "../events/view_sent_message";
+import { newMessageAction } from "../events/create_new_message";
 
 /**
  * Construct the outbox modal
@@ -43,6 +44,22 @@ export function getOutboxModal(outbox: SentInboxEntry[]): ModalView {
     }
   }
 
+  let block: AnyModalBlock = {
+    type: "actions",
+    elements: [
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "New message",
+        },
+        style: "primary",
+        action_id: newMessageAction,
+      },
+    ],
+  };
+  blocks.push(block);
+
   return {
     type: "modal",
     title: {
@@ -57,7 +74,6 @@ function getOutboxItem(entry: SentInboxEntry): AnyModalBlock[] {
   return [
     {
       type: "section",
-      block_id: entry.message.ts,
       text: {
         type: "mrkdwn",
         text: `*${entry.description}*`,

@@ -1,5 +1,6 @@
 import { slack } from "../../../slack";
 import { cache } from "../../common/cache";
+import { ButtonAction } from "slack-edge";
 import {
   InboxAction,
   ReceivedInboxEntry,
@@ -9,18 +10,19 @@ import {
   messageDoneAction,
 } from "../data";
 
-slack.event(messageDoneAction, async (request) => {
-  const payload: { actions: [{ value: string }] } = request.payload;
-  const action = payload.actions[0]; // assuming the button is the first action
-  const actionData = JSON.parse(action.value);
+slack.action(
+  messageDoneAction.action_id || messageDismissedAction.action_id,
+  async (request) => {
+    const payload = request.payload;
+    const actionData = JSON.parse((payload.actions[0] as ButtonAction).value);
 
-  await resolveInboxEntry({
-    messageTs: actionData.ts,
-    senderId: actionData.senderId,
-    userId: actionData.userId,
-    action: actionData.action,
-  });
-});
+    await resolveInboxEntry({
+      entry: actionData.entry,
+      userId: actionData.userId,
+      action: actionData.action,
+    });
+  }
+);
 
 /**
  * Resolves one inbox entry for a user with the chosen [action].
@@ -29,8 +31,7 @@ slack.event(messageDoneAction, async (request) => {
  * inbox resolution to the entry of the sender.
  */
 export async function resolveInboxEntry(options: {
-  messageTs: string;
-  senderId: string;
+  entry: ReceivedInboxEntry;
   userId: string;
   action: InboxAction;
 }): Promise<void> {
@@ -41,21 +42,22 @@ export async function resolveInboxEntry(options: {
       options.userId
     )) ?? [];
 
-  // Remove the target entry based on the message id.
+  // Remove the target entry.
   await cache.hset("inbox:received", {
-    [options.userId]: receivedInbox.filter(
-      (e) => e.message.ts != options.messageTs
-    ),
+    [options.userId]: receivedInbox.filter((e) => e != options.entry),
   });
 
   // Get the current sent entries for the sender.
   var sentInbox =
-    (await cache.hget<SentInboxEntry[]>("inbox:sent", options.senderId)) ?? [];
+    (await cache.hget<SentInboxEntry[]>(
+      "inbox:sent",
+      options.entry.senderId
+    )) ?? [];
 
   // Add the resolution of the user to the target entry.
   await cache.hset("inbox:sent", {
-    [options.senderId]: sentInbox.map((e) => {
-      if (e.message.ts == options.messageTs) {
+    [options.entry.senderId]: sentInbox.map((e) => {
+      if (e.message.ts == options.entry.message.ts) {
         return {
           ...e,
           resolutions: {

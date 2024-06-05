@@ -2,8 +2,11 @@ import { ButtonAction } from "slack-edge";
 import { slack } from "../../../slack";
 import { SentInboxEntry, loadSentInboxEntries } from "../data";
 import { getChannelById } from "../../../slack";
+import { deleteSentInboxEntry } from "../data";
+import { getOutboxModal } from "../views/outbox_modal";
 
 export const viewSentMessageAction = "view_sent_message";
+export const deleteSentMessageAction = "delete_sent_message";
 
 /**
  * Opens the modal to view the sent message.
@@ -29,8 +32,8 @@ slack.action(viewSentMessageAction, async (request) => {
     actionCountsText += `\n${action}: ${count}`;
   }
 
-  await slack.client.views.push({
-    trigger_id: payload.trigger_id,
+  await slack.client.views.update({
+    view_id: payload.view?.root_view_id ?? undefined,
     view: {
       type: "modal",
       title: {
@@ -73,9 +76,41 @@ slack.action(viewSentMessageAction, async (request) => {
             }*`,
           },
         },
-        //TODO: add more information about how many responded with what action
         {
           type: "divider",
+        },
+        {
+          type: "actions",
+          elements: [
+            {
+              type: "button",
+              text: {
+                type: "plain_text",
+                text: "Delete",
+              },
+              style: "danger",
+              action_id: deleteSentMessageAction,
+              value: JSON.stringify(entry),
+              confirm: {
+                title: {
+                  type: "plain_text",
+                  text: "Are you sure?",
+                },
+                text: {
+                  type: "mrkdwn",
+                  text: "Are you sure you want to proceed?",
+                },
+                confirm: {
+                  type: "plain_text",
+                  text: "Yes",
+                },
+                deny: {
+                  type: "plain_text",
+                  text: "No",
+                },
+              },
+            },
+          ],
         },
       ],
     },
@@ -101,3 +136,19 @@ function getResponseCountByAction(
     count,
   }));
 }
+
+/**
+ * Deletes the sent message from the outbox.
+ */
+slack.action(deleteSentMessageAction, async (request) => {
+  const payload = request.payload;
+  const entry = JSON.parse((payload.actions[0] as ButtonAction).value);
+  console.log("Payload", payload);
+
+  await deleteSentInboxEntry(payload.user.id, entry);
+
+  await slack.client.views.update({
+    view_id: payload.view?.root_view_id ?? undefined,
+    view: getOutboxModal(await loadSentInboxEntries(payload.user.id)),
+  });
+});
