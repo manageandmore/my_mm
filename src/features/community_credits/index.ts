@@ -1,1 +1,1 @@
-import "./detect_message";
+import "./events/detect_message";
