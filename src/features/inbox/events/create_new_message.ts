@@ -23,7 +23,7 @@ slack.action(newMessageAction, async (request) => {
   var value = (request.payload.actions[0] as ButtonAction).value;
   const { channelId, messageTs, messageDescription } = JSON.parse(value);
 
-  await slack.client.views.push({
+  await slack.client.views.open({
     trigger_id: payload.trigger_id,
     view: await getNewMessageModal(channelId, messageTs, messageDescription),
   });
