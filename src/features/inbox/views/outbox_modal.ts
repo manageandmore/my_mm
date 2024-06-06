@@ -43,7 +43,7 @@ export function getOutboxModal(outbox: SentInboxEntry[]): ModalView {
       blocks = blocks.concat(getOutboxItem(entry));
     }
   }
-
+  /*
   let block: AnyModalBlock = {
     type: "actions",
     elements: [
@@ -59,6 +59,9 @@ export function getOutboxModal(outbox: SentInboxEntry[]): ModalView {
     ],
   };
   blocks.push(block);
+  */
+  //Blocked for now since probably not needed
+  //TODO: final decision needed
 
   return {
     type: "modal",

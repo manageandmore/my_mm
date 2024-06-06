@@ -1,9 +1,10 @@
-import { ButtonAction } from "slack-edge";
+import { AnyModalBlock, ButtonAction } from "slack-edge";
 import { slack } from "../../../slack";
 import { SentInboxEntry, loadSentInboxEntries } from "../data";
 import { getChannelById } from "../../../slack";
 import { deleteSentInboxEntry } from "../data";
 import { getOutboxModal } from "../views/outbox_modal";
+import { getViewSentMessageModal } from "../views/view_sent_message_modal";
 
 export const viewSentMessageAction = "view_sent_message";
 export const deleteSentMessageAction = "delete_sent_message";
@@ -19,17 +20,12 @@ slack.action(viewSentMessageAction, async (request) => {
   const payload = request.payload;
   const action = payload.actions[0] as ButtonAction;
   const entry = JSON.parse(action.value) as SentInboxEntry;
-
-  const messageLink = `https://slack.com/archives/${
-    entry.message.channel
-  }/p${entry.message.ts.replace(".", "")}`;
-
-  const channelName = await getChannelById(entry.message.channel);
-  const actionCounts = getResponseCountByAction(entry); // Replace [entry] with the actual array of SentInboxEntry
-
-  let actionCountsText = "";
-  for (const { action, count } of actionCounts) {
-    actionCountsText += `\n${action}: ${count}`;
+  //shorten title to 24 characters for modal title
+  let title = "";
+  if (entry.description.length > 24) {
+    title = entry.description.substring(0, 22) + "..";
+  } else {
+    title = entry.description;
   }
 
   await slack.client.views.update({
@@ -38,86 +34,14 @@ slack.action(viewSentMessageAction, async (request) => {
       type: "modal",
       title: {
         type: "plain_text",
-        text: `${entry.description}`,
+        text: `${title}`,
       },
-      blocks: [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `<${messageLink}|Original message>`,
-          },
-        },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `*Channel posted:*\n${channelName}`,
-          },
-        },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `*Deadline:*\n${
-              entry.deadline
-                ? new Date(entry.deadline).toLocaleString()
-                : "No deadline"
-            }`,
-          },
-        },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `*Responded:*\n${actionCountsText}\n
-            *Overall: ${Object.keys(entry.resolutions).length} of ${
-              entry.recipientIds.length
-            }*`,
-          },
-        },
-        {
-          type: "divider",
-        },
-        {
-          type: "actions",
-          elements: [
-            {
-              type: "button",
-              text: {
-                type: "plain_text",
-                text: "Delete",
-              },
-              style: "danger",
-              action_id: deleteSentMessageAction,
-              value: JSON.stringify(entry),
-              confirm: {
-                title: {
-                  type: "plain_text",
-                  text: "Are you sure?",
-                },
-                text: {
-                  type: "mrkdwn",
-                  text: "Are you sure you want to proceed?",
-                },
-                confirm: {
-                  type: "plain_text",
-                  text: "Yes",
-                },
-                deny: {
-                  type: "plain_text",
-                  text: "No",
-                },
-              },
-            },
-          ],
-        },
-      ],
+      blocks: await getViewSentMessageModal(entry),
     },
   });
 });
 
-function getResponseCountByAction(
+export function getResponseCountByAction(
   entry: SentInboxEntry
 ): { action: string; count: number }[] {
   const actionCounts: { [action: string]: number } = {};

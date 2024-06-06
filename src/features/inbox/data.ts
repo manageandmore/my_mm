@@ -1,6 +1,10 @@
 import { cache } from "../common/cache";
 import { slack } from "../../slack";
-import { Button, ChatPostMessageResponse } from "slack-edge";
+import {
+  Button,
+  ChatPostMessageResponse,
+  OpenIDConnectError,
+} from "slack-edge";
 import { asReadableDuration } from "../common/time_utils";
 
 /** The base type for an inbox entry. */
@@ -105,14 +109,16 @@ export async function createInboxEntry(
   let nextCursor: string | undefined = undefined;
 
   // Get all members (paginated).
-  do {
-    var response = await slack.client.conversations.members({
-      channel: options.message.channel,
-      cursor: nextCursor,
-    });
-    recipientIds.push(...(response.members ?? []));
-    nextCursor = response.response_metadata?.next_cursor;
-  } while (nextCursor != null && nextCursor != "");
+  if (options.message.channel != null && options.message.channel != "") {
+    do {
+      var response = await slack.client.conversations.members({
+        channel: options.message.channel,
+        cursor: nextCursor,
+      });
+      recipientIds.push(...(response.members ?? []));
+      nextCursor = response.response_metadata?.next_cursor;
+    } while (nextCursor != null && nextCursor != "");
+  }
 
   const entry: InboxEntry = {
     message: {

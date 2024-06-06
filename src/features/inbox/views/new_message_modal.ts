@@ -1,14 +1,20 @@
 import { ModalView, PlainTextOption } from "slack-edge";
 import { newMessageAction } from "../events/create_new_message";
 import { responseActions } from "../data";
+import { getChannelById } from "../../../slack";
 
 /**
  * Construct the new message modal
  *
  * @returns The new message modal view.
  */
-export function getNewMessageModal(): ModalView {
+export async function getNewMessageModal(
+  channelId?: string,
+  ts?: string,
+  description?: string
+): Promise<ModalView> {
   const options = getResponseActionsOptions();
+
   return {
     type: "modal",
     callback_id: newMessageAction,
@@ -52,7 +58,8 @@ export function getNewMessageModal(): ModalView {
           action_id: "message_description_input",
           multiline: true,
           min_length: 4,
-          max_length: 100,
+          max_length: 1000,
+          initial_value: description,
         },
       },
       {

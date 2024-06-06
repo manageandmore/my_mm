@@ -8,6 +8,9 @@ import {
 } from "../data";
 import { getOutboxModal } from "../views/outbox_modal";
 
+/**
+ * This action id can be used to call the modal to create an outbox message
+ */
 export const newMessageAction = "new_outbox_message";
 
 /**
@@ -18,7 +21,7 @@ slack.action(newMessageAction, async (request) => {
 
   await slack.client.views.push({
     trigger_id: payload.trigger_id,
-    view: getNewMessageModal(),
+    view: await getNewMessageModal(),
   });
 });
 
@@ -28,6 +31,17 @@ slack.action(newMessageAction, async (request) => {
 slack.viewSubmission(newMessageAction, async (request) => {
   const payload = request.payload;
   const values = payload.view.state.values;
+
+  let privateMetadata: { channelId?: string; ts?: string } = {};
+  if (payload.view.private_metadata) {
+    try {
+      privateMetadata = JSON.parse(payload.view.private_metadata);
+    } catch (error) {
+      console.error("Error parsing private_metadata:", error);
+    }
+  }
+  const channelId: string | undefined = privateMetadata.channelId;
+  const ts: string | undefined = privateMetadata.ts;
   console.log("values", values);
 
   const notify_on_create =
@@ -58,10 +72,10 @@ slack.viewSubmission(newMessageAction, async (request) => {
   }
 
   let options: CreateInboxEntryOptions = {
-    //TODO - Add the rest of the fields
+    //TODO - Add the rest of whthe fields
     message: {
-      ts: "123465",
-      channel: "C0694MW7XJN",
+      ts: ts ?? "",
+      channel: channelId ?? "",
       userId: payload.user.id,
     },
     description: description as string | "", // Assign empty string instead of undefined
