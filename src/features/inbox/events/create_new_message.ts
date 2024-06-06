@@ -7,6 +7,7 @@ import {
   loadSentInboxEntries,
 } from "../data";
 import { getOutboxModal } from "../views/outbox_modal";
+import { ButtonAction } from "slack-edge";
 
 /**
  * This action id can be used to call the modal to create an outbox message
@@ -18,10 +19,13 @@ export const newMessageAction = "new_outbox_message";
  */
 slack.action(newMessageAction, async (request) => {
   const payload = request.payload;
+  //get channel and ts from the payload
+  var value = (request.payload.actions[0] as ButtonAction).value;
+  const { channelId, messageTs, messageDescription } = JSON.parse(value);
 
   await slack.client.views.push({
     trigger_id: payload.trigger_id,
-    view: await getNewMessageModal(),
+    view: await getNewMessageModal(channelId, messageTs, messageDescription),
   });
 });
 
