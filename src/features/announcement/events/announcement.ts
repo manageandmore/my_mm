@@ -1,9 +1,12 @@
 import {
+  AnyMessageBlock,
   AnyRichTextBlockElement,
   ButtonAction,
 } from "slack-edge";
 import { getAnnouncementCreatorModal } from "../views/announcement";
 import { slack } from "../../../slack";
+import { cache } from "../../common/cache";
+import { hash } from "../../../utils";
 
 export const createAnnouncementAction = "create_announcement_action";
 
@@ -37,6 +40,9 @@ slack.viewSubmission(
     const message = (state.message.message as any).rich_text_value
       .elements as AnyRichTextBlockElement[];
 
+    const announcementId = `announcement:${hash(message)}`;
+    await cache.set(announcementId, message);
+
     await slack.client.chat.postMessage({
       channel: payload.user.id,
       text: "Here is your announcement.",
@@ -65,7 +71,7 @@ slack.viewSubmission(
                 text: "Send",
               },
               action_id: sendAnnouncementAction,
-              value: JSON.stringify({ channel, message }),
+              value: JSON.stringify({ channel, announcementId }),
               style: "primary",
             },
           ],
@@ -86,7 +92,12 @@ slack.action(sendAnnouncementAction, async (request) => {
     return;
   }
 
-  var { channel, message } = JSON.parse(value);
+  var { channel, announcementId } = JSON.parse(value);
+  const message = await cache.get<AnyRichTextBlockElement[]>(announcementId);
+
+  if (message == null) {
+    return;
+  }
 
   // Send the announcement.
   await slack.client.chat.postMessage({
@@ -96,8 +107,8 @@ slack.action(sendAnnouncementAction, async (request) => {
       {
         type: "rich_text",
         elements: message,
-      }
-    ]
+      },
+    ],
   });
 
   // Update the users preview message to prevent repeated sending.
