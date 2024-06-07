@@ -202,9 +202,22 @@ export async function deleteSentInboxEntry(
   userId: string,
   entryToBeDeleted: SentInboxEntry
 ): Promise<void> {
+  // Delete the entries for all recipients.
+  for (var recipientId of entryToBeDeleted.recipientIds) {
+    var inboxes =
+      (await cache.hget<ReceivedInboxEntry[]>("inbox:received", recipientId)) ??
+      [];
+    await cache.hset<ReceivedInboxEntry[]>("inbox:received", {
+      [recipientId]: inboxes.filter(
+        (e) => e.message.ts != entryToBeDeleted.message.ts
+      ),
+    });
+  }
+
+  //Delete the entry for the sender.
   const oldEntries: SentInboxEntry[] = await loadSentInboxEntries(userId);
   const newEntries = oldEntries.filter(
-    (e) => JSON.stringify(e) !== JSON.stringify(entryToBeDeleted)
+    (e) => e.message.ts != entryToBeDeleted.message.ts
   );
   await cache.hset<SentInboxEntry[]>("inbox:sent", {
     [userId]: newEntries,
@@ -327,7 +340,8 @@ async function sendInboxNotification(
       },
       action_id: action.action_id,
       value: JSON.stringify({
-        entry: entry,
+        messageTs: entry.message.ts,
+        senderId: entry.senderId,
         userId: to,
         action: action,
       }),
