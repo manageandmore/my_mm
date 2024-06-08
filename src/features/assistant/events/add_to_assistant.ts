@@ -32,33 +32,12 @@ anyMessage(async (request) => {
   const indexedChannels = await features.read(assistantFeatureFlag).tags
     .IndexedChannels;
 
-  const isIndexed =
-    indexedChannels != false &&
-    indexedChannels.split(";").includes(channelName);
 
-  if (!isIndexed) {
-    return;
-  }
-
-  const vectorStore = await getVectorStore();
-
-  const documentId = await getMessageDocumentId(payload.channel, payload.ts);
-
-  // Prepare the document.
-  const user = await getUserById(payload.user ?? "");
-  const document = await messageToDocument({
-    channel: { id: payload.channel, name: channelName },
-    user: {
-      id: payload.user,
-      name: user?.real_name ?? user?.name,
-    },
-    text: payload.text,
-    ts: payload.ts,
-    autoIndexed: true,
+  await request.context.respond({
+    response_type: "ephemeral",
+    text: "❌ Sorry, only messages posted in public channels can be added to my knowledge index in order to protect private conversations.",
   });
 
-  // Add it to the vector database.
-  await vectorStore.addDocuments([document], { ids: [documentId] });
 
   await slack.client.reactions.add({
     channel: payload.channel,
@@ -72,7 +51,7 @@ const addToAssistantShortcut = "add_to_assistant";
 /**
  * Handles the "add to assistant" shortcut on a message.
  */
-slack.messageShortcut(addToAssistantShortcut, async (request) => {
+  slack.messageShortcut(addToAssistantShortcut, async (request) => {
   const payload = request.payload;
 
   try {
