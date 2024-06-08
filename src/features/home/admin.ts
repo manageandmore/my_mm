@@ -15,6 +15,7 @@ import { createAnnouncementAction } from "../announcement/events/announcement";
 import { syncNotionTask } from "../assistant/loaders/load_pages";
 import { syncSlackTask } from "../assistant/loaders/load_channels";
 import { syncWebsiteTask } from "../assistant/loaders/load_website";
+import { openOutboxAction } from "../inbox/events/open_outbox";
 
 export type AdminActionRequest = SlackRequestWithOptionalRespond<
   SlackAppEnv,
@@ -113,6 +114,15 @@ export async function getAdminSection(
           },
           action_id: checkForRemindersAction,
         },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "open outbox",
+            emoji: true,
+          },
+          action_id: openOutboxAction,
+        },
       ],
     },
     {
@@ -186,7 +196,7 @@ slack.action(
   async (_) => {},
   async (request) => {
     const viewId = await openTaskModal(request.payload.trigger_id);
-    await triggerTask(syncNotionTask, {viewId});
+    await triggerTask(syncNotionTask, { viewId });
   }
 );
 
