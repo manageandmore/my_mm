@@ -2,7 +2,7 @@ import { RequestContext } from "@vercel/edge";
 import { runTasks } from "../src/features/common/task_utils";
 import { syncNotionTask } from "../src/features/assistant/loaders/load_pages";
 import { syncWebsiteTask } from "../src/features/assistant/loaders/load_website";
-import { checkInboxRemindersTask } from "../src/features/inbox/check_reminders";
+import { checkInboxRemindersTask } from "../src/features/inbox/events/check_reminders";
 
 /**
  * Configures the vercel deployment to use the edge runtime.

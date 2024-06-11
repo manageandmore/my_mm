@@ -54,3 +54,11 @@ export async function getPublicChannels() {
 
   return channels;
 }
+
+export async function getChannelById(channelId: string) {
+  const response = await slack.client.conversations.info({
+    channel: channelId,
+  });
+  const channel = response.channel as Channel;
+  return channel.name;
+}

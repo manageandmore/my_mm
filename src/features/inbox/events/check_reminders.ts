@@ -1,5 +1,5 @@
-import { Task } from "../common/task_utils";
-import { checkAndTriggerOverdueInboxReminders } from "./data";
+import { Task } from "../../common/task_utils";
+import { checkAndTriggerOverdueInboxReminders } from "../data";
 
 export const checkInboxRemindersTask: Task = {
   name: "check reminders",
@@ -9,4 +9,4 @@ export const checkInboxRemindersTask: Task = {
   display(_) {
     return [];
   },
-}
+};
