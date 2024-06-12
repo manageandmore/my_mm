@@ -9,6 +9,7 @@ import { getAskAIButton } from "../../assistant/events/ask_ai_action";
 import { getCreatePostButton } from "../../post_creator/actions/create_post_action";
 import { getAdminSection } from "../admin";
 import { ProfileOptions, getProfileSection } from "./profile_section";
+import { getInboxSection } from "../../inbox/views/inbox_section";
 
 /** Interface for the data used to hydrate the home view. */
 export type HomeOptions = ProfileOptions & {
@@ -31,6 +32,10 @@ export async function getHomeView(
     blocks: [
       ...getProfileSection(options),
       ...getSkillsSection(options.skillList),
+      {
+        type: "divider",
+      },
+      ...getInboxSection(),
       {
         type: "divider",
       },
