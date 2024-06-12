@@ -59,6 +59,12 @@ anyMessage(async (request) => {
 
   // Add it to the vector database.
   await vectorStore.addDocuments([document], { ids: [documentId] });
+
+  await slack.client.reactions.add({
+    channel: payload.channel,
+    timestamp: payload.ts,
+    name: "brain",
+  });
 });
 
 const addToAssistantShortcut = "add_to_assistant";
