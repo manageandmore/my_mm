@@ -19,13 +19,27 @@ export const newMessageAction = "new_outbox_message";
  */
 slack.action(newMessageAction, async (request) => {
   const payload = request.payload;
-  //get channel and ts from the payload
-  var value = (request.payload.actions[0] as ButtonAction).value;
-  const { channelId, messageTs, messageDescription } = JSON.parse(value);
+
+  // Get channel and message id from the payload.
+  const { channelId, messageTs } = JSON.parse(
+    (request.payload.actions[0] as ButtonAction).value
+  );
+
+  // Get the message text from the api.
+  const response = await slack.client.conversations.history({
+    channel: channelId,
+    latest: messageTs,
+    limit: 1,
+    inclusive: true,
+  });
+  const message = response.messages?.[0].text;
+  if (!message) {
+    return;
+  }
 
   await slack.client.views.open({
     trigger_id: payload.trigger_id,
-    view: await getNewMessageModal(channelId, messageTs, messageDescription),
+    view: await getNewMessageModal(channelId, messageTs, message),
   });
 });
 
@@ -36,34 +50,20 @@ slack.viewSubmission(newMessageAction, async (request) => {
   const payload = request.payload;
   const values = payload.view.state.values;
 
-  let privateMetadata: { channelId?: string; ts?: string } = {};
-  if (payload.view.private_metadata) {
-    try {
-      privateMetadata = JSON.parse(payload.view.private_metadata);
-    } catch (error) {
-      console.error("Error parsing private_metadata:", error);
-    }
-  }
-  const channelId: string | undefined = privateMetadata.channelId;
-  const ts: string | undefined = privateMetadata.ts;
-  console.log("values", values);
+  const { channelId, messageTs }: { channelId: string; messageTs: string } =
+    JSON.parse(payload.view.private_metadata);
 
-  const notify_on_create =
-    values.Options.options_input_action.selected_options?.find(
-      (option) => option.value === "notify_on_create"
-    );
   const enable_reminders =
-    values.Options.options_input_action.selected_options?.find(
+    values.options.options_input_action.selected_options?.find(
       (option) => option.value === "enable_reminders"
     );
 
-  let deadline =
-    values.message_date.message_date_picker.selected_date_time ?? "";
-  console.log("deadline", deadline);
-  if (typeof deadline === "number") {
-    deadline = deadline * 1000;
-    deadline = new Date(deadline).toISOString();
-  }
+  const notify_on_create =
+    values.options.options_input_action.selected_options?.find(
+      (option) => option.value === "notify_on_create"
+    );
+
+  let deadline = values.deadline.deadline_input_action.selected_date_time;
 
   const description =
     values.message_description.message_description_input.value;
@@ -76,22 +76,28 @@ slack.viewSubmission(newMessageAction, async (request) => {
   }
 
   let options: CreateInboxEntryOptions = {
-    //TODO - Add the rest of whthe fields
     message: {
-      ts: ts ?? "",
-      channel: channelId ?? "",
+      ts: messageTs,
+      channel: channelId,
       userId: payload.user.id,
     },
-    description: description as string | "", // Assign empty string instead of undefined
+    description: description ?? "",
     actions: actions,
     deadline:
-      enable_reminders != null ? (deadline as unknown as string) : undefined, // Assign undefined instead of empty string
-
+      typeof deadline === "number"
+        ? new Date(deadline * 1000).toISOString()
+        : undefined,
     notifyOnCreate: notify_on_create != null,
     enableReminders: enable_reminders != null,
   };
-  //console.log("options", options);
+
   await createInboxEntry(options);
+
+  await slack.client.chat.postEphemeral({
+    channel: channelId,
+    user: payload.user.id,
+    text: "Successfully added this message to the inbox.",
+  });
 
   //update initial view
   await slack.client.views.update({

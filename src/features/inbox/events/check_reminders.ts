@@ -1,5 +1,10 @@
+import { Button, ChatPostMessageResponse } from "slack-edge";
+import { slack } from "../../../slack";
 import { Task } from "../../common/task_utils";
-import { checkAndTriggerOverdueInboxReminders } from "../data";
+import { ReceivedInboxEntry } from "../data";
+import { asReadableDuration } from "../../common/time_utils";
+import { cache } from "../../common/cache";
+import { getButtonForInboxAction } from "../views/inbox_section";
 
 export const checkInboxRemindersTask: Task = {
   name: "check reminders",
@@ -10,3 +15,122 @@ export const checkInboxRemindersTask: Task = {
     return [];
   },
 };
+
+export const checkForRemindersAction = "check_for_reminders";
+
+slack.action(checkForRemindersAction, async (request) => {
+  await checkAndTriggerOverdueInboxReminders();
+});
+
+
+/**
+ * Checks all active inbox entries for overdue reminders and sends the notifications.
+ *
+ * This function is idempotent as long as its not called in parallel.
+ */
+export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
+  var now = new Date().toISOString();
+  var inboxes =
+    (await cache.hgetall<ReceivedInboxEntry[]>("inbox:received")) ?? {};
+
+  for (var userId in inboxes) {
+    var entries = inboxes[userId];
+    var needsUpdate = false;
+
+    for (var entry of entries) {
+      console.log(entry);
+      var nextReminder = entry.reminders?.at(0);
+      if (nextReminder != undefined && nextReminder < now) {
+        // Remove this reminder so its not triggering again.
+        entry.reminders?.shift();
+        // Mark that we need to update the inbox.
+        needsUpdate = true;
+
+        await sendInboxNotification(userId, entry, "reminder");
+      }
+    }
+
+    // Only update the inbox if we actually triggered a reminder.
+    if (needsUpdate) {
+      await cache.hset<ReceivedInboxEntry[]>("inbox:received", {
+        [userId]: entries,
+      });
+    }
+  }
+}
+
+/**
+ * Sends an inbox notification to a user.
+ *
+ * @param to The user id of the target user.
+ * @param entry The inbox entry to notify about.
+ * @param type "new" for a newly created entry, or "reminder" for an inbox reminder.
+ * @returns The response from slack.
+ */
+export async function sendInboxNotification(
+  to: string,
+  entry: ReceivedInboxEntry,
+  type: "new" | "reminder"
+): Promise<ChatPostMessageResponse> {
+  var title = type == "new" ? "New Inbox Message" : "Inbox Reminder";
+
+  var note = "";
+  if (entry.deadline != null) {
+    var timeLeft = asReadableDuration(
+      new Date(entry.deadline!).valueOf() - Date.now()
+    );
+
+    note =
+      type == "new"
+        ? `You have *${timeLeft}* to respond`
+        : `You have *${timeLeft}* to respond to this message`;
+  }
+
+  var response = await slack.client.chat.postMessage({
+    channel: to,
+    //text is fallback in case client doesn't support blocks
+    text: `📬 ${title}${note.length > 0 ? ` | ${note}` : ""}:\n${
+      entry.description
+    }`,
+
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text:
+            `📬 ${title}${note.length > 0 ? ` | ${note}` : ""}:\n` +
+            `<${entry.message.ts}|original message>`,
+        },
+      },
+      {
+        type: "divider",
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: entry.description,
+        },
+      },
+      {
+        type: "divider",
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "_You can mark this message as resolved by clicking one of the buttons below. This will notify the message author and remove it from your inbox._",
+          },
+        ],
+      },
+      {
+        type: "actions",
+        elements: entry.actions.map((a) => getButtonForInboxAction(a, entry)),
+      },
+    ],
+  });
+
+  return response;
+}

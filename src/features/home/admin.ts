@@ -7,7 +7,6 @@ import {
 } from "slack-edge";
 import { slack } from "../../slack";
 import { getRolesForUser, refreshRoles } from "../common/role_utils";
-import { checkForRemindersAction } from "../inbox/events/message_response";
 import { openTaskModal, performTask, triggerTask } from "../common/task_utils";
 import { createAnnouncementAction } from "../announcement/events/announcement";
 import { syncNotionTask } from "../assistant/loaders/load_pages";
@@ -15,6 +14,7 @@ import { syncSlackTask } from "../assistant/loaders/load_channels";
 import { syncWebsiteTask } from "../assistant/loaders/load_website";
 import { openOutboxAction } from "../inbox/events/open_outbox";
 import { indexedChannels } from "../../constants";
+import { checkForRemindersAction } from "../inbox/events/check_reminders";
 
 export type AdminActionRequest = SlackRequestWithOptionalRespond<
   SlackAppEnv,
@@ -95,7 +95,7 @@ export async function getAdminSection(
           type: "button",
           text: {
             type: "plain_text",
-            text: "⏰ Check Reminders",
+            text: "📬 Trigger Inbox Reminders",
             emoji: true,
           },
           action_id: checkForRemindersAction,

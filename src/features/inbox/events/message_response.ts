@@ -5,7 +5,6 @@ import {
   InboxAction,
   ReceivedInboxEntry,
   SentInboxEntry,
-  checkAndTriggerOverdueInboxReminders,
   messageDismissedAction,
   messageDoneAction,
 } from "../data";
@@ -13,20 +12,23 @@ import {
 slack.action(messageDoneAction.action_id, async (request) => {
   const payload = request.payload;
   const actionData = JSON.parse((payload.actions[0] as ButtonAction).value);
+
   await resolveInboxEntry({
     messageTs: actionData.messageTs,
     senderId: actionData.senderId,
-    userId: actionData.userId,
+    userId: request.payload.user.id,
     action: messageDoneAction,
   });
 });
+
 slack.action(messageDismissedAction.action_id, async (request) => {
   const payload = request.payload;
   const actionData = JSON.parse((payload.actions[0] as ButtonAction).value);
+
   await resolveInboxEntry({
     messageTs: actionData.messageTs,
     senderId: actionData.senderId,
-    userId: actionData.userId,
+    userId: request.payload.user.id,
     action: messageDismissedAction,
   });
 });
@@ -83,8 +85,3 @@ export async function resolveInboxEntry(options: {
   });
 }
 
-export const checkForRemindersAction = "check_for_reminders";
-
-slack.action(checkForRemindersAction, async (request) => {
-  await checkAndTriggerOverdueInboxReminders();
-});

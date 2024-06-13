@@ -1,7 +1,6 @@
-import { AnyModalBlock, ButtonAction } from "slack-edge";
+import { ButtonAction } from "slack-edge";
 import { slack } from "../../../slack";
 import { SentInboxEntry, loadSentInboxEntries } from "../data";
-import { getChannelById } from "../../../slack";
 import { deleteSentInboxEntry } from "../data";
 import { getOutboxModal } from "../views/outbox_modal";
 import { getViewSentMessageModal } from "../views/view_sent_message_modal";
@@ -15,7 +14,6 @@ export const deleteSentMessageAction = "delete_sent_message";
  * Displays the message and all available information about it based on JSON value that was sent
  * with the button.
  */
-
 slack.action(viewSentMessageAction, async (request) => {
   const payload = request.payload;
   const action = payload.actions[0] as ButtonAction;

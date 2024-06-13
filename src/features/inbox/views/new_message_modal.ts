@@ -9,9 +9,9 @@ import { getChannelById } from "../../../slack";
  * @returns The new message modal view.
  */
 export async function getNewMessageModal(
-  channelId?: string,
-  ts?: string,
-  description?: string
+  channelId: string,
+  messageTs: string,
+  description: string
 ): Promise<ModalView> {
   const options = getResponseActionsOptions();
 
@@ -20,7 +20,7 @@ export async function getNewMessageModal(
     callback_id: newMessageAction,
     title: {
       type: "plain_text",
-      text: "New Message",
+      text: "New Inbox Message",
       emoji: false,
     },
     submit: {
@@ -32,13 +32,16 @@ export async function getNewMessageModal(
       type: "plain_text",
       text: "Cancel",
     },
+    private_metadata: JSON.stringify({
+      channelId, messageTs,
+    }),
     blocks: [
       {
         type: "context",
         elements: [
           {
             type: "mrkdwn",
-            text: "Send a new message to someone.",
+            text: "Create a new Inbox Message.",
           },
         ],
       },
@@ -57,28 +60,12 @@ export async function getNewMessageModal(
           type: "plain_text_input",
           action_id: "message_description_input",
           multiline: true,
-          min_length: 4,
-          max_length: 1000,
           initial_value: description,
         },
       },
       {
         type: "input",
-        block_id: "message_date",
-        label: {
-          type: "plain_text",
-          text: "Date",
-          emoji: true,
-        },
-        element: {
-          type: "datetimepicker",
-          action_id: "message_date_picker",
-          initial_date_time: Math.floor(Date.now() / 1000),
-        },
-      },
-      {
-        type: "input",
-        block_id: "Options",
+        block_id: "options",
         label: {
           type: "plain_text",
           text: "Options",
@@ -89,10 +76,15 @@ export async function getNewMessageModal(
           action_id: "options_input_action",
           options: [
             {
-              value: "No reminders",
+              value: "enable_reminders",
               text: {
                 type: "plain_text",
-                text: "No reminders needed",
+                text: "Enable reminders (Requires Deadline)",
+                emoji: true,
+              },
+              description: {
+                type: "plain_text",
+                text: "Reminders will be sent 1 and 8 hours before, as well as 1, 3, 7 and 14 days before the deadline.",
                 emoji: true,
               },
             },
@@ -100,20 +92,7 @@ export async function getNewMessageModal(
               value: "notify_on_create",
               text: {
                 type: "plain_text",
-                text: "Notify recipients on create?",
-                emoji: true,
-              },
-            },
-            {
-              value: "enable_reminders",
-              text: {
-                type: "plain_text",
-                text: "Enable reminders?",
-                emoji: true,
-              },
-              description: {
-                type: "plain_text",
-                text: "Reminders will be sent 1, 8 hours before aswell as 1, 3, 7, 14 days before the deadline if applicable.",
+                text: "Notify recipients on create",
                 emoji: true,
               },
             },
@@ -122,10 +101,24 @@ export async function getNewMessageModal(
       },
       {
         type: "input",
+        block_id: "deadline",
+        label: {
+          type: "plain_text",
+          text: "Deadline",
+          emoji: true,
+        },
+        element: {
+          type: "datetimepicker",
+          action_id: "deadline_input_action",
+        },
+        optional: true,
+      },
+      {
+        type: "input",
         block_id: "multi_select_menu",
         label: {
           type: "plain_text",
-          text: "Response actions menu",
+          text: "Response actions",
           emoji: true,
         },
         element: {
@@ -137,6 +130,7 @@ export async function getNewMessageModal(
             emoji: true,
           },
           options: options,
+          initial_options: options,
         },
       },
     ],
