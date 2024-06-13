@@ -5,31 +5,64 @@ import {
   InboxAction,
   ReceivedInboxEntry,
   SentInboxEntry,
-  checkAndTriggerOverdueInboxReminders,
-  messageDismissedAction,
-  messageDoneAction,
+  allResponseActions,
 } from "../data";
+import { updateHomeViewForUser } from "../../home/event";
 
-slack.action(messageDoneAction.action_id, async (request) => {
-  const payload = request.payload;
-  const actionData = JSON.parse((payload.actions[0] as ButtonAction).value);
-  await resolveInboxEntry({
-    messageTs: actionData.messageTs,
-    senderId: actionData.senderId,
-    userId: actionData.userId,
-    action: messageDoneAction,
-  });
-});
-slack.action(messageDismissedAction.action_id, async (request) => {
-  const payload = request.payload;
-  const actionData = JSON.parse((payload.actions[0] as ButtonAction).value);
-  await resolveInboxEntry({
-    messageTs: actionData.messageTs,
-    senderId: actionData.senderId,
-    userId: actionData.userId,
-    action: messageDismissedAction,
-  });
-});
+registerActions();
+
+function registerActions() {
+  for (let action of allResponseActions) {
+    slack.action(
+      action.action_id,
+      async (request) => {
+        const payload = request.payload;
+
+        if (payload.channel && payload.message) {
+          await slack.client.chat.update({
+            channel: payload.channel!.id,
+            ts: payload.message!.ts,
+            text: payload.message!.text ?? "",
+            blocks: [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: payload.message.text ?? "",
+                },
+              },
+              {
+                type: "context",
+                elements: [
+                  {
+                    type: "mrkdwn",
+                    text: `*You responded with [${action.label}] to this message.*`,
+                  },
+                ],
+              },
+            ],
+          });
+        }
+      },
+      async (request) => {
+        const payload = request.payload;
+        const actionData = JSON.parse(
+          (payload.actions[0] as ButtonAction).value
+        );
+
+        await resolveInboxEntry({
+          messageTs: actionData.messageTs,
+          senderId: actionData.senderId,
+          userId: request.payload.user.id,
+          action: action,
+        });
+
+        // Update the home page.
+        await updateHomeViewForUser(request.payload.user.id);
+      }
+    );
+  }
+}
 
 /**
  * Resolves one inbox entry for a user with the chosen [action].
@@ -82,9 +115,3 @@ export async function resolveInboxEntry(options: {
     }),
   });
 }
-
-export const checkForRemindersAction = "check_for_reminders";
-
-slack.action(checkForRemindersAction, async (request) => {
-  await checkAndTriggerOverdueInboxReminders();
-});

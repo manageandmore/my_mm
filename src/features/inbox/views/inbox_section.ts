@@ -1,147 +1,156 @@
-import { ModalView } from "slack-edge";
-
-export type ContentSchedulerModalOptions = {
-  previewImageUrl: string;
-  imageUrl: string;
-};
-
-//TODO: Define Interface
-//TODO: Remove Events.
+import { AnyHomeTabBlock, AnyTextField, Button, HeaderBlock } from "slack-edge";
+import { InboxAction, ReceivedInboxEntry } from "../data";
+import { openOutboxAction } from "../events/open_outbox";
+import { asReadableDuration } from "../../common/time_utils";
 
 /**
- * Constructs the modal view for the inbox viewer
- *
- * @param options The options for hydrating the modal.
- * @returns The modal view.
+ * Constructs the inbox section.
  */
-export function getInboxSection(): any {
+export function getInboxSection(
+  entries: ReceivedInboxEntry[],
+  hasOutbox: boolean
+): AnyHomeTabBlock[] {
+  const header: HeaderBlock = {
+    type: "header",
+    text: {
+      type: "plain_text",
+      text: (entries.length == 0 ? "📪" : "📬") + " Your Inbox",
+    },
+  };
 
-  return (
-    [
-		{
-			"type": "header",
-			"text": {
-				"type": "plain_text",
-				"text": ":newspaper:  Your MM Inbox  :newspaper:"
-			}
-		},
-		{
-			"type": "divider"
-		},
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": " :loud_sound: *ACTION REQUIRED* :loud_sound:"
-			}
-		},
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "Unlock the Power of AI with Our Microclasses!  Join us for a series of transformative microclasses designed to supercharge your skills in Artificial Intelligence (AI)...."
-			},
-			"accessory": {
-				"type": "button",
-				"text": {
-					"type": "plain_text",
-					"text": "Go to post",
-					"emoji": true
-				}
-			}
-		},
-		{
-			"type": "actions",
-			"elements": [
-				{
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"emoji": true,
-						"text": "Done"
-					},
-					"style": "primary",
-					"value": "click_me_123"
-				},
-				{
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"emoji": true,
-						"text": "Ignore"
-					},
-					"style": "danger",
-					"value": "click_me_123"
-				}
-			]
-		},
-		{
-			"type": "divider"
-		},
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": ":calendar: |   *UPCOMING EVENTS*  | :calendar: "
-			}
-		},
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "`11/20-11/22` *Beet the Competition* _ annual retreat at Schrute Farms_"
-			},
-			"accessory": {
-				"type": "button",
-				"text": {
-					"type": "plain_text",
-					"text": "RSVP",
-					"emoji": true
-				}
-			}
-		},
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "`12/01` *Toby's Going Away Party* at _Benihana_"
-			},
-			"accessory": {
-				"type": "button",
-				"text": {
-					"type": "plain_text",
-					"text": "Learn More",
-					"emoji": true
-				}
-			}
-		},
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "`11/13` :pretzel: *Pretzel Day* :pretzel: at _Scranton Office_"
-			},
-			"accessory": {
-				"type": "button",
-				"text": {
-					"type": "plain_text",
-					"text": "RSVP",
-					"emoji": true
-				}
-			}
-		},
-		{
-			"type": "divider"
-		},
-		{
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": ":pushpin: Do you have something to include in the newsletter? Here's *how to submit content*."
-				}
-			]
-		}
-])
+  const outboxSection: AnyHomeTabBlock[] = hasOutbox
+    ? [
+        {
+          type: "divider",
+        },
+        {
+          type: "header",
+          text: {
+            type: "plain_text",
+            text: "📤 Your Outbox",
+          },
+        },
+        {
+          type: "context",
+          elements: [
+            {
+              type: "mrkdwn",
+              text: "The Outbox shows all messages you sent to others and how they responded.",
+            },
+          ],
+        },
+        {
+          type: "actions",
+          elements: [
+            {
+              type: "button",
+              text: {
+                type: "plain_text",
+                text: "Open Outbox",
+                emoji: true,
+              },
+              action_id: openOutboxAction,
+            },
+          ],
+        },
+      ]
+    : [];
+
+  if (entries.length == 0) {
+    return [
+      header,
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "All done. Check back later.",
+          },
+        ],
+      },
+      ...outboxSection,
+    ];
+  }
+
+  return [
+    header,
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "_You can mark messages as resolved by clicking one of its buttons. This will notify the message author and remove it from your inbox._",
+        },
+      ],
+    },
+    ...entries.flatMap<AnyHomeTabBlock>((e) => {
+      let deadlineHint: AnyHomeTabBlock[] = [];
+      if (e.deadline != null) {
+        let timeLeft = asReadableDuration(
+          new Date(e.deadline!).valueOf() - Date.now()
+        );
+
+        deadlineHint = [
+          {
+            type: "context",
+            elements: [
+              {
+                type: "mrkdwn",
+                text: `*You have ${timeLeft} left to respond to this message.*`,
+              },
+            ],
+          },
+        ];
+      }
+
+      return [
+        {
+          type: "divider",
+        },
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: e.description,
+          },
+          accessory: {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "View original message",
+              emoji: true,
+            },
+            url: e.message.url,
+          },
+        },
+        ...deadlineHint,
+        {
+          type: "actions",
+          elements: e.actions.map<Button>((a) => getButtonForInboxAction(a, e)),
+        },
+      ];
+    }),
+    ...outboxSection,
+  ];
 }
 
+export function getButtonForInboxAction(
+  action: InboxAction,
+  entry: ReceivedInboxEntry
+): Button {
+  return {
+    type: "button",
+    text: {
+      emoji: true,
+      type: "plain_text",
+      text: action.label,
+    },
+    action_id: action.action_id,
+    style: action.style,
+    value: JSON.stringify({
+      messageTs: entry.message.ts,
+      senderId: entry.senderId,
+      action: action,
+    }),
+  };
+}
