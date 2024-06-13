@@ -1,21 +1,13 @@
-import {
-  AnyModalBlock,
-  ModalView,
-  Button,
-  RichTextSection,
-  RichTextBlockElement,
-  RichTextSectionElement,
-  AnyTextField,
-} from "slack-edge";
+import { AnyModalBlock, ModalView, AnyTextField } from "slack-edge";
 import { SentInboxEntry } from "../data";
 import {
   deleteSentMessageAction,
-  getResponseCountByAction,
   viewSentMessageAction,
 } from "../events/view_sent_message";
-import { newMessageAction } from "../events/create_new_message";
-import { getChannelById } from "../../../slack";
-import { openOutboxAction } from "../events/open_outbox";
+import {
+  deleteExpiredOutboxMessagesAction,
+  openOutboxAction,
+} from "../events/open_outbox";
 
 /**
  * Construct the outbox modal
@@ -23,7 +15,10 @@ import { openOutboxAction } from "../events/open_outbox";
  * @param messages - The messages to construct the outbox modal.
  * @returns The outbox modal view.
  */
-export function getOutboxModal(outbox: SentInboxEntry[]): ModalView {
+export function getOutboxModal(
+  outbox: SentInboxEntry[],
+  expired: number
+): ModalView {
   let blocks: AnyModalBlock[];
   if (outbox.length === 0) {
     blocks = [
@@ -48,6 +43,31 @@ export function getOutboxModal(outbox: SentInboxEntry[]): ModalView {
           },
         ],
       },
+      ...(<AnyModalBlock[]>(expired > 0
+        ? [
+            {
+              type: "divider",
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `You have ${expired} expired outbox message${
+                  expired > 1 ? "s" : ""
+                }. Do you want to remove them from everyone's inbox?`,
+              },
+              accessory: {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  text: "Remove expired messages",
+                },
+                style: "danger",
+                action_id: deleteExpiredOutboxMessagesAction,
+              },
+            },
+          ]
+        : [])),
       {
         type: "divider",
       },
@@ -65,7 +85,9 @@ export function getOutboxModal(outbox: SentInboxEntry[]): ModalView {
               text: "View Details",
             },
             action_id: viewSentMessageAction,
-            value: JSON.stringify(entry),
+            value: JSON.stringify({
+              messageTs: entry.message.ts,
+            }),
           },
         },
         {
@@ -141,7 +163,12 @@ export async function getViewSentMessageModal(
     },
   ];
 
-  const actionCounts = getResponseCountByAction(entry); // Replace [entry] with the actual array of SentInboxEntry
+  const actionCounts: { [action: string]: number } = {};
+
+  for (const resolution of Object.values(entry.resolutions)) {
+    const id = resolution.action.action_id;
+    actionCounts[id] = (actionCounts[id] ?? 0) + 1;
+  }
 
   blocks = blocks.concat([
     {
@@ -182,7 +209,9 @@ export async function getViewSentMessageModal(
           },
           style: "danger",
           action_id: deleteSentMessageAction,
-          value: JSON.stringify(entry),
+          value: JSON.stringify({
+            messageTs: entry.message.ts,
+          }),
           confirm: {
             title: {
               type: "plain_text",
@@ -210,7 +239,7 @@ export async function getViewSentMessageModal(
     type: "modal",
     title: {
       type: "plain_text",
-      text: "Inbox Message",
+      text: "Outbox Message",
     },
     blocks: blocks,
   };

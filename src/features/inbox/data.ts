@@ -48,15 +48,23 @@ export const messageThumbsUpAction: InboxAction = {
   action_id: "message_action_thumbsup",
 };
 
-export const allResponseActions = [messageDoneAction, messageDismissedAction, messageAcceptAction, messageDeclineAction, messageThumbsUpAction];
-export const defaultResponseActions = [messageDoneAction, messageDismissedAction];
+export const allResponseActions = [
+  messageDoneAction,
+  messageDismissedAction,
+  messageAcceptAction,
+  messageDeclineAction,
+  messageThumbsUpAction,
+];
+export const defaultResponseActions = [
+  messageDoneAction,
+  messageDismissedAction,
+];
 
 /** The type of a inbox entry as viewed by the user that sent it. */
 export type SentInboxEntry = InboxEntry & {
   recipientIds: string[];
   resolutions: { [userId: string]: InboxEntryResolution };
 };
-//TODO: change this? 2000 character limit for values may be reached with this
 
 /**
  * The type of a single users resolution of an inbox entry.
@@ -162,28 +170,11 @@ export async function createInboxEntry(
     ],
   });
 
-  // Get the current received entries for all recipients.
-  var inboxes =
-    (await cache.hmget<ReceivedInboxEntry[]>(
-      "inbox:received",
-      ...recipientIds
-    )) ?? {};
-
-  // Update the received entries for all recipients.
-  await cache.hset<ReceivedInboxEntry[]>(
-    "inbox:received",
-    Object.fromEntries(
-      recipientIds.map((recipientId) => {
-        return [
-          recipientId,
-          [
-            { ...entry, senderId: options.message.userId },
-            ...(inboxes[recipientId] ?? []),
-          ],
-        ];
-      })
-    )
-  );
+  // Add the entry for all recipients.
+  await updateRecipientsInboxes(recipientIds, (inbox) => [
+    { ...entry, senderId: options.message.userId },
+    ...inbox,
+  ]);
 
   if (options.notifyOnCreate) {
     // Notify all recipients.
@@ -215,27 +206,24 @@ export async function loadSentInboxEntries(
 /** Deletes a sent inbox entry for a user. */
 export async function deleteSentInboxEntry(
   userId: string,
-  entryToBeDeleted: SentInboxEntry
+  messageTs: string
 ): Promise<void> {
-  // Delete the entries for all recipients.
-  for (var recipientId of entryToBeDeleted.recipientIds) {
-    var inboxes =
-      (await cache.hget<ReceivedInboxEntry[]>("inbox:received", recipientId)) ??
-      [];
-    await cache.hset<ReceivedInboxEntry[]>("inbox:received", {
-      [recipientId]: inboxes.filter(
-        (e) => e.message.ts != entryToBeDeleted.message.ts
-      ),
-    });
+  //Delete the entry for the sender.
+  const oldEntries = await loadSentInboxEntries(userId);
+  const targetEntry = oldEntries.find((e) => e.message.ts == messageTs);
+
+  if (!targetEntry) {
+    return;
   }
 
-  //Delete the entry for the sender.
-  const oldEntries: SentInboxEntry[] = await loadSentInboxEntries(userId);
-  const newEntries = oldEntries.filter(
-    (e) => e.message.ts != entryToBeDeleted.message.ts
+  // Delete the entry for all recipients.
+  await updateRecipientsInboxes(targetEntry.recipientIds, (inbox) =>
+    inbox.filter((e) => e.message.ts != messageTs)
   );
+
+  //Delete the entry for the sender.
   await cache.hset<SentInboxEntry[]>("inbox:sent", {
-    [userId]: newEntries,
+    [userId]: oldEntries.filter((e) => e.message.ts != messageTs),
   });
 }
 
@@ -248,4 +236,24 @@ export async function loadReceivedInboxEntries(
     userId
   );
   return entries ?? [];
+}
+
+async function updateRecipientsInboxes(
+  recipientIds: string[],
+  update: (inbox: ReceivedInboxEntry[]) => ReceivedInboxEntry[]
+): Promise<void> {
+  var inboxes =
+    (await cache.hmget<ReceivedInboxEntry[]>(
+      "inbox:received",
+      ...recipientIds
+    )) ?? {};
+
+  await cache.hset<ReceivedInboxEntry[]>(
+    "inbox:received",
+    Object.fromEntries(
+      recipientIds.map((recipientId) => {
+        return [recipientId, update(inboxes[recipientId] ?? [])];
+      })
+    )
+  );
 }
