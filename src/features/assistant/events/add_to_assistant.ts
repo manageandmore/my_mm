@@ -1,10 +1,10 @@
+
 import { anyMessage, getPublicChannels, slack } from "../../../slack";
 import { getVectorStore } from "../ai/chain";
 import { getUserById } from "../../common/id_utils";
 import { ButtonAction } from "slack-edge";
-import { features } from "../../common/feature_flags";
-import { assistantFeatureFlag } from "..";
 import { getMessageDocumentId, messageToDocument } from "../loaders/load_channels";
+import { indexedChannels } from "../../../constants";
 
 /**
  * Listens to new messages in indexed channels and adds them to the vector database.
@@ -27,15 +27,7 @@ anyMessage(async (request) => {
   if (channelName == null) {
     return;
   }
-
-  // Check if its an indexed channel.
-  const indexedChannels = await features.read(assistantFeatureFlag).tags
-    .IndexedChannels;
-
-  const isIndexed =
-    indexedChannels != false &&
-    indexedChannels.split(";").includes(channelName);
-
+  const isIndexed = indexedChannels.includes(channelName);
   if (!isIndexed) {
     return;
   }

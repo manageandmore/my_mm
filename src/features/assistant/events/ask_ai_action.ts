@@ -1,8 +1,7 @@
 import { Button } from "slack-edge";
 import { slack } from "../../../slack";
-import { features } from "../../common/feature_flags";
-import { assistantFeatureFlag } from "..";
 import { assistantIndexDatabaseId } from "../loaders/load_pages";
+import { indexedChannels } from "../../../constants";
 
 const askAIAction = "ask_ai_action";
 
@@ -10,9 +9,6 @@ const askAIAction = "ask_ai_action";
  * Show an explanation modal when clicking the "Ask Assistant" feature button.
  */
 slack.action(askAIAction, async (request) => {
-  var tag = features.read(assistantFeatureFlag).tags.IndexedChannels || null;
-  var channels = tag?.split(";") ?? [];
-
   await slack.client.views.open({
     trigger_id: request.payload.trigger_id,
     view: {
@@ -45,14 +41,14 @@ slack.action(askAIAction, async (request) => {
             {
               type: "mrkdwn",
               text:
-                "The assistant is still in preview and has a limited knowledge about information from Notion and Slack.\n\n" +
+                "The assistant has knowledge about information from Notion, Slack and the MM Website.\n\n" +
                 "Information from Notion is added only for specific pages:\n" +
-                `• To add or remove a *notion page* to the ai index, check <https://www.notion.so/${assistantIndexDatabaseId}|this database>.\n\n` +
+                `• To add or remove a *notion page* to the ai knowledge index, check <https://www.notion.so/${assistantIndexDatabaseId}|this database>.\n\n` +
                 "Information from Slack is added in two ways:\n" +
-                `• All new messages posted any channel of ${channels.join(
+                `• All new messages posted in either ${indexedChannels.join(
                   " or "
                 )} are automatically added.\n` +
-                '• To add or remove an additional *slack message* to the ai index, open the message context menu (tap "..." on the message) and select "Add to assistant". ' +
+                '• To add or remove an additional *slack message* to the ai knowledge index, open the message context menu (tap "..." on the message) and select "Add to assistant".\n' +
                 "The assistant will react with a 🧠 emoji to every message it indexed.",
             },
           ],
@@ -62,12 +58,7 @@ slack.action(askAIAction, async (request) => {
   });
 });
 
-export async function getAskAIButton(userId: string): Promise<Button | null> {
-  const isEnabled = await features.check(assistantFeatureFlag, userId);
-  if (!isEnabled) {
-    return null;
-  }
-
+export async function getAskAIButton(userId: string): Promise<Button> {
   return {
     type: "button",
     text: {
