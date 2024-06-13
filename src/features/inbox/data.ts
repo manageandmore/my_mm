@@ -121,18 +121,13 @@ export async function createInboxEntry(
     message_ts: options.message.ts,
   });
 
-  const description =
-    options.description.length > 200
-      ? options.description.substring(0, 200) + "..."
-      : options.description;
-
   const entry: InboxEntry = {
     message: {
       channel: options.message.channel,
       ts: options.message.ts,
       url: link.permalink!,
     },
-    description: description,
+    description: options.description,
     actions: options.actions,
     deadline: options.deadline,
     reminders: reminders,

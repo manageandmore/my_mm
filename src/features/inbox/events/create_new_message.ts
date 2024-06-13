@@ -4,10 +4,9 @@ import {
   CreateInboxEntryOptions,
   InboxAction,
   createInboxEntry,
-  loadSentInboxEntries,
 } from "../data";
-import { getOutboxModal } from "../views/outbox_modal";
-import { ButtonAction } from "slack-edge";
+import { ButtonAction, WebhookParams } from "slack-edge";
+import { openOutboxAction } from "./open_outbox";
 
 /**
  * This action id can be used to call the modal to create an outbox message
@@ -32,14 +31,23 @@ slack.action(newMessageAction, async (request) => {
     limit: 1,
     inclusive: true,
   });
-  const message = response.messages?.[0].text;
+  let message = response.messages?.[0].text;
   if (!message) {
     return;
   }
 
+  if (message.length > 200) {
+    message = message.substring(0, 197) + "...";
+  }
+
   await slack.client.views.open({
     trigger_id: payload.trigger_id,
-    view: await getNewMessageModal(channelId, messageTs, message),
+    view: await getNewMessageModal(
+      channelId,
+      messageTs,
+      message,
+      payload.response_url
+    ),
   });
 });
 
@@ -50,16 +58,21 @@ slack.viewSubmission(newMessageAction, async (request) => {
   const payload = request.payload;
   const values = payload.view.state.values;
 
-  const { channelId, messageTs }: { channelId: string; messageTs: string } =
-    JSON.parse(payload.view.private_metadata);
+  const {
+    channelId,
+    messageTs,
+    updateUrl,
+  }: { channelId: string; messageTs: string; updateUrl: string } = JSON.parse(
+    payload.view.private_metadata
+  );
 
   const enable_reminders =
-    values.options.options_input_action.selected_options?.find(
+    values.options?.options_input_action?.selected_options?.find(
       (option) => option.value === "enable_reminders"
     );
 
   const notify_on_create =
-    values.options.options_input_action.selected_options?.find(
+    values.options?.options_input_action?.selected_options?.find(
       (option) => option.value === "notify_on_create"
     );
 
@@ -93,15 +106,36 @@ slack.viewSubmission(newMessageAction, async (request) => {
 
   await createInboxEntry(options);
 
-  await slack.client.chat.postEphemeral({
-    channel: channelId,
-    user: payload.user.id,
-    text: "Successfully added this message to the inbox.",
-  });
-
-  //update initial view
-  await slack.client.views.update({
-    view_id: payload.view.root_view_id!,
-    view: getOutboxModal(await loadSentInboxEntries(payload.user.id)),
+  // Update the original ephemeral message.
+  await fetch(updateUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(<WebhookParams>{
+      replace_original: true,
+      text: "✅ Successfully added this message to the inbox.",
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "✅ Successfully added this message to the inbox.",
+          },
+        },
+        {
+          type: "actions",
+          elements: [
+            {
+              type: "button",
+              text: {
+                type: "plain_text",
+                text: "📤 Open Outbox",
+                emoji: true,
+              },
+              action_id: openOutboxAction,
+            },
+          ],
+        },
+      ],
+    }),
   });
 });

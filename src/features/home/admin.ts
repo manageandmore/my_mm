@@ -12,7 +12,6 @@ import { createAnnouncementAction } from "../announcement/events/announcement";
 import { syncNotionTask } from "../assistant/loaders/load_pages";
 import { syncSlackTask } from "../assistant/loaders/load_channels";
 import { syncWebsiteTask } from "../assistant/loaders/load_website";
-import { openOutboxAction } from "../inbox/events/open_outbox";
 import { indexedChannels } from "../../constants";
 import { checkForRemindersAction } from "../inbox/events/check_reminders";
 
@@ -99,15 +98,6 @@ export async function getAdminSection(
             emoji: true,
           },
           action_id: checkForRemindersAction,
-        },
-        {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "open outbox",
-            emoji: true,
-          },
-          action_id: openOutboxAction,
         },
       ],
     },

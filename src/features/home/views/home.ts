@@ -17,6 +17,7 @@ export type HomeOptions = ProfileOptions & {
   creditsLeaderboard: CreditsLeaderboardItem[];
   skillList: SkillListPerLevel;
   inbox: ReceivedInboxEntry[];
+  hasOutbox: boolean;
 };
 
 /**
@@ -37,7 +38,7 @@ export async function getHomeView(
       {
         type: "divider",
       },
-      ...getInboxSection(options.inbox),
+      ...getInboxSection(options.inbox, options.hasOutbox),
       {
         type: "divider",
       },

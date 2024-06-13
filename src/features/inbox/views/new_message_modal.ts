@@ -11,7 +11,8 @@ import { getChannelById } from "../../../slack";
 export async function getNewMessageModal(
   channelId: string,
   messageTs: string,
-  description: string
+  description: string,
+  updateUrl: string,
 ): Promise<ModalView> {
   const options = getResponseActionsOptions();
 
@@ -33,7 +34,7 @@ export async function getNewMessageModal(
       text: "Cancel",
     },
     private_metadata: JSON.stringify({
-      channelId, messageTs,
+      channelId, messageTs, updateUrl,
     }),
     blocks: [
       {
@@ -60,6 +61,7 @@ export async function getNewMessageModal(
           type: "plain_text_input",
           action_id: "message_description_input",
           multiline: true,
+          max_length: 200,
           initial_value: description,
         },
       },
@@ -98,6 +100,7 @@ export async function getNewMessageModal(
             },
           ],
         },
+        optional: true,
       },
       {
         type: "input",

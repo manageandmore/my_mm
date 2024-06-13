@@ -1,4 +1,4 @@
-import { Button, ChatPostMessageResponse } from "slack-edge";
+import { AnyTextField, ChatPostMessageResponse } from "slack-edge";
 import { slack } from "../../../slack";
 import { Task } from "../../common/task_utils";
 import { ReceivedInboxEntry } from "../data";
@@ -72,39 +72,32 @@ export async function sendInboxNotification(
   entry: ReceivedInboxEntry,
   type: "new" | "reminder"
 ): Promise<ChatPostMessageResponse> {
-  var title = type == "new" ? "New Inbox Message" : "Inbox Reminder";
+  let title = type == "new" ? "New Inbox Message" : "Inbox Reminder";
 
-  var note = "";
+  let deadlineHint: AnyTextField[] = [];
   if (entry.deadline != null) {
-    var timeLeft = asReadableDuration(
+    let timeLeft = asReadableDuration(
       new Date(entry.deadline!).valueOf() - Date.now()
     );
 
-    note =
-      type == "new"
-        ? `You have *${timeLeft}* to respond`
-        : `You have *${timeLeft}* to respond to this message`;
+    deadlineHint = [{
+      type: "mrkdwn",
+      text: `*You have ${timeLeft}${type == "new" ? "" : " left"} to respond to this message.*`,
+    }];
   }
 
-  var response = await slack.client.chat.postMessage({
+  let response = await slack.client.chat.postMessage({
     channel: to,
-    //text is fallback in case client doesn't support blocks
-    text: `📬 ${title}${note.length > 0 ? ` | ${note}` : ""}:\n${
-      entry.description
-    }`,
-
+    // Text is fallback in case client doesn't support blocks
+    text: `📬 *${title}*:\n${entry.description}`,
     blocks: [
       {
         type: "section",
         text: {
           type: "mrkdwn",
           text:
-            `📬 ${title}${note.length > 0 ? ` | ${note}` : ""}:\n` +
-            `<${entry.message.ts}|original message>`,
+            `📬 *${title}*:`,
         },
-      },
-      {
-        type: "divider",
       },
       {
         type: "section",
@@ -112,13 +105,20 @@ export async function sendInboxNotification(
           type: "mrkdwn",
           text: entry.description,
         },
-      },
-      {
-        type: "divider",
+        accessory: {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Go to message",
+            emoji: true,
+          },
+          url: entry.message.url,
+        },
       },
       {
         type: "context",
         elements: [
+          ...deadlineHint,
           {
             type: "mrkdwn",
             text: "_You can mark this message as resolved by clicking one of the buttons below. This will notify the message author and remove it from your inbox._",
