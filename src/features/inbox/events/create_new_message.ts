@@ -54,88 +54,92 @@ slack.action(newMessageAction, async (request) => {
 /**
  * This event is triggered when the user clicks the "Submit" button when creating a new message
  */
-slack.viewSubmission(newMessageAction, async (request) => {
-  const payload = request.payload;
-  const values = payload.view.state.values;
+slack.viewSubmission(
+  newMessageAction,
+  async (_) => {},
+  async (request) => {
+    const payload = request.payload;
+    const values = payload.view.state.values;
 
-  const {
-    channelId,
-    messageTs,
-    updateUrl,
-  }: { channelId: string; messageTs: string; updateUrl: string } = JSON.parse(
-    payload.view.private_metadata
-  );
-
-  const enable_reminders =
-    values.options?.options_input_action?.selected_options?.find(
-      (option) => option.value === "enable_reminders"
+    const {
+      channelId,
+      messageTs,
+      updateUrl,
+    }: { channelId: string; messageTs: string; updateUrl: string } = JSON.parse(
+      payload.view.private_metadata
     );
 
-  const notify_on_create =
-    values.options?.options_input_action?.selected_options?.find(
-      (option) => option.value === "notify_on_create"
-    );
+    const enable_reminders =
+      values.options?.options_input_action?.selected_options?.find(
+        (option) => option.value === "enable_reminders"
+      );
 
-  let deadline = values.deadline.deadline_input_action.selected_date_time;
+    const notify_on_create =
+      values.options?.options_input_action?.selected_options?.find(
+        (option) => option.value === "notify_on_create"
+      );
 
-  const description =
-    values.message_description.message_description_input.value;
+    let deadline = values.deadline.deadline_input_action.selected_date_time;
 
-  const actions = [] as InboxAction[];
-  const multiselect_data =
-    values.multi_select_menu.multi_select_menu_action.selected_options;
-  for (const option of multiselect_data ?? []) {
-    actions.push(JSON.parse(option.value) as InboxAction);
-  }
+    const description =
+      values.message_description.message_description_input.value;
 
-  let options: CreateInboxEntryOptions = {
-    message: {
-      ts: messageTs,
-      channel: channelId,
-      userId: payload.user.id,
-    },
-    description: description ?? "",
-    actions: actions,
-    deadline:
-      typeof deadline === "number"
-        ? new Date(deadline * 1000).toISOString()
-        : undefined,
-    notifyOnCreate: notify_on_create != null,
-    enableReminders: enable_reminders != null,
-  };
+    const actions = [] as InboxAction[];
+    const multiselect_data =
+      values.multi_select_menu.multi_select_menu_action.selected_options;
+    for (const option of multiselect_data ?? []) {
+      actions.push(JSON.parse(option.value) as InboxAction);
+    }
 
-  await createInboxEntry(options);
+    let options: CreateInboxEntryOptions = {
+      message: {
+        ts: messageTs,
+        channel: channelId,
+        userId: payload.user.id,
+      },
+      description: description ?? "",
+      actions: actions,
+      deadline:
+        typeof deadline === "number"
+          ? new Date(deadline * 1000).toISOString()
+          : undefined,
+      notifyOnCreate: notify_on_create != null,
+      enableReminders: enable_reminders != null,
+    };
 
-  // Update the original ephemeral message.
-  await fetch(updateUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(<WebhookParams>{
-      replace_original: true,
-      text: "✅ Successfully added this message to the inbox.",
-      blocks: [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "✅ Successfully added this message to the inbox.",
-          },
-        },
-        {
-          type: "actions",
-          elements: [
-            {
-              type: "button",
-              text: {
-                type: "plain_text",
-                text: "📤 Open Outbox",
-                emoji: true,
-              },
-              action_id: openOutboxAction,
+    await createInboxEntry(options);
+
+    // Update the original ephemeral message.
+    await fetch(updateUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(<WebhookParams>{
+        replace_original: true,
+        text: "✅ Successfully added this message to the inbox.",
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: "✅ Successfully added this message to the inbox.",
             },
-          ],
-        },
-      ],
-    }),
-  });
-});
+          },
+          {
+            type: "actions",
+            elements: [
+              {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  text: "📤 Open Outbox",
+                  emoji: true,
+                },
+                action_id: openOutboxAction,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+  }
+);
