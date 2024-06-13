@@ -35,9 +35,18 @@ slack.action(
       }
     }
 
-    const view = await slack.client.views.open({
-      trigger_id: payload.trigger_id,
-      view: getOutboxModal(outbox_messages),
-    });
+    const viewId = payload.view?.root_view_id;
+
+    if (viewId && payload.view?.type != "home") {
+      await slack.client.views.update({
+        view_id: viewId,
+        view: getOutboxModal(outbox_messages),
+      });
+    } else {
+      await slack.client.views.open({
+        trigger_id: payload.trigger_id,
+        view: getOutboxModal(outbox_messages),
+      });
+    }
   }
 );

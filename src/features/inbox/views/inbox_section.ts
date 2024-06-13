@@ -117,7 +117,7 @@ export function getInboxSection(
             type: "button",
             text: {
               type: "plain_text",
-              text: "Go to message",
+              text: "View original message",
               emoji: true,
             },
             url: e.message.url,
@@ -146,6 +146,7 @@ export function getButtonForInboxAction(
       text: action.label,
     },
     action_id: action.action_id,
+    style: action.style,
     value: JSON.stringify({
       messageTs: entry.message.ts,
       senderId: entry.senderId,

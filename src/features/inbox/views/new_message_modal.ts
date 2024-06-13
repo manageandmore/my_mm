@@ -1,7 +1,10 @@
 import { ModalView, PlainTextOption } from "slack-edge";
 import { newMessageAction } from "../events/create_new_message";
-import { responseActions } from "../data";
-import { getChannelById } from "../../../slack";
+import {
+  InboxAction,
+  allResponseActions,
+  defaultResponseActions,
+} from "../data";
 
 /**
  * Construct the new message modal
@@ -12,10 +15,8 @@ export async function getNewMessageModal(
   channelId: string,
   messageTs: string,
   description: string,
-  updateUrl: string,
+  updateUrl: string
 ): Promise<ModalView> {
-  const options = getResponseActionsOptions();
-
   return {
     type: "modal",
     callback_id: newMessageAction,
@@ -34,7 +35,9 @@ export async function getNewMessageModal(
       text: "Cancel",
     },
     private_metadata: JSON.stringify({
-      channelId, messageTs, updateUrl,
+      channelId,
+      messageTs,
+      updateUrl,
     }),
     blocks: [
       {
@@ -42,7 +45,7 @@ export async function getNewMessageModal(
         elements: [
           {
             type: "mrkdwn",
-            text: "Create a new Inbox Message.",
+            text: "Write a short subject text for this inbox message including things like a summary, who it is relevant for and how they should respond. Additionally recipients will always see the original message.",
           },
         ],
       },
@@ -54,7 +57,7 @@ export async function getNewMessageModal(
         block_id: "message_description",
         label: {
           type: "plain_text",
-          text: "Message",
+          text: "Message Subject",
           emoji: true,
         },
         element: {
@@ -132,25 +135,21 @@ export async function getNewMessageModal(
             text: "Select items",
             emoji: true,
           },
-          options: options,
-          initial_options: options,
+          options: allResponseActions.map(getOptionForAction),
+          initial_options: defaultResponseActions.map(getOptionForAction),
         },
       },
     ],
   };
 }
 
-function getResponseActionsOptions(): PlainTextOption[] {
-  const options: PlainTextOption[] = [];
-  for (const action of responseActions) {
-    options.push({
-      text: {
-        type: "plain_text",
-        text: action.label,
-        emoji: true,
-      },
-      value: JSON.stringify(action),
-    });
-  }
-  return options;
+function getOptionForAction(action: InboxAction): PlainTextOption {
+  return {
+    text: {
+      type: "plain_text",
+      text: action.label,
+      emoji: true,
+    },
+    value: JSON.stringify(action),
+  };
 }

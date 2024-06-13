@@ -1,7 +1,21 @@
-import { AnyModalBlock, ModalView, Button } from "slack-edge";
+import {
+  AnyModalBlock,
+  ModalView,
+  Button,
+  RichTextSection,
+  RichTextBlockElement,
+  RichTextSectionElement,
+  AnyTextField,
+} from "slack-edge";
 import { SentInboxEntry } from "../data";
-import { viewSentMessageAction } from "../events/view_sent_message";
+import {
+  deleteSentMessageAction,
+  getResponseCountByAction,
+  viewSentMessageAction,
+} from "../events/view_sent_message";
 import { newMessageAction } from "../events/create_new_message";
+import { getChannelById } from "../../../slack";
+import { openOutboxAction } from "../events/open_outbox";
 
 /**
  * Construct the outbox modal
@@ -37,11 +51,47 @@ export function getOutboxModal(outbox: SentInboxEntry[]): ModalView {
       {
         type: "divider",
       },
+      ...outbox.flatMap<AnyModalBlock>((entry) => [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `*${entry.description}*`,
+          },
+          accessory: {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "View Details",
+            },
+            action_id: viewSentMessageAction,
+            value: JSON.stringify(entry),
+          },
+        },
+        {
+          type: "context",
+          elements: [
+            {
+              type: "mrkdwn",
+              text: `Sent to <#${entry.message.channel}>`,
+            },
+            {
+              type: "mrkdwn",
+              text: `<${entry.message.url}|Original message>`,
+            },
+            {
+              type: "mrkdwn",
+              text: `Responses: ${Object.keys(entry.resolutions).length} / ${
+                entry.recipientIds.length
+              }`,
+            },
+          ],
+        },
+        {
+          type: "divider",
+        },
+      ]),
     ];
-
-    for (let entry of outbox) {
-      blocks = blocks.concat(getOutboxItem(entry));
-    }
   }
 
   return {
@@ -54,30 +104,114 @@ export function getOutboxModal(outbox: SentInboxEntry[]): ModalView {
   };
 }
 
-function getOutboxItem(entry: SentInboxEntry): AnyModalBlock[] {
-  return [
+export async function getViewSentMessageModal(
+  entry: SentInboxEntry
+): Promise<ModalView> {
+  let blocks: AnyModalBlock[] = [
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*${entry.description}*`,
+        text: entry.description,
       },
-      accessory: getViewMessageButton(entry),
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `Sent to <#${entry.message.channel}>`,
+        },
+        {
+          type: "mrkdwn",
+          text: `<${entry.message.url}|Original message>`,
+        },
+      ],
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Deadline:* ${
+          entry.deadline
+            ? new Date(entry.deadline).toLocaleString()
+            : "No deadline"
+        }`,
+      },
+    },
+  ];
+
+  const actionCounts = getResponseCountByAction(entry); // Replace [entry] with the actual array of SentInboxEntry
+
+  blocks = blocks.concat([
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Responses*:  ${Object.keys(entry.resolutions).length} / ${
+          entry.recipientIds.length
+        }`,
+      },
+    },
+    {
+      type: "section",
+      fields: entry.actions.map<AnyTextField>((a) => ({
+        type: "mrkdwn",
+        text: `*${a.label}*:  ${actionCounts[a.action_id] ?? 0}`,
+      })),
     },
     {
       type: "divider",
     },
-  ];
-}
-
-function getViewMessageButton(entry: SentInboxEntry): Button {
-  return {
-    type: "button",
-    text: {
-      type: "plain_text",
-      text: "View Message",
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "View all",
+          },
+          action_id: openOutboxAction,
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Delete",
+          },
+          style: "danger",
+          action_id: deleteSentMessageAction,
+          value: JSON.stringify(entry),
+          confirm: {
+            title: {
+              type: "plain_text",
+              text: "Are you sure?",
+            },
+            text: {
+              type: "mrkdwn",
+              text: "Are you sure you want to delete this inbox message?",
+            },
+            confirm: {
+              type: "plain_text",
+              text: "Yes",
+            },
+            deny: {
+              type: "plain_text",
+              text: "No",
+            },
+          },
+        },
+      ],
     },
-    action_id: viewSentMessageAction,
-    value: JSON.stringify(entry),
+  ]);
+
+  return {
+    type: "modal",
+    title: {
+      type: "plain_text",
+      text: "Inbox Message",
+    },
+    blocks: blocks,
   };
 }

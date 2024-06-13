@@ -109,7 +109,7 @@ export async function sendInboxNotification(
           type: "button",
           text: {
             type: "plain_text",
-            text: "Go to message",
+            text: "View original message",
             emoji: true,
           },
           url: entry.message.url,

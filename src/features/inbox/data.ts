@@ -19,23 +19,37 @@ export type InboxEntry = {
 export type InboxAction = {
   label: string;
   /** The style for the action button in slack. */
-  style: "primary" | "danger" | null;
+  style?: "primary" | "danger";
   /** The action id for the action button in slack. */
-  action_id: "message_done" | "message_dismissed";
+  action_id: string;
 };
 
 export const messageDoneAction: InboxAction = {
-  label: "✅  Done",
+  label: "✅ Done",
   style: "primary",
-  action_id: "message_done",
+  action_id: "message_action_done",
 };
 export const messageDismissedAction: InboxAction = {
   label: "🗑️ Dismiss",
+  action_id: "message_action_dismiss",
+};
+export const messageAcceptAction: InboxAction = {
+  label: "✅ Accept",
+  style: "primary",
+  action_id: "message_action_accept",
+};
+export const messageDeclineAction: InboxAction = {
+  label: "❌ Decline",
   style: "danger",
-  action_id: "message_dismissed",
+  action_id: "message_action_decline",
+};
+export const messageThumbsUpAction: InboxAction = {
+  label: "👍 Thumbs Up",
+  action_id: "message_action_thumbsup",
 };
 
-export const responseActions = [messageDoneAction, messageDismissedAction];
+export const allResponseActions = [messageDoneAction, messageDismissedAction, messageAcceptAction, messageDeclineAction, messageThumbsUpAction];
+export const defaultResponseActions = [messageDoneAction, messageDismissedAction];
 
 /** The type of a inbox entry as viewed by the user that sent it. */
 export type SentInboxEntry = InboxEntry & {
