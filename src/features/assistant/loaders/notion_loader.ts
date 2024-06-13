@@ -1,6 +1,6 @@
 /**
- * Copied and adapted from langchain/document_loaders/notionapi
- * https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/document_loaders/web/notionapi.ts
+ * Copied and adapted from @langchain/community/document_loaders/web/notionapi
+ * https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/document_loaders/web/notionapi.ts
  */
 
 import {

@@ -7,6 +7,7 @@ import "../src/features/community_credits/index";
 import "../src/features/home/index";
 import "../src/features/post_creator/index";
 import "../src/features/wishlist/index";
+import "../src/features/inbox/index";
 
 /**
  * Configures the vercel deployment to use the edge runtime.

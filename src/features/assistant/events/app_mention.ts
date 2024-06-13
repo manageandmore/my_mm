@@ -2,12 +2,10 @@ import {
   AnyMessageBlock,
   AnyTextField,
   AppMentionEvent,
-  ChatPostMessageResponse,
   GenericMessageEvent,
 } from "slack-edge";
-import { slack } from "../../../slack";
-import { promptAssistant } from "../ai/prompt";
-import { anyMessage } from "../../common/message_handlers";
+import { anyMessage, slack } from "../../../slack";
+import { promptAssistant } from "../ai/chain";
 
 /**
  * Handles text messages sent to the app by prompting chatgpt to respond to the users message.
@@ -40,107 +38,21 @@ slack.event("app_mention", async (request) => {
   await triggerAssistant(payload, request.context.botUserId);
 });
 
+/**
+ * Shared message for triggering the assistant and generating a response.
+ * 
+ * This is executed for both direct messages to the app and mentions of the app in channels.
+ */
 async function triggerAssistant(
   event: GenericMessageEvent | AppMentionEvent,
   botUserId: string | undefined
 ) {
   const message = event.text.replaceAll(`<@${botUserId}>`, "");
 
-  let n = 0;
-  const msg = await createLoadingMessage(event.channel);
-
-  const interval = setInterval(() => {
-    n = (n + 1) % 3;
-    updateLoadingMessage(msg, n);
-  }, 1000);
-
-  const results = await promptAssistant(message);
-
-  //check if context was used by finding CNY in the response
-  const usedContext = !(results.text as string).includes("CNY");
-  //delete CNY from the response
-  results.text = results.text.replace("CNY", "");
-  let blocks: AnyMessageBlock[] = [
-    {
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: results.text,
-      },
-    },
-  ];
-
-  // TODO: Find better metric for unsuccessful responses.
-  const knowsAnswer = !(results.text as string).includes("I don't know");
-
-  if (knowsAnswer && results.sourceDocuments != null) {
-    const sourceIds: string[] = [];
-    const elements: AnyTextField[] = [];
-
-    if (usedContext) {
-      for (var doc of results.sourceDocuments) {
-        const meta = doc.metadata;
-
-        if (meta.notionId != null) {
-          if (sourceIds.includes(meta.notionId)) continue;
-
-          sourceIds.push(meta.notionId);
-          elements.push({
-            type: "mrkdwn",
-            text: `<${meta.url}|${meta.title}>`,
-          });
-        } else if (meta.type == "slack.message") {
-          if (sourceIds.includes(meta.message_ts)) continue;
-
-          sourceIds.push(meta.message_ts);
-          elements.push({
-            type: "mrkdwn",
-            text: `<${meta.link}|${meta.title}>`,
-          });
-        }
-      }
-
-      if (elements.length > 0) {
-        blocks.push({
-          type: "context",
-          elements: [
-            {
-              type: "plain_text",
-              text: "Learn more:",
-            },
-            elements[0],
-          ],
-        });
-      }
-    } else {
-      //add note that context wasn't helpful
-      blocks.push({
-        type: "context",
-        elements: [
-          {
-            type: "plain_text",
-            text: "I couldn't find any relevant context from MM slack or notion.",
-          },
-        ],
-      });
-    }
-  }
-
-  clearInterval(interval);
-
-  await slack.client.chat.update({
-    channel: msg.channel!,
-    ts: msg.ts!,
-    text: results.text,
-    blocks: blocks,
-  });
-}
-
-async function createLoadingMessage(
-  channel: string
-): Promise<ChatPostMessageResponse> {
-  return slack.client.chat.postMessage({
-    channel: channel,
+  // Display animating dots ('...') while the response is loading.
+  const msg = await slack.client.chat.postMessage({
+    channel: event.channel,
+    thread_ts: event.thread_ts,
     text: "...",
     blocks: [
       {
@@ -148,19 +60,59 @@ async function createLoadingMessage(
         elements: [{ type: "plain_text", text: "." }],
       },
     ],
-  });
-}
+  });;
 
-async function updateLoadingMessage(msg: ChatPostMessageResponse, n: number) {
-  return slack.client.chat.update({
+  let n = 0;
+  const interval = setInterval(() => {
+    n = (n + 1) % 3;
+    slack.client.chat.update({
+      channel: msg.channel!,
+      ts: msg.ts!,
+      text: "...",
+      blocks: [
+        {
+          type: "context",
+          elements: [{ type: "plain_text", text: "...".substring(0, n + 1) }],
+        },
+      ],
+    });
+  }, 1000);
+
+  const result = await promptAssistant(message);
+  let blocks: AnyMessageBlock[] = [
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: result.response,
+      },
+    },
+  ];
+
+  // If given, add links to the relevant sources.
+  if (result.learnMore.length > 0) {
+    blocks.push({
+      type: "context",
+      elements: [
+        {
+          type: "plain_text",
+          text: "Learn more:",
+        },
+        ...result.learnMore
+          // Pick at max. 9 links (max context elements is 10)
+          .slice(0, 9)
+          .map<AnyTextField>((link) => ({ type: "mrkdwn", text: link })),
+      ],
+    });
+  }
+
+  clearInterval(interval);
+
+  // Send the response.
+  await slack.client.chat.update({
     channel: msg.channel!,
     ts: msg.ts!,
-    text: "...",
-    blocks: [
-      {
-        type: "context",
-        elements: [{ type: "plain_text", text: "...".substring(0, n + 1) }],
-      },
-    ],
+    text: result.response,
+    blocks: blocks,
   });
 }

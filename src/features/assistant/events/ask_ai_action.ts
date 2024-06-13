@@ -1,10 +1,12 @@
 import { Button } from "slack-edge";
 import { slack } from "../../../slack";
-import { assistantIndexDatabaseId } from "../data/load_pages";
-import { indexedChannels } from "../../../constants";
+import { assistantIndexDatabaseId } from "../loaders/load_pages";
 
 const askAIAction = "ask_ai_action";
 
+/**
+ * Show an explanation modal when clicking the "Ask Assistant" feature button.
+ */
 slack.action(askAIAction, async (request) => {
   await slack.client.views.open({
     trigger_id: request.payload.trigger_id,

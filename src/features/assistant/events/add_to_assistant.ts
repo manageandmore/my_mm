@@ -1,15 +1,14 @@
-import { slack } from "../../../slack";
+
+import { anyMessage, getPublicChannels, slack } from "../../../slack";
 import { getVectorStore } from "../ai/chain";
 import { getUserById } from "../../common/id_utils";
 import { ButtonAction } from "slack-edge";
-import {
-  getMessageDocumentId,
-  messageToDocument,
-} from "../data/message_loader";
-import { anyMessage } from "../../common/message_handlers";
-import { getPublicChannels } from "../data/load_channels";
+import { getMessageDocumentId, messageToDocument } from "../loaders/load_channels";
 import { indexedChannels } from "../../../constants";
 
+/**
+ * Listens to new messages in indexed channels and adds them to the vector database.
+ */
 anyMessage(async (request) => {
   const payload = request.payload;
 
@@ -21,6 +20,7 @@ anyMessage(async (request) => {
     return;
   }
 
+  // Check if its a public channel (we don't want to index private messages).
   const channels = await getPublicChannels();
   const channelName = channels.get(payload.channel)?.name;
 
@@ -36,6 +36,7 @@ anyMessage(async (request) => {
 
   const documentId = await getMessageDocumentId(payload.channel, payload.ts);
 
+  // Prepare the document.
   const user = await getUserById(payload.user ?? "");
   const document = await messageToDocument({
     channel: { id: payload.channel, name: channelName },
@@ -48,11 +49,21 @@ anyMessage(async (request) => {
     autoIndexed: true,
   });
 
+  // Add it to the vector database.
   await vectorStore.addDocuments([document], { ids: [documentId] });
+
+  await slack.client.reactions.add({
+    channel: payload.channel,
+    timestamp: payload.ts,
+    name: "brain",
+  });
 });
 
 const addToAssistantShortcut = "add_to_assistant";
 
+/**
+ * Handles the "add to assistant" shortcut on a message.
+ */
 slack.messageShortcut(addToAssistantShortcut, async (request) => {
   const payload = request.payload;
 
@@ -61,6 +72,7 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
       channel: payload.channel.id,
     });
 
+    // Check that its a public channel.
     const channel = response.channel!;
     if (!channel.is_channel || channel.is_archived || channel.is_private) {
       throw new Error("Unallowed channel");
@@ -82,10 +94,8 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
 
   const vectorStore = await getVectorStore();
 
-  const documentId = await getMessageDocumentId(
-    payload.channel.id,
-    payload.message_ts
-  );
+  // Check if this message is already indexed.
+  const documentId = await getMessageDocumentId(payload.channel.id, payload.message_ts);
   const query = await vectorStore.client.query(
     `SELECT ${vectorStore.idColumnName} FROM ${vectorStore.tableName} WHERE ${vectorStore.idColumnName} = $1`,
     [documentId]
@@ -126,6 +136,7 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
 
   await vectorStore.delete({ ids: [documentId] });
 
+  // Prepare the document.
   const user = await getUserById(payload.message.user ?? "");
   const document = await messageToDocument({
     channel: payload.channel,
@@ -137,8 +148,10 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
     ts: payload.message_ts,
   });
 
+  // Add it to the vector database.
   await vectorStore.addDocuments([document], { ids: [documentId] });
 
+  // Add a reaction to the message to signal its indexing.
   try {
     await slack.client.reactions.add({
       channel: payload.channel.id,
@@ -149,6 +162,7 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
     console.log("ERROR", e);
   }
 
+  // Notify the user about the success.
   await slack.client.chat.postEphemeral({
     channel: payload.channel.id,
     user: payload.user.id,
@@ -158,21 +172,27 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
 
 const removeFromAssistantAction = "remove_from_assistant";
 
+/**
+ * Handles the "remove from assistant" action for a message.
+ */
 slack.action(removeFromAssistantAction, async (request) => {
   const payload = request.payload;
   const action = payload.actions[0] as ButtonAction;
 
   const { documentId, messageTs } = JSON.parse(action.value);
 
+  // Remove the message from the vector database.
   const vectorStore = await getVectorStore();
   await vectorStore.delete({ ids: [documentId] });
 
+  // Remove the apps reaction from the message.
   await slack.client.reactions.remove({
     channel: payload.channel!.id,
     timestamp: messageTs,
     name: "brain",
   });
 
+  // Notify the user about the success.
   await slack.client.chat.postEphemeral({
     channel: payload.channel!.id,
     user: payload.user.id,

@@ -1,9 +1,9 @@
 import { Filter, notion } from "../../notion";
-import { ScholarRow } from "../profile/query";
 import { getScholarIdFromUserId } from "./id_utils";
 import { ONE_WEEK } from "./time_utils";
 import { notionEnv } from "../../constants";
-import { cache } from "../../utils";
+import { cache } from "./cache";
+import { ScholarRow } from "../home/data/query_profile";
 
 const rolesPropertyId = notionEnv == "production" ? "gxSS" : "yQJE";
 

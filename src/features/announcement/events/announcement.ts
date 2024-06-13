@@ -1,9 +1,12 @@
 import {
+  AnyMessageBlock,
   AnyRichTextBlockElement,
   ButtonAction,
 } from "slack-edge";
-import { slack } from "../../slack";
-import { getAnnouncementCreatorModal } from "./views/announcement";
+import { getAnnouncementCreatorModal } from "../views/announcement";
+import { slack } from "../../../slack";
+import { cache } from "../../common/cache";
+import { hash } from "../../../utils";
 
 export const createAnnouncementAction = "create_announcement_action";
 
@@ -37,6 +40,9 @@ slack.viewSubmission(
     const message = (state.message.message as any).rich_text_value
       .elements as AnyRichTextBlockElement[];
 
+    const announcementId = `announcement:${hash(message)}`;
+    await cache.set(announcementId, message);
+
     await slack.client.chat.postMessage({
       channel: payload.user.id,
       text: "Here is your announcement.",
@@ -65,7 +71,7 @@ slack.viewSubmission(
                 text: "Send",
               },
               action_id: sendAnnouncementAction,
-              value: JSON.stringify({ channel, message }),
+              value: JSON.stringify({ channel, announcementId }),
               style: "primary",
             },
           ],
@@ -77,14 +83,23 @@ slack.viewSubmission(
 
 const sendAnnouncementAction = "send_announcement_action";
 
+/**
+ * Sends the announcement to the target channel.
+ */
 slack.action(sendAnnouncementAction, async (request) => {
   var value = (request.payload.actions[0] as ButtonAction).value;
   if (value == null) {
     return;
   }
 
-  var { channel, message } = JSON.parse(value);
+  var { channel, announcementId } = JSON.parse(value);
+  const message = await cache.get<AnyRichTextBlockElement[]>(announcementId);
 
+  if (message == null) {
+    return;
+  }
+
+  // Send the announcement.
   await slack.client.chat.postMessage({
     channel: channel,
     text: "📢 New announcement from @MyMM",
@@ -92,10 +107,11 @@ slack.action(sendAnnouncementAction, async (request) => {
       {
         type: "rich_text",
         elements: message,
-      }
-    ]
+      },
+    ],
   });
 
+  // Update the users preview message to prevent repeated sending.
   await request.context.respond!({
     replace_original: true,
     text: `Announcement sent to channel <#${channel}>`,

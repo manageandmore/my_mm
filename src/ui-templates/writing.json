@@ -1,0 +1,36 @@
+{
+  "blocks": [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "You have used *#inbox* in your message which will notify 87 active scholars. Are you sure? "
+      }
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "emoji": true,
+            "text": "Approve"
+          },
+          "style": "primary",
+          "value": "click_me_123"
+        },
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "emoji": true,
+            "text": "Deny"
+          },
+          "style": "danger",
+          "value": "click_me_123"
+        }
+      ]
+    }
+  ]
+}

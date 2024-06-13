@@ -1,6 +1,10 @@
-import { cache } from "../../utils";
+import { cache } from "../common/cache";
 import { slack } from "../../slack";
-import { Button, ChatPostMessageResponse } from "slack-edge";
+import {
+  Button,
+  ChatPostMessageResponse,
+  OpenIDConnectError,
+} from "slack-edge";
 import { asReadableDuration } from "../common/time_utils";
 
 /** The base type for an inbox entry. */
@@ -15,9 +19,6 @@ export type InboxEntry = {
   reminders?: string[]; // list of iso timestamps, ordered by earliest to latest
 };
 
-export const messageDoneAction = "message_done";
-export const messageDismissedAction = "message_dismissed";
-
 /** The type of an inbox action. */
 export type InboxAction = {
   label: string;
@@ -27,11 +28,25 @@ export type InboxAction = {
   action_id: "message_done" | "message_dismissed";
 };
 
+export const messageDoneAction: InboxAction = {
+  label: "✅  Done",
+  style: "primary",
+  action_id: "message_done",
+};
+export const messageDismissedAction: InboxAction = {
+  label: "🗑️ Dismiss",
+  style: "danger",
+  action_id: "message_dismissed",
+};
+
+export const responseActions = [messageDoneAction, messageDismissedAction];
+
 /** The type of a inbox entry as viewed by the user that sent it. */
 export type SentInboxEntry = InboxEntry & {
   recipientIds: string[];
   resolutions: { [userId: string]: InboxEntryResolution };
 };
+//TODO: change this? 2000 character limit for values may be reached with this
 
 /**
  * The type of a single users resolution of an inbox entry.
@@ -41,7 +56,7 @@ export type SentInboxEntry = InboxEntry & {
  * */
 export type InboxEntryResolution = {
   action: InboxAction;
-  time: string; // iso timestamp
+  timestamp: string; // iso timestamp
 };
 
 /** The type of an inbox entry as viewed by the user that received it. */
@@ -94,14 +109,16 @@ export async function createInboxEntry(
   let nextCursor: string | undefined = undefined;
 
   // Get all members (paginated).
-  do {
-    var response = await slack.client.conversations.members({
-      channel: options.message.channel,
-      cursor: nextCursor,
-    });
-    recipientIds.push(...(response.members ?? []));
-    nextCursor = response.response_metadata?.next_cursor;
-  } while (nextCursor != null);
+  if (options.message.channel != null && options.message.channel != "") {
+    do {
+      var response = await slack.client.conversations.members({
+        channel: options.message.channel,
+        cursor: nextCursor,
+      });
+      recipientIds.push(...(response.members ?? []));
+      nextCursor = response.response_metadata?.next_cursor;
+    } while (nextCursor != null && nextCursor != "");
+  }
 
   const entry: InboxEntry = {
     message: {
@@ -113,6 +130,7 @@ export async function createInboxEntry(
     deadline: options.deadline,
     reminders: reminders,
   };
+  console.log("new entry", entry);
 
   // Get the current sent entries for the sender.
   const entries =
@@ -155,7 +173,11 @@ export async function createInboxEntry(
   if (options.notifyOnCreate) {
     // Notify all recipients.
     for (var recipientId of recipientIds) {
-      var r = await sendInboxNotification(recipientId, entry, "new");
+      var r = await sendInboxNotification(
+        recipientId,
+        { ...entry, senderId: options.message.userId },
+        "new"
+      );
 
       // We need to track if we get rate-limited for this.
       // Sending out bursts of messages is allowed but the docs are not clear on the exact limits.
@@ -173,6 +195,33 @@ export async function loadSentInboxEntries(
 ): Promise<SentInboxEntry[]> {
   var entries = await cache.hget<SentInboxEntry[]>("inbox:sent", userId);
   return entries ?? [];
+}
+
+/** Deletes a sent inbox entry for a user. */
+export async function deleteSentInboxEntry(
+  userId: string,
+  entryToBeDeleted: SentInboxEntry
+): Promise<void> {
+  // Delete the entries for all recipients.
+  for (var recipientId of entryToBeDeleted.recipientIds) {
+    var inboxes =
+      (await cache.hget<ReceivedInboxEntry[]>("inbox:received", recipientId)) ??
+      [];
+    await cache.hset<ReceivedInboxEntry[]>("inbox:received", {
+      [recipientId]: inboxes.filter(
+        (e) => e.message.ts != entryToBeDeleted.message.ts
+      ),
+    });
+  }
+
+  //Delete the entry for the sender.
+  const oldEntries: SentInboxEntry[] = await loadSentInboxEntries(userId);
+  const newEntries = oldEntries.filter(
+    (e) => e.message.ts != entryToBeDeleted.message.ts
+  );
+  await cache.hset<SentInboxEntry[]>("inbox:sent", {
+    [userId]: newEntries,
+  });
 }
 
 /** Loads all received inbox entries for a user. */
@@ -291,13 +340,10 @@ async function sendInboxNotification(
       },
       action_id: action.action_id,
       value: JSON.stringify({
-        ts: entry.message.ts,
+        messageTs: entry.message.ts,
         senderId: entry.senderId,
         userId: to,
-        action: {
-          label: action.label,
-          style: action.style,
-        },
+        action: action,
       }),
     };
     actionBlocks.push(button);

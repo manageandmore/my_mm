@@ -5,9 +5,9 @@ import {
 } from "@notionhq/client/build/src/api-endpoints";
 import { notion } from "../../../notion";
 import { currentUrl, notionEnv } from "../../../constants";
-import { queryScholarProfile } from "../../profile/query";
 import { Prop } from "../../../utils";
 import { getScholarIdFromUserId } from "../../common/id_utils";
+import { queryScholarProfile } from "../../home/data/query_profile";
 
 const contentCalendarDatabaseId =
   notionEnv == "production"

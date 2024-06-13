@@ -5,9 +5,44 @@ import { notionEnv, notionToken } from "../../../constants";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { Document } from "langchain/dist/document";
 import { QueryResult } from "@vercel/postgres";
-import { VercelPostgres } from "langchain/vectorstores/vercel_postgres";
-import { LoaderStats, NotionAPILoader } from "./notion_loader";
 import yaml from "js-yaml";
+import { toMap } from "../../common/utils";
+import { VercelPostgres } from "@langchain/community/vectorstores/vercel_postgres";
+import { LoaderStats, NotionAPILoader } from "./notion_loader";
+import { Task } from "../../common/task_utils";
+
+/**
+ * Background task that syncs all notion pages and databases specified in the knowledge index.
+ */
+export const syncNotionTask: Task<ReportInfo> = {
+  name: "notion sync",
+  run: loadNotionPages,
+  display(report) {
+    if (report.type == "update") {
+      return [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text:
+              `Completed loading documents for ${report.target} ${report.id}:\n` +
+              `-> Skipped ${report.stats.skipped}, Updated ${report.stats.updated}, Added ${report.stats.added}, Removed ${report.stats.removed}`,
+          },
+        },
+      ];
+    } else {
+      return [
+        {
+          type: "section",
+          text: {
+            type: "plain_text",
+            text: `Removed ${report.amount} documents for ${report.id}.`,
+          },
+        },
+      ];
+    }
+  },
+};
 
 export const assistantIndexDatabaseId =
   notionEnv == "production"
@@ -17,7 +52,7 @@ export const assistantIndexDatabaseId =
 /**
  * Type definition for a row in the Assistant Index database.
  */
-export type AssistantIndexRow = DatabaseRow<{
+type AssistantIndexRow = DatabaseRow<{
   Name: Property<"title">;
   Type: Property<"select">;
 }>;
@@ -25,7 +60,7 @@ export type AssistantIndexRow = DatabaseRow<{
 var _m: MentionRichTextItemResponse;
 type IndexTarget = Extract<typeof _m.mention, { type: "page" | "database" }>;
 
-export type ReportInfo =
+type ReportInfo =
   | {
       type: "update";
       target: "page" | "database";
@@ -38,7 +73,11 @@ export type ReportInfo =
       amount: number;
     };
 
-export async function loadNotionPages(
+/**
+ * Syncs all notion pages and databases specified in the knowledge index.
+ */
+async function loadNotionPages(
+  _: any,
   report?: (info: ReportInfo) => Promise<void>
 ) {
   try {
@@ -54,6 +93,7 @@ export async function loadNotionPages(
       let name = row.properties.Name;
       let target: IndexTarget | null = null;
 
+      // Extract the target page from the title.
       for (var part of name.title) {
         if (part.type != "mention") {
           continue;
@@ -75,21 +115,21 @@ export async function loadNotionPages(
       let existingLastEdited = existingTimestamps.get(targetId);
       existingTimestamps.delete(targetId);
 
-      console.log("LOADING NOTION TARGET", target);
-
+      // Get the loader options depending on a page or database.
       let options: LoadingOptions =
         targetType == "page"
           ? {
-              lastEdited: existingLastEdited,
-              splitDocuments: true,
               titleKey: "Title",
+              lastEdited: existingLastEdited,
+              // Split the page content in chunks.
+              splitDocuments: true,
               addChunkHeader: true,
               getHeader: (_) => ({ Type: "Notion Page" }),
             }
           : {
+              titleKey: "Database",
               lastEdited: existingLastEdited,
               splitDocuments: false,
-              titleKey: "Database",
               addChunkHeader: false,
               getHeader: (doc) =>
                 doc.metadata.notionId != doc.metadata.targetId
@@ -97,12 +137,15 @@ export async function loadNotionPages(
                   : { Type: "Notion Database" },
             };
 
+      // Load the page or database and prepare as documents.
       let { docs, stats } = await loadPage(targetId, options);
 
+      // Delete any removed chunks not present anymore in the notion index.
       for (let notionId of stats.removed) {
         await deleteNotionDocuments(vectorStore, notionId, "notionId");
       }
 
+      // Add all documents to the vector database.
       if (docs.length > 0) {
         await vectorStore.addDocuments(docs);
       }
@@ -122,6 +165,7 @@ export async function loadNotionPages(
       });
     }
 
+    // Delete any removed pages or databases not present anymore in the notion index.
     for (let targetId of existingTimestamps.keys()) {
       let deleted = await deleteNotionDocuments(
         vectorStore,
@@ -143,6 +187,11 @@ export async function loadNotionPages(
   }
 }
 
+/**
+ * Queries all existing notion documents in the vector database.
+ * 
+ * This is used to check whether a page actually needs updating based on the last_edited timestamp.
+ */
 async function queryNotionDocuments(
   vectorStore: VercelPostgres
 ): Promise<Map<string, Map<string, string>>> {
@@ -174,14 +223,6 @@ async function queryNotionDocuments(
   );
 }
 
-function toMap<T, K, V>(
-  entries: T[],
-  key: (e: T) => K,
-  val: (e: T) => V
-): Map<K, V> {
-  return entries.reduce((map, e) => map.set(key(e), val(e)), new Map<K, V>());
-}
-
 async function deleteNotionDocuments(
   vectorStore: VercelPostgres,
   targetId: string,
@@ -197,11 +238,6 @@ async function deleteNotionDocuments(
 
   return result.rowCount;
 }
-
-const textSplitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 500,
-  chunkOverlap: 50,
-});
 
 interface LoadingOptions {
   lastEdited: Map<string, string> | undefined;
@@ -225,9 +261,14 @@ async function loadPage(
     checkEditTimestamps: options.lastEdited,
   });
 
-  let docs = await (options.splitDocuments
-    ? loader.loadAndSplit(textSplitter)
-    : loader.load());
+  let docs = await loader.load();
+
+  if (options.splitDocuments) {
+    docs = await new RecursiveCharacterTextSplitter({
+      chunkSize: 2000,
+      chunkOverlap: 0,
+    }).splitDocuments(docs);
+  }
 
   let isChunked = docs.length > 1;
 
@@ -244,7 +285,10 @@ async function loadPage(
   return { docs, stats: loader.stats };
 }
 
-function addHeader(doc: Document, header: Record<string, string>) {
+/**
+ * Adds a set of header properties to the document content in the frontmatter format.
+ */
+export function addHeader(doc: Document, header: Record<string, string>) {
   if (doc.pageContent == null) {
     doc.pageContent = "";
   }

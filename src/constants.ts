@@ -19,4 +19,4 @@ export const cachePrefix = process.env.CACHE_PREFIX;
 
 
 /** List of automatically indexed channels for the ai assistant. */
-export const indexedChannels = process.env.MM_INDEXED_CHANNELS?.split(";") ?? [];
+export const indexedChannels = ["general", "active"];

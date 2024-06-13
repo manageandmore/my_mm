@@ -1,5 +1,6 @@
-import { cache } from "../../../utils";
 import { slack } from "../../../slack";
+import { cache } from "../../common/cache";
+import { ButtonAction } from "slack-edge";
 import {
   InboxAction,
   ReceivedInboxEntry,
@@ -9,19 +10,24 @@ import {
   messageDoneAction,
 } from "../data";
 
-slack.event(messageDoneAction, async (request) => {
-  const payload: { actions: [{ value: string }] } = request.payload;
-  const action = payload.actions[0]; // assuming the button is the first action
-  const actionData = JSON.parse(action.value);
-
+slack.action(messageDoneAction.action_id, async (request) => {
+  const payload = request.payload;
+  const actionData = JSON.parse((payload.actions[0] as ButtonAction).value);
   await resolveInboxEntry({
-    messageTs: actionData.ts,
+    messageTs: actionData.messageTs,
     senderId: actionData.senderId,
     userId: actionData.userId,
-    action: {
-      label: actionData.action.actionLabel,
-      style: actionData.action.Style,
-    },
+    action: messageDoneAction,
+  });
+});
+slack.action(messageDismissedAction.action_id, async (request) => {
+  const payload = request.payload;
+  const actionData = JSON.parse((payload.actions[0] as ButtonAction).value);
+  await resolveInboxEntry({
+    messageTs: actionData.messageTs,
+    senderId: actionData.senderId,
+    userId: actionData.userId,
+    action: messageDismissedAction,
   });
 });
 
@@ -44,7 +50,7 @@ export async function resolveInboxEntry(options: {
       options.userId
     )) ?? [];
 
-  // Remove the target entry based on the message id.
+  // Remove the target entry based on ts.
   await cache.hset("inbox:received", {
     [options.userId]: receivedInbox.filter(
       (e) => e.message.ts != options.messageTs

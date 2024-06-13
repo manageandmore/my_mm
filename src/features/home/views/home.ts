@@ -1,14 +1,15 @@
 import { AnyHomeTabBlock, Button, HomeTabView } from "slack-edge";
-import { CreditsLeaderboardItem } from "../../community_credits/query_leaderboard";
+import { CreditsLeaderboardItem } from "../../community_credits/data/query_leaderboard";
 import { getWishlistSection } from "../../wishlist/views/open_wishlist_button";
 import { getSkillsSection } from "../../skill_interface/views/skills_section";
-import { ProfileOptions, getProfileSection } from "../../profile/profile_section";
-import { getCreditsLeaderboardSection } from "../../community_credits/leaderboard_section";
+import { getCreditsLeaderboardSection } from "../../community_credits/views/leaderboard_section";
 import { SkillListPerLevel } from "../../skill_interface/data/query_skills";
 import { scholarsDatabaseId } from "../../common/id_utils";
 import { getAskAIButton } from "../../assistant/events/ask_ai_action";
 import { getCreatePostButton } from "../../post_creator/actions/create_post_action";
 import { getAdminSection } from "../admin";
+import { ProfileOptions, getProfileSection } from "./profile_section";
+import { getInboxSection } from "../../inbox/views/inbox_section";
 
 /** Interface for the data used to hydrate the home view. */
 export type HomeOptions = ProfileOptions & {
@@ -31,6 +32,10 @@ export async function getHomeView(
     blocks: [
       ...getProfileSection(options),
       ...getSkillsSection(options.skillList),
+      {
+        type: "divider",
+      },
+      ...getInboxSection(),
       {
         type: "divider",
       },
