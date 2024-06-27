@@ -115,36 +115,44 @@ export async function resolveInboxEntry(options: {
     }),
   });
 
-  let hasMore = true;
-  let cursor: string | undefined = undefined;
-  let messages: any[] = [];
+  //get the channel id of app with user. (is only userId for chat.postMessage)
+  const channel = await slack.client.conversations.info({
+    channel: options.userId,
+  });
+  console.log({ channel: channel });
+  const channelId = channel.channel?.id;
 
-  while (hasMore) {
-    // Use the conversations.history method to retrieve messages from the channel
-    const result = await slack.client.conversations.history({
-      channel: options.userId,
-      cursor: cursor,
-      limit: 200, // Maximum number of messages per request
-    });
+  // Get the message text in order to use it to update the channel message
+  /*
+  const message = await slack.client.conversations.history({
+    channel: options.userId,
+    latest: options.messageTs,
+    limit: 1,
+  });
+  const messageText = message.messages?.[0].text;
 
-    if (result.messages) {
-      messages.push(
-        ...result.messages.filter(
-          (message: any) =>
-            message.text && message.text.includes(options.messageTs)
-        )
-      );
-    }
-
-    // Check if there are more messages to fetch
-    cursor = result.response_metadata?.next_cursor;
-    hasMore = !!cursor;
-  }
-  // Delete all the messages
-  for (const message of messages) {
-    await slack.client.chat.delete({
-      channel: options.userId,
-      ts: message.ts,
-    });
-  }
+  await slack.client.chat.update({
+    channel: options.userId,
+    ts: options.messageTs,
+    text: messageText ?? "",
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: messageText ?? "",
+        },
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: `*You responded with [${options.action.label}] to this message.*`,
+          },
+        ],
+      },
+    ],
+  });
+  */
 }
