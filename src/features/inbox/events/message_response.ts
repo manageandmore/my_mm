@@ -114,4 +114,37 @@ export async function resolveInboxEntry(options: {
       }
     }),
   });
+
+  let hasMore = true;
+  let cursor: string | undefined = undefined;
+  let messages: any[] = [];
+
+  while (hasMore) {
+    // Use the conversations.history method to retrieve messages from the channel
+    const result = await slack.client.conversations.history({
+      channel: options.userId,
+      cursor: cursor,
+      limit: 200, // Maximum number of messages per request
+    });
+
+    if (result.messages) {
+      messages.push(
+        ...result.messages.filter(
+          (message: any) =>
+            message.text && message.text.includes(options.messageTs)
+        )
+      );
+    }
+
+    // Check if there are more messages to fetch
+    cursor = result.response_metadata?.next_cursor;
+    hasMore = !!cursor;
+  }
+  // Delete all the messages
+  for (const message of messages) {
+    await slack.client.chat.delete({
+      channel: options.userId,
+      ts: message.ts,
+    });
+  }
 }

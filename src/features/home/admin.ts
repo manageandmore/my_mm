@@ -13,7 +13,10 @@ import { syncNotionTask } from "../assistant/loaders/load_pages";
 import { syncSlackTask } from "../assistant/loaders/load_channels";
 import { syncWebsiteTask } from "../assistant/loaders/load_website";
 import { indexedChannels } from "../../constants";
-import { checkForRemindersAction } from "../inbox/events/check_reminders";
+import {
+  checkForRemindersAction,
+  deleteAllMessagesAction,
+} from "../inbox/events/check_reminders";
 
 export type AdminActionRequest = SlackRequestWithOptionalRespond<
   SlackAppEnv,
@@ -98,6 +101,15 @@ export async function getAdminSection(
             emoji: true,
           },
           action_id: checkForRemindersAction,
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: " Delete All inbox messages",
+            emoji: true,
+          },
+          action_id: deleteAllMessagesAction,
         },
       ],
     },

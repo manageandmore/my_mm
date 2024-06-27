@@ -22,6 +22,14 @@ slack.action(checkForRemindersAction, async (request) => {
   await checkAndTriggerOverdueInboxReminders();
 });
 
+export const deleteAllMessagesAction = "delete_all_messages";
+//empty complete inbox
+slack.action(deleteAllMessagesAction, async (request) => {
+  const payload = request.payload;
+  await cache.hset("inbox:received", {
+    [payload.user.id]: [],
+  });
+});
 
 /**
  * Checks all active inbox entries for overdue reminders and sends the notifications.
@@ -80,10 +88,14 @@ export async function sendInboxNotification(
       new Date(entry.deadline!).valueOf() - Date.now()
     );
 
-    deadlineHint = [{
-      type: "mrkdwn",
-      text: `*You have ${timeLeft}${type == "new" ? "" : " left"} to respond to this message.*`,
-    }];
+    deadlineHint = [
+      {
+        type: "mrkdwn",
+        text: `*You have ${timeLeft}${
+          type == "new" ? "" : " left"
+        } to respond to this message.*`,
+      },
+    ];
   }
 
   let response = await slack.client.chat.postMessage({
@@ -95,8 +107,7 @@ export async function sendInboxNotification(
         type: "section",
         text: {
           type: "mrkdwn",
-          text:
-            `📬 *${title}*:`,
+          text: `📬 *${title}*:`,
         },
       },
       {
