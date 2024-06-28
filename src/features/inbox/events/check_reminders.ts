@@ -5,6 +5,7 @@ import { ReceivedInboxEntry } from "../data";
 import { asReadableDuration } from "../../common/time_utils";
 import { cache } from "../../common/cache";
 import { getButtonForInboxAction } from "../views/inbox_section";
+import { getUserById } from "../../common/id_utils";
 
 export const checkInboxRemindersTask: Task = {
   name: "check reminders",
@@ -54,7 +55,14 @@ export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
         // Mark that we need to update the inbox.
         needsUpdate = true;
 
-        await sendInboxNotification(userId, entry, "reminder");
+        const sentMessage = await sendInboxNotification(
+          userId,
+          entry,
+          "reminder"
+        );
+        entry.reminderMessageTs = entry.reminderMessageTs
+          ? [...entry.reminderMessageTs, sentMessage.ts!]
+          : [sentMessage.ts!];
       }
     }
 

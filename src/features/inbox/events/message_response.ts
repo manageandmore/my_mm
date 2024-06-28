@@ -8,6 +8,7 @@ import {
   allResponseActions,
 } from "../data";
 import { updateHomeViewForUser } from "../../home/event";
+import { getChannelIdForUser } from "../../common/id_utils";
 
 registerActions();
 
@@ -83,6 +84,15 @@ export async function resolveInboxEntry(options: {
       options.userId
     )) ?? [];
 
+  // Copy message for later use
+  const messageDescription = receivedInbox.find(
+    (e) => e.message.ts == options.messageTs
+  )?.description;
+  // Copy reminderTs for later use
+  const reminderTsArray = receivedInbox.find(
+    (e) => e.message.ts == options.messageTs
+  )?.reminderMessageTs;
+
   // Remove the target entry based on ts.
   await cache.hset("inbox:received", {
     [options.userId]: receivedInbox.filter(
@@ -115,44 +125,32 @@ export async function resolveInboxEntry(options: {
     }),
   });
 
-  //get the channel id of app with user. (is only userId for chat.postMessage)
-  const channel = await slack.client.conversations.info({
-    channel: options.userId,
-  });
-  console.log({ channel: channel });
-  const channelId = channel.channel?.id;
+  const channelId = await getChannelIdForUser(options.userId);
+  console.log(channelId);
 
-  // Get the message text in order to use it to update the channel message
-  /*
-  const message = await slack.client.conversations.history({
-    channel: options.userId,
-    latest: options.messageTs,
-    limit: 1,
-  });
-  const messageText = message.messages?.[0].text;
-
-  await slack.client.chat.update({
-    channel: options.userId,
-    ts: options.messageTs,
-    text: messageText ?? "",
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: messageText ?? "",
-        },
-      },
-      {
-        type: "context",
-        elements: [
-          {
+  for (const reminderTs of reminderTsArray ?? []) {
+    await slack.client.chat.update({
+      channel: channelId!,
+      ts: reminderTs,
+      text: messageDescription?.toString() ?? "",
+      blocks: [
+        {
+          type: "section",
+          text: {
             type: "mrkdwn",
-            text: `*You responded with [${options.action.label}] to this message.*`,
+            text: messageDescription?.toString() ?? "",
           },
-        ],
-      },
-    ],
-  });
-  */
+        },
+        {
+          type: "context",
+          elements: [
+            {
+              type: "mrkdwn",
+              text: `*You responded with [${options.action.label}] to this message.*`,
+            },
+          ],
+        },
+      ],
+    });
+  }
 }

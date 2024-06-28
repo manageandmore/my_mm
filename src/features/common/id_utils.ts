@@ -154,3 +154,8 @@ export async function getUserIdForEmail(email: string) {
   const response = await slack.client.users.lookupByEmail({ email: email });
   return response.user!.id!;
 }
+
+export async function getChannelIdForUser(userId: string) {
+  const directChannelId = await cache.hget<string>("directChannels", userId);
+  return directChannelId;
+}
