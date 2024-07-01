@@ -122,6 +122,11 @@ export async function createInboxEntry(
         new Date(deadline - hours * 60 * 60 * 1000).toISOString()
       );
     }
+    for (var reminder of reminders) {
+      if (new Date(reminder) < new Date(Date.now())) {
+        reminders.shift();
+      }
+    }
   }
 
   const recipientIds: string[] = [];
