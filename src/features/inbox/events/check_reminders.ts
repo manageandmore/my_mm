@@ -38,7 +38,9 @@ slack.action(deleteAllMessagesAction, async (request) => {
  * This function is idempotent as long as its not called in parallel.
  */
 export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
-  var now = new Date().toISOString();
+  var nowDate = new Date();
+  nowDate.setHours(23, 59, 59, 0);
+  var now = nowDate.toISOString();
   var inboxes =
     (await cache.hgetall<ReceivedInboxEntry[]>("inbox:received")) ?? {};
 
