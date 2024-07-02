@@ -122,10 +122,8 @@ export async function createInboxEntry(
         new Date(deadline - hours * 60 * 60 * 1000).toISOString()
       );
     }
-    for (var reminder of reminders) {
-      if (new Date(reminder) < new Date(Date.now())) {
-        reminders.shift();
-      }
+    while (reminders.length > 0 && new Date(reminders[0]) < new Date()) {
+      reminders.shift();
     }
   }
 
