@@ -80,6 +80,7 @@ export type InboxEntryResolution = {
 /** The type of an inbox entry as viewed by the user that received it. */
 export type ReceivedInboxEntry = InboxEntry & {
   senderId: string;
+  reminderMessageTs?: string[];
 };
 
 /** The options for creating a new inbox entry. */
@@ -120,6 +121,9 @@ export async function createInboxEntry(
       reminders.unshift(
         new Date(deadline - hours * 60 * 60 * 1000).toISOString()
       );
+    }
+    while (reminders.length > 0 && new Date(reminders[0]) < new Date()) {
+      reminders.shift();
     }
   }
 
@@ -170,12 +174,7 @@ export async function createInboxEntry(
     ],
   });
 
-  // Add the entry for all recipients.
-  await updateRecipientsInboxes(recipientIds, (inbox) => [
-    { ...entry, senderId: options.message.userId },
-    ...inbox,
-  ]);
-
+  let reminderTsArray: ReminderTsArray = {};
   if (options.notifyOnCreate) {
     // Notify all recipients.
     for (var recipientId of recipientIds) {
@@ -184,6 +183,8 @@ export async function createInboxEntry(
         { ...entry, senderId: options.message.userId },
         "new"
       );
+      console.log("Sent notification to", r.channel, r.ts!);
+      reminderTsArray[recipientId] = [r.ts!];
 
       // We need to track if we get rate-limited for this.
       // Sending out bursts of messages is allowed but the docs are not clear on the exact limits.
@@ -193,6 +194,16 @@ export async function createInboxEntry(
       }
     }
   }
+
+  // Add the entry for all recipients.
+  await updateRecipientsInboxes(recipientIds, (inbox, recipientId) => [
+    {
+      ...entry,
+      senderId: options.message.userId,
+      reminderMessageTs: reminderTsArray[recipientId],
+    },
+    ...inbox,
+  ]);
 }
 
 /** Loads all sent inbox entries for a user. */
@@ -238,9 +249,15 @@ export async function loadReceivedInboxEntries(
   return entries ?? [];
 }
 
+type ReminderTsArray = { [key: string]: string[] };
+
 async function updateRecipientsInboxes(
   recipientIds: string[],
-  update: (inbox: ReceivedInboxEntry[]) => ReceivedInboxEntry[]
+  update: (
+    inbox: ReceivedInboxEntry[],
+    recipientId: string,
+    reminderTsArray?: ReminderTsArray
+  ) => ReceivedInboxEntry[]
 ): Promise<void> {
   var inboxes =
     (await cache.hmget<ReceivedInboxEntry[]>(
@@ -252,7 +269,8 @@ async function updateRecipientsInboxes(
     "inbox:received",
     Object.fromEntries(
       recipientIds.map((recipientId) => {
-        return [recipientId, update(inboxes[recipientId] ?? [])];
+        let updatedInbox = update(inboxes[recipientId] ?? [], recipientId);
+        return [recipientId, updatedInbox];
       })
     )
   );

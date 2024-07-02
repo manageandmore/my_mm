@@ -129,6 +129,21 @@ export function getOutboxModal(
 export async function getViewSentMessageModal(
   entry: SentInboxEntry
 ): Promise<ModalView> {
+  let nextReminderBlock: AnyModalBlock[] = [];
+  if (entry.reminders && entry.reminders.length > 0) {
+    const nextReminder = entry.reminders[0];
+    nextReminderBlock = [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*Next reminder:* ${new Date(nextReminder).toLocaleString(
+            "de-DE"
+          )}`,
+        },
+      },
+    ];
+  }
   let blocks: AnyModalBlock[] = [
     {
       type: "section",
@@ -156,11 +171,12 @@ export async function getViewSentMessageModal(
         type: "mrkdwn",
         text: `*Deadline:* ${
           entry.deadline
-            ? new Date(entry.deadline).toLocaleString()
+            ? new Date(entry.deadline).toLocaleString("de-DE")
             : "No deadline"
         }`,
       },
     },
+    ...nextReminderBlock,
   ];
 
   const actionCounts: { [action: string]: number } = {};
@@ -171,6 +187,9 @@ export async function getViewSentMessageModal(
   }
 
   blocks = blocks.concat([
+    {
+      type: "divider",
+    },
     {
       type: "section",
       text: {

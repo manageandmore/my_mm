@@ -5,6 +5,7 @@ import { ReceivedInboxEntry } from "../data";
 import { asReadableDuration } from "../../common/time_utils";
 import { cache } from "../../common/cache";
 import { getButtonForInboxAction } from "../views/inbox_section";
+import { getUserById } from "../../common/id_utils";
 
 export const checkInboxRemindersTask: Task = {
   name: "check reminders",
@@ -22,6 +23,14 @@ slack.action(checkForRemindersAction, async (request) => {
   await checkAndTriggerOverdueInboxReminders();
 });
 
+export const deleteAllMessagesAction = "delete_all_messages";
+//empty complete inbox
+slack.action(deleteAllMessagesAction, async (request) => {
+  const payload = request.payload;
+  await cache.hset("inbox:received", {
+    [payload.user.id]: [],
+  });
+});
 
 /**
  * Checks all active inbox entries for overdue reminders and sends the notifications.
@@ -29,7 +38,9 @@ slack.action(checkForRemindersAction, async (request) => {
  * This function is idempotent as long as its not called in parallel.
  */
 export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
-  var now = new Date().toISOString();
+  var nowDate = new Date();
+  nowDate.setHours(23, 59, 59, 0);
+  var now = nowDate.toISOString();
   var inboxes =
     (await cache.hgetall<ReceivedInboxEntry[]>("inbox:received")) ?? {};
 
@@ -46,7 +57,14 @@ export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
         // Mark that we need to update the inbox.
         needsUpdate = true;
 
-        await sendInboxNotification(userId, entry, "reminder");
+        const sentMessage = await sendInboxNotification(
+          userId,
+          entry,
+          "reminder"
+        );
+        entry.reminderMessageTs = entry.reminderMessageTs
+          ? [...entry.reminderMessageTs, sentMessage.ts!]
+          : [sentMessage.ts!];
       }
     }
 
@@ -80,10 +98,14 @@ export async function sendInboxNotification(
       new Date(entry.deadline!).valueOf() - Date.now()
     );
 
-    deadlineHint = [{
-      type: "mrkdwn",
-      text: `*You have ${timeLeft}${type == "new" ? "" : " left"} to respond to this message.*`,
-    }];
+    deadlineHint = [
+      {
+        type: "mrkdwn",
+        text: `*You have ${timeLeft}${
+          type == "new" ? "" : " left"
+        } to respond to this message.*`,
+      },
+    ];
   }
 
   let response = await slack.client.chat.postMessage({
@@ -95,8 +117,7 @@ export async function sendInboxNotification(
         type: "section",
         text: {
           type: "mrkdwn",
-          text:
-            `📬 *${title}*:`,
+          text: `📬 *${title}*:`,
         },
       },
       {

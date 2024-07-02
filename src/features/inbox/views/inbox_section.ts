@@ -2,6 +2,7 @@ import { AnyHomeTabBlock, AnyTextField, Button, HeaderBlock } from "slack-edge";
 import { InboxAction, ReceivedInboxEntry } from "../data";
 import { openOutboxAction } from "../events/open_outbox";
 import { asReadableDuration } from "../../common/time_utils";
+import { has } from "cheerio/lib/api/traversing";
 
 /**
  * Constructs the inbox section.
@@ -18,6 +19,7 @@ export function getInboxSection(
     },
   };
 
+  let tooManyEntriesSection: AnyHomeTabBlock[] = [];
   const outboxSection: AnyHomeTabBlock[] = hasOutbox
     ? [
         {
@@ -70,7 +72,24 @@ export function getInboxSection(
       },
       ...outboxSection,
     ];
+  } else if (entries.length > 15) {
+    tooManyEntriesSection = [
+      {
+        type: "divider",
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "⚠️ *You have more than 15 messages in your inbox. Please resolve some messages first and reload the home screen.*",
+          },
+        ],
+      },
+    ];
   }
+  //Slicing entries to less than 15 so not more than 100 blocks are sent
+  entries = entries.slice(0, 15);
 
   return [
     header,
@@ -83,13 +102,13 @@ export function getInboxSection(
         },
       ],
     },
+    ...tooManyEntriesSection,
     ...entries.flatMap<AnyHomeTabBlock>((e) => {
       let deadlineHint: AnyHomeTabBlock[] = [];
       if (e.deadline != null) {
         let timeLeft = asReadableDuration(
           new Date(e.deadline!).valueOf() - Date.now()
         );
-
         deadlineHint = [
           {
             type: "context",
