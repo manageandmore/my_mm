@@ -155,6 +155,11 @@ export async function getUserIdForEmail(email: string) {
   return response.user!.id!;
 }
 
+/**
+ * Returns the direct channel id to the conversation with the given user.
+ * 
+ * This is saved in the cache when the user opens the home screen for the first time.
+ */
 export async function getChannelIdForUser(userId: string) {
   const directChannelId = await cache.hget<string>("directChannels", userId);
   return directChannelId;
