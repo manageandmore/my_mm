@@ -8,6 +8,7 @@ import {
   allResponseActions,
 } from "../data";
 import { updateHomeViewForUser } from "../../home/event";
+import { getChannelIdForUser } from "../../common/id_utils";
 
 registerActions();
 
@@ -83,6 +84,15 @@ export async function resolveInboxEntry(options: {
       options.userId
     )) ?? [];
 
+  // Copy message for later use
+  const messageDescription = receivedInbox.find(
+    (e) => e.message.ts == options.messageTs
+  )?.description;
+  // Copy reminderTs for later use
+  const reminderTsArray = receivedInbox.find(
+    (e) => e.message.ts == options.messageTs
+  )?.reminderMessageTs;
+
   // Remove the target entry based on ts.
   await cache.hset("inbox:received", {
     [options.userId]: receivedInbox.filter(
@@ -114,4 +124,33 @@ export async function resolveInboxEntry(options: {
       }
     }),
   });
+
+  const channelId = await getChannelIdForUser(options.userId);
+  console.log(channelId);
+
+  for (const reminderTs of reminderTsArray ?? []) {
+    await slack.client.chat.update({
+      channel: channelId!,
+      ts: reminderTs,
+      text: messageDescription?.toString() ?? "",
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: messageDescription?.toString() ?? "",
+          },
+        },
+        {
+          type: "context",
+          elements: [
+            {
+              type: "mrkdwn",
+              text: `*You responded with [${options.action.label}] to this message.*`,
+            },
+          ],
+        },
+      ],
+    });
+  }
 }
