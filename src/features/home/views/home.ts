@@ -10,11 +10,14 @@ import { getCreatePostButton } from "../../post_creator/actions/create_post_acti
 import { getAdminSection } from "../admin";
 import { ProfileOptions, getProfileSection } from "./profile_section";
 import { getInboxSection } from "../../inbox/views/inbox_section";
+import { ReceivedInboxEntry } from "../../inbox/data";
 
 /** Interface for the data used to hydrate the home view. */
 export type HomeOptions = ProfileOptions & {
   creditsLeaderboard: CreditsLeaderboardItem[];
   skillList: SkillListPerLevel;
+  inbox: ReceivedInboxEntry[];
+  hasOutbox: boolean;
 };
 
 /**
@@ -35,7 +38,7 @@ export async function getHomeView(
       {
         type: "divider",
       },
-      ...getInboxSection(),
+      ...getInboxSection(options.inbox, options.hasOutbox),
       {
         type: "divider",
       },

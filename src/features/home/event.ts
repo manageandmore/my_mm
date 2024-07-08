@@ -4,6 +4,7 @@ import { querySkillListForHomeView } from "../skill_interface/data/query_skills"
 import { getScholarIdFromUserId } from "../common/id_utils";
 import { queryCreditsLeaderboard } from "../community_credits/data/query_leaderboard";
 import { queryScholarProfile } from "./data/query_profile";
+import { loadReceivedInboxEntries, loadSentInboxEntries } from "../inbox/data";
 
 /**
  * Handle the app_home_opened event by updating the users home view with the current data.
@@ -29,10 +30,12 @@ slack.event("app_home_opened", async (request) => {
 export async function updateHomeViewForUser(userId: string) {
   const scholarId = await getScholarIdFromUserId(userId);
 
-  const [profile, [leaderboard, rank], skillList] = await Promise.all([
+  const [profile, [leaderboard, rank], skillList, inbox, outbox] = await Promise.all([
     queryScholarProfile(scholarId),
     queryCreditsLeaderboard(scholarId),
     querySkillListForHomeView(scholarId),
+    loadReceivedInboxEntries(userId),
+    loadSentInboxEntries(userId),
   ]);
 
   await slack.client.views.publish({
@@ -42,6 +45,8 @@ export async function updateHomeViewForUser(userId: string) {
       rank: rank,
       creditsLeaderboard: leaderboard,
       skillList: skillList,
+      inbox: inbox,
+      hasOutbox: outbox.length > 0,
     }),
   });
 }
