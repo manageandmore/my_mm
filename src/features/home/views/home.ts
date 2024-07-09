@@ -9,7 +9,7 @@ import { getAskAIButton } from "../../assistant/events/ask_ai_action";
 import { getCreatePostButton } from "../../post_creator/actions/create_post_action";
 import { getAdminSection } from "../admin";
 import { ProfileOptions, getProfileSection } from "./profile_section";
-import { getInboxSection } from "../../inbox/views/inbox_section";
+import { getInboxSection, getOutboxSection } from "../../inbox/views/inbox_section";
 import { ReceivedInboxEntry } from "../../inbox/data";
 
 /** Interface for the data used to hydrate the home view. */
@@ -38,7 +38,8 @@ export async function getHomeView(
       {
         type: "divider",
       },
-      ...getInboxSection(options.inbox, options.hasOutbox),
+      ...getInboxSection(options.inbox),
+      ...(options.hasOutbox ? getOutboxSection() : []),
       {
         type: "divider",
       },

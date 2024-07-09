@@ -64,6 +64,24 @@ export function getOutboxModal(
                 },
                 style: "danger",
                 action_id: deleteExpiredOutboxMessagesAction,
+                confirm: {
+                  title: {
+                    type: "plain_text",
+                    text: "Are you sure?",
+                  },
+                  text: {
+                    type: "mrkdwn",
+                    text: `Are you sure you want to remove ${expired} expired messages?`,
+                  },
+                  confirm: {
+                    type: "plain_text",
+                    text: "Yes",
+                  },
+                  deny: {
+                    type: "plain_text",
+                    text: "No",
+                  },
+                }
               },
             },
           ]
@@ -173,6 +191,7 @@ export async function getViewSentMessageModal(
       nextReminder = entry.reminders[i];
       break;
     }
+
     if (nextReminder != null) {
       blocks.push({
         type: "section",
@@ -180,7 +199,7 @@ export async function getViewSentMessageModal(
           type: "mrkdwn",
           text: `*Next reminder:* <!date^${nextReminder}^{date_short} {time}|${new Date(
             nextReminder * 1000
-          ).toLocaleString("de-DE")} UTC>"}`,
+          ).toLocaleString("de-DE")} UTC>`,
         },
       });
     }

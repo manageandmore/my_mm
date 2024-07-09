@@ -106,7 +106,7 @@ export async function getAdminSection(
           type: "button",
           text: {
             type: "plain_text",
-            text: " Delete All inbox messages",
+            text: "🗑️ Delete Inbox Messages",
             emoji: true,
           },
           action_id: deleteAllMessagesAction,

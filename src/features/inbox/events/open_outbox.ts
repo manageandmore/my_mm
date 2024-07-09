@@ -34,10 +34,11 @@ slack.action(
     const outbox: SentInboxEntry[] = await loadSentInboxEntries(
       payload.user.id
     );
+    const now = Date.now() / 1000;
 
     for (let entry of outbox) {
       // Delete outbox messages that are past the deadline.
-      if (entry.deadline && new Date(entry.deadline) < new Date()) {
+      if (entry.deadline && entry.deadline < now) {
         await deleteSentInboxEntry(payload.user.id, entry.message.ts);
       }
     }
@@ -51,9 +52,8 @@ export async function showOutboxView(
 ): Promise<void> {
   const outbox: SentInboxEntry[] = await loadSentInboxEntries(payload.user.id);
 
-  const expired = outbox.filter(
-    (o) => o.deadline && new Date(o.deadline) < new Date()
-  ).length;
+  const now = Date.now() / 1000;
+  const expired = outbox.filter((o) => o.deadline && o.deadline < now).length;
 
   const viewId = payload.view?.root_view_id;
 

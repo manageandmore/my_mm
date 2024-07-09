@@ -1,6 +1,7 @@
 import { cache } from "../common/cache";
 import { slack } from "../../slack";
 import { sendInboxNotification } from "./events/check_reminders";
+import { getReminderMessage } from "./views/reminder_message";
 
 /** The base type for an inbox entry. */
 export type InboxEntry = {
@@ -123,7 +124,7 @@ export async function createInboxEntry(
     const nowTimestamp = Date.now() / 1000;
 
     for (var hours of remindHoursBeforeDeadline) {
-      const reminderTimestamp = options.deadline! - (hours * 60 * 60);
+      const reminderTimestamp = options.deadline! - hours * 60 * 60;
       if (reminderTimestamp > nowTimestamp) {
         reminders.unshift(reminderTimestamp);
       }
@@ -190,13 +191,16 @@ export async function createInboxEntry(
       // We need to track if we get rate-limited for this.
       // Sending out bursts of messages is allowed but the docs are not clear on the exact limits.
       if (sentMessage.ok == false && sentMessage.error == "rate_limited") {
-        console.error("App got rate-limited while sending out messages.", sentMessage);
+        console.error(
+          "App got rate-limited while sending out messages.",
+          sentMessage
+        );
         break;
       }
 
       console.log("Sent notification to", sentMessage.channel, sentMessage.ts!);
       reminderTsArray[recipientId] = {
-        type: 'new',
+        type: "new",
         messageTs: sentMessage.ts!,
         channelId: sentMessage.channel!,
       };
@@ -235,15 +239,35 @@ export async function deleteSentInboxEntry(
     return;
   }
 
-  // Delete the entry for all recipients.
-  await updateRecipientsInboxes(targetEntry.recipientIds, (inbox) =>
-    inbox.filter((e) => e.message.ts != messageTs)
-  );
+  let openReminderEntries: ReceivedInboxEntry[] = [];
 
-  //Delete the entry for the sender.
+  // Delete the entry for all recipients.
+  await updateRecipientsInboxes(targetEntry.recipientIds, (inbox) => {
+    var entry = inbox.find((e) => e.message.ts == messageTs);
+
+    if (entry?.lastReminder != null) {
+      openReminderEntries.push(entry);
+    }
+
+    return inbox.filter((e) => e != entry);
+  });
+
+  // Delete the entry for the sender.
   await cache.hset<SentInboxEntry[]>("inbox:sent", {
     [userId]: oldEntries.filter((e) => e.message.ts != messageTs),
   });
+
+  // Remove buttons from all reminder messages.
+  for (let entry of openReminderEntries) {
+    let {text, blocks} = getReminderMessage(entry, entry.lastReminder!.type, false);
+
+    await slack.client.chat.update({
+      channel: entry.lastReminder!.channelId,
+      ts: entry.lastReminder!.messageTs,
+      text: text,
+      blocks: blocks,
+    });
+  }
 }
 
 /** Loads all received inbox entries for a user. */
@@ -261,7 +285,7 @@ async function updateRecipientsInboxes(
   recipientIds: string[],
   update: (
     inbox: ReceivedInboxEntry[],
-    recipientId: string,
+    recipientId: string
   ) => ReceivedInboxEntry[]
 ): Promise<void> {
   var inboxes =
