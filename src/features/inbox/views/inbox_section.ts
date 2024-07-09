@@ -106,9 +106,7 @@ export function getInboxSection(
     ...entries.flatMap<AnyHomeTabBlock>((e) => {
       let deadlineHint: AnyHomeTabBlock[] = [];
       if (e.deadline != null) {
-        let timeLeft = asReadableDuration(
-          new Date(e.deadline!).valueOf() - Date.now()
-        );
+        let timeLeft = asReadableDuration((e.deadline * 1000) - Date.now());
         deadlineHint = [
           {
             type: "context",

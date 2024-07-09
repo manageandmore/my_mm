@@ -99,10 +99,8 @@ slack.viewSubmission(
       },
       description: description ?? "",
       actions: actions,
-      deadline:
-        typeof deadline === "number"
-          ? new Date(deadline * 1000).toISOString()
-          : undefined,
+      deadline: 
+        typeof deadline === "number" ? deadline : undefined,
       notifyOnCreate: notify_on_create != null,
       enableReminders: enable_reminders != null,
     };

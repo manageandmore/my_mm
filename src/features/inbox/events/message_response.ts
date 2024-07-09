@@ -8,7 +8,7 @@ import {
   allResponseActions,
 } from "../data";
 import { updateHomeViewForUser } from "../../home/event";
-import { getChannelIdForUser } from "../../common/id_utils";
+import { getReminderMessage } from "../views/reminder_message";
 
 registerActions();
 
@@ -78,26 +78,19 @@ export async function resolveInboxEntry(options: {
   action: InboxAction;
 }): Promise<void> {
   // Get the current received entries for the user.
-  var receivedInbox =
+  let receivedInbox =
     (await cache.hget<ReceivedInboxEntry[]>(
       "inbox:received",
       options.userId
     )) ?? [];
 
-  // Copy message for later use
-  const messageDescription = receivedInbox.find(
-    (e) => e.message.ts == options.messageTs
-  )?.description;
-  // Copy reminderTs for later use
-  const reminderTsArray = receivedInbox.find(
-    (e) => e.message.ts == options.messageTs
-  )?.reminderMessageTs;
+  // Find the target entry
+  const entry = receivedInbox.find((e) => e.message.ts == options.messageTs);
+  if (entry == undefined) return;
 
-  // Remove the target entry based on ts.
+  // Remove the target entry from the inbox.
   await cache.hset("inbox:received", {
-    [options.userId]: receivedInbox.filter(
-      (e) => e.message.ts != options.messageTs
-    ),
+    [options.userId]: receivedInbox.filter((e) => e != entry),
   });
 
   // Get the current sent entries for the sender.
@@ -115,7 +108,7 @@ export async function resolveInboxEntry(options: {
             // Sets the resolution for [userId] with the [action] and current [time].
             [options.userId]: {
               action: options.action,
-              time: new Date().toISOString(),
+              timestamp: Math.round(Date.now() / 1000),
             },
           },
         };
@@ -125,32 +118,14 @@ export async function resolveInboxEntry(options: {
     }),
   });
 
-  const channelId = await getChannelIdForUser(options.userId);
-  console.log(channelId);
+  if (entry.lastReminder != null) {
+    let {text, blocks} = getReminderMessage(entry, entry.lastReminder.type, false, options.action);
 
-  for (const reminderTs of reminderTsArray ?? []) {
     await slack.client.chat.update({
-      channel: channelId!,
-      ts: reminderTs,
-      text: messageDescription?.toString() ?? "",
-      blocks: [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: messageDescription?.toString() ?? "",
-          },
-        },
-        {
-          type: "context",
-          elements: [
-            {
-              type: "mrkdwn",
-              text: `*You responded with [${options.action.label}] to this message.*`,
-            },
-          ],
-        },
-      ],
+      channel: entry.lastReminder.channelId,
+      ts: entry.lastReminder.messageTs,
+      text: text,
+      blocks: blocks,
     });
   }
 }

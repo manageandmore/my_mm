@@ -41,6 +41,16 @@ anyMessage(async (request) => {
         },
       },
       {
+        type: "context",
+        elements: [{
+          type: "mrkdwn",
+          text: "By adding a message to a users Inbox it is easier them to keep track and respond to that message without it getting lost. Additionally you can see easily who already responded to a message. When setting a deadline users will also get automatic reminders until they respond.",
+        }, {
+          type: "mrkdwn",
+          text: "Press the button below to start creating a new inbox message.",
+        }],
+      },
+      {
         type: "actions",
         elements: [
           {
