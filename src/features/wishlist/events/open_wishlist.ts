@@ -19,19 +19,19 @@ slack.action(
     // Show the modal with the initial loading hint.
     const view = await slack.client.views.open({
       trigger_id: payload.trigger_id,
-      view: getWishlistModal({}),
+      view: getWishlistModal({currentUserId: payload.user.id}),
     });
 
     console.time("Wishlist Query");
 
-    var items = await queryWishlistItems(payload.user.id);
+    var items = await queryWishlistItems();
 
     console.timeEnd("Wishlist Query");
 
     // Update the modal with the actual data.
     await slack.client.views.update({
       view_id: view.view!.id,
-      view: getWishlistModal({ items }),
+      view: getWishlistModal({ items, currentUserId: payload.user.id }),
     });
   }
 );

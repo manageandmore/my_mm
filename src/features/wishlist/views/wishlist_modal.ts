@@ -7,6 +7,7 @@ import { wishlistDatabaseId, WishlistItem } from "../data/query_items";
 /** Interface for the data used to hydrate the wishlist modal. */
 export interface WishlistOptions {
   items?: WishlistItem[];
+  currentUserId: string;
 }
 
 /**
@@ -47,7 +48,7 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
       },
     ];
     for (let item of options.items) {
-      blocks = blocks.concat(getWishlistItem(item));
+      blocks = blocks.concat(getWishlistItem(item, options.currentUserId));
     }
     blocks = blocks.concat([
       {
@@ -86,11 +87,10 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
       emoji: true,
     },
     blocks: blocks,
-    private_metadata: JSON.stringify(options.items ?? []),
   };
 }
 
-function getWishlistItem(item: WishlistItem): AnyModalBlock[] {
+function getWishlistItem(item: WishlistItem, currentUserId: string): AnyModalBlock[] {
   return [
     {
       type: "section",
@@ -99,7 +99,7 @@ function getWishlistItem(item: WishlistItem): AnyModalBlock[] {
         type: "mrkdwn",
         text: `*${item.title}*\n${item.description}`,
       },
-      accessory: getVoteButton(item.votedByUser),
+      accessory: getVoteButton(item.voters.find((v) => v.userId == currentUserId) != null),
     },
     {
       type: "context",

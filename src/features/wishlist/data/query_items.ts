@@ -1,6 +1,7 @@
 import { notionEnv } from "../../../constants";
 import { DatabaseRow, notion, Property, RollupProperty } from "../../../notion";
-import { timeSince } from "../../common/time_utils";
+import { cache } from "../../common/cache";
+import { ONE_DAY, timeSince } from "../../common/time_utils";
 import { getVoterByScholarId, Voter } from "./get_voter";
 
 /** The id of the wishlist database in notion. */
@@ -27,7 +28,6 @@ export interface WishlistItem {
   title: string;
   description: string;
   voters: Voter[];
-  votedByUser: boolean;
   timeSinceCreated: string;
 }
 
@@ -38,9 +38,13 @@ export interface WishlistItem {
  * @param currentUserId The id of the current user.
  * @returns A list of wishlist items.
  */
-export async function queryWishlistItems(
-  currentUserId: string
-): Promise<WishlistItem[]> {
+export async function queryWishlistItems(): Promise<WishlistItem[]> {
+  const cached = await cache.get<WishlistItem[]>("wishlist");
+
+  if (cached != null) {
+    return cached;
+  }
+
   const response = await notion.databases.query({
     database_id: wishlistDatabaseId,
     sorts: [
@@ -62,7 +66,6 @@ export async function queryWishlistItems(
 
   for (let row of response.results as WishlistRow[]) {
     let voters: Voter[] = [];
-    let votedByUser = false;
 
     for (const voted of row.properties.Voted.relation) {
       const scholarId = voted.id;
@@ -73,11 +76,6 @@ export async function queryWishlistItems(
 
       const voter = allVoters[scholarId];
       voters.push(voter);
-
-      // Check if the current user is part of the voters.
-      if (voter.userId == currentUserId) {
-        votedByUser = true;
-      }
     }
 
     items.push({
@@ -85,10 +83,11 @@ export async function queryWishlistItems(
       title: row.properties.Title.title[0].plain_text,
       description: row.properties.Description.rich_text[0].plain_text,
       voters: voters,
-      votedByUser: votedByUser,
       timeSinceCreated: timeSince(row.created_time),
     });
   }
+
+  await cache.set<WishlistItem[]>("wishlist", items, { ex: ONE_DAY });
 
   return items;
 }

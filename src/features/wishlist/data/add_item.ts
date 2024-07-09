@@ -1,5 +1,12 @@
 import { notion } from "../../../notion";
-import { wishlistDatabaseId } from "./query_items";
+import { cache } from "../../common/cache";
+import { ONE_DAY, timeSince } from "../../common/time_utils";
+import { getVoterById } from "./get_voter";
+import {
+  WishlistItem,
+  queryWishlistItems,
+  wishlistDatabaseId,
+} from "./query_items";
 
 /**
  * Interface for a new wishlist item.
@@ -8,6 +15,7 @@ interface NewWishlistItem {
   title: string;
   description: string;
   createdBy: string;
+  createdByUser: string;
 }
 
 /**
@@ -16,7 +24,7 @@ interface NewWishlistItem {
  * @param item The data for the new entry.
  */
 export async function addWishlistItem(item: NewWishlistItem) {
-  await notion.pages.create({
+  var resp = await notion.pages.create({
     parent: {
       type: "database_id",
       database_id: wishlistDatabaseId,
@@ -37,4 +45,16 @@ export async function addWishlistItem(item: NewWishlistItem) {
       },
     },
   });
+
+  const items = await cache.get<WishlistItem[]>("wishlist");
+  await cache.set("wishlist", [
+    ...(items ?? []),
+    {
+      id: resp.id,
+      title: item.title,
+      description: item.description,
+      voters: [await getVoterById(item.createdByUser)],
+      timeSinceCreated: timeSince(new Date().toISOString()),
+    },
+  ]);
 }

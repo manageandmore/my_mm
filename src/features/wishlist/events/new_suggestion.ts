@@ -38,14 +38,14 @@ slack.viewSubmission(
       title: values.title.title.value!,
       description: values.description.description.value!,
       createdBy: scholarId,
+      createdByUser: payload.user.id,
     });
 
-    // TODO Optimize this to add the item locally instead of querying the whole table again.
-    var items = await queryWishlistItems(payload.user.id);
+    var items = await queryWishlistItems();
 
     await slack.client.views.update({
       view_id: payload.view.root_view_id!,
-      view: getWishlistModal({ items }),
+      view: getWishlistModal({ items, currentUserId: payload.user.id }),
     });
   }
 );

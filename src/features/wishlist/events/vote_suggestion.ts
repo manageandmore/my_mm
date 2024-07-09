@@ -3,8 +3,11 @@ import { notion } from "../../../notion";
 import { slack } from "../../../slack";
 import { getScholarIdFromUserId } from "../../common/id_utils";
 import { getWishlistModal } from "../views/wishlist_modal";
-import { WishlistItem } from "../data/query_items";
+import { WishlistItem, queryWishlistItems } from "../data/query_items";
 import { getVoterById } from "../data/get_voter";
+import { toggleWishlistVote } from "../data/toggle_vote";
+import { ONE_DAY } from "../../common/time_utils";
+import { cache } from "../../common/cache";
 
 export const voteWishlistItemAction = "vote_wishlist_item";
 
@@ -22,27 +25,24 @@ slack.action(
     const currentUserId = payload.user.id;
     const action = payload.actions[0] as ButtonAction;
 
-    var view = payload.view!;
-    // Retrieve the current items from the json payload of the view.
-    // This is faster than re-querying the data from the database.
-    const items = JSON.parse(view.private_metadata) as WishlistItem[];
+    const view = payload.view!;
+    const items = await queryWishlistItems();
 
     for (var item of items) {
       // Find the item that the user voted on.
       if (item.id == action.block_id) {
-        // Flip the voting boolean and add or remove the current user from the list of voters.
-        item.votedByUser = !item.votedByUser;
-        if (item.votedByUser) {
-          item.voters.push(await getVoterById(currentUserId));
-        } else {
+        // Add or remove the current user from the list of voters.
+        if (item.voters.find((v) => v.userId == currentUserId)) {
           item.voters = item.voters.filter((v) => v.userId != currentUserId);
+        } else {
+          item.voters.push(await getVoterById(currentUserId));
         }
       }
     }
 
     await slack.client.views.update({
       view_id: view.id,
-      view: getWishlistModal({ items }),
+      view: getWishlistModal({ items, currentUserId }),
     });
   },
   async (request) => {
@@ -52,18 +52,10 @@ slack.action(
     const action = payload.actions[0] as ButtonAction;
     const voted = action.value == "true";
 
-    const view = payload.view!;
-    // Retrieve the current items from the json payload of the view.
-    // This is faster than re-querying the data from the database.
-    const items = JSON.parse(view.private_metadata) as WishlistItem[];
+    const items = await queryWishlistItems();
 
     // Find the item that the user voted on.
-    let selectedItem: WishlistItem | null = null;
-    for (let item of items) {
-      if (item.id == action.block_id) {
-        selectedItem = item;
-      }
-    }
+    let selectedItem = items.find((i) => i.id == action.block_id);
 
     if (selectedItem == null) {
       throw Error(
@@ -71,30 +63,14 @@ slack.action(
       );
     }
 
-    var relations: { id: string }[] = [];
-
     if (voted) {
-      // Remove the current user from the list of voters and map it to the scholar relations for notion.
-      relations = selectedItem.voters
-        .filter((v) => v.userId != currentUserId)
-        .map((v) => ({ id: v.scholarId }));
+      selectedItem.voters = selectedItem.voters.filter((v) => v.userId != currentUserId);
     } else {
-      // Add the current user to the list of voters and map it to the scholar relations for notion.
-      let scholarId = await getScholarIdFromUserId(currentUserId);
-      relations = [
-        ...selectedItem.voters.map((v) => ({ id: v.scholarId })),
-        { id: scholarId },
-      ];
+      selectedItem.voters.push(await getVoterById(currentUserId));
     }
 
-    // Update the Voted property of the wishlist item in notion.
-    notion.pages.update({
-      page_id: selectedItem.id,
-      properties: {
-        Voted: {
-          relation: relations,
-        },
-      },
-    });
+    await cache.set('wishlist', items, {ex: ONE_DAY});
+
+    await toggleWishlistVote(selectedItem, currentUserId, voted);
   }
 );

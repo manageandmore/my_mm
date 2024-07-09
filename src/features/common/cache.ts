@@ -18,6 +18,10 @@ class Cache {
     return kv.get<T>(cachePrefix + key, ...rest);
   }
 
+  async del(...keys: string[]) {
+    await kv.del(...keys);
+  }
+
   async delAll(...args: Parameters<typeof kv.keys>) {
     let [key, ...rest] = args;
     let keys = await kv.keys(cachePrefix + key, ...rest);
