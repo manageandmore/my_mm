@@ -23,7 +23,7 @@ export function getInboxSection(
       elements: [
         {
           type: "mrkdwn",
-          text: "The Inbox contains important messages from #general or #active that requires a response from you. Some may have a deadline and you will be sent reminders until you respond to them.",
+          text: "The Inbox contains important messages from #general or #active that require a response from you. Some may have a deadline and you will be sent reminders until you respond to them.",
         },
       ],
     },
@@ -157,7 +157,7 @@ export function getOutboxSection(): AnyHomeTabBlock[] {
       elements: [
         {
           type: "mrkdwn",
-          text: "The Outbox shows all messages you sent to others and how they responded.",
+          text: "The Outbox shows all messages you sent to other inboxes and the responses you got.",
         },
       ],
     },
