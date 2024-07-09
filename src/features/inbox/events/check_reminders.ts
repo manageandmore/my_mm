@@ -101,6 +101,17 @@ export async function sendInboxNotification(
   entry: ReceivedInboxEntry,
   type: "new" | "reminder"
 ): Promise<ChatPostMessageResponse> {
+  if (entry.lastReminder != null) {
+    let {text, blocks} = getReminderMessage(entry, entry.lastReminder.type, false);
+
+    await slack.client.chat.update({
+      channel: entry.lastReminder.channelId,
+      ts: entry.lastReminder.messageTs,
+      text: text,
+      blocks: blocks,
+    });
+  }
+  
   let { text, blocks } = getReminderMessage(entry, type, true);
 
   let response = await slack.client.chat.postMessage({
