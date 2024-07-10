@@ -5,7 +5,7 @@ import { ReceivedInboxEntry } from "../data";
 import { asReadableDuration } from "../../common/time_utils";
 import { cache } from "../../common/cache";
 import { getButtonForInboxAction } from "../views/inbox_section";
-import { getUserById } from "../../common/id_utils";
+import { getReminderMessage } from "../views/reminder_message";
 
 export const checkInboxRemindersTask: Task = {
   name: "check reminders",
@@ -24,7 +24,10 @@ slack.action(checkForRemindersAction, async (request) => {
 });
 
 export const deleteAllMessagesAction = "delete_all_messages";
-//empty complete inbox
+
+/**
+ * Empties the complete inbox for a user.
+ */
 slack.action(deleteAllMessagesAction, async (request) => {
   const payload = request.payload;
   await cache.hset("inbox:received", {
@@ -38,22 +41,27 @@ slack.action(deleteAllMessagesAction, async (request) => {
  * This function is idempotent as long as its not called in parallel.
  */
 export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
-  var nowDate = new Date();
-  nowDate.setHours(23, 59, 59, 0);
-  var now = nowDate.toISOString();
+  var now = Date.now() / 1000;
   var inboxes =
     (await cache.hgetall<ReceivedInboxEntry[]>("inbox:received")) ?? {};
 
   for (var userId in inboxes) {
-    var entries = inboxes[userId];
-    var needsUpdate = false;
+    let entries = inboxes[userId];
+    let needsUpdate = false;
 
-    for (var entry of entries) {
-      console.log(entry);
-      var nextReminder = entry.reminders?.at(0);
-      if (nextReminder != undefined && nextReminder < now) {
+    for (let entry of entries) {
+      if (entry.reminders == null) continue;
+
+      let hasOverdueReminder = false;
+      while (entry.reminders.length > 0) {
+        if (entry.reminders[0] > now) break;
+
+        hasOverdueReminder = true;
         // Remove this reminder so its not triggering again.
-        entry.reminders?.shift();
+        entry.reminders.shift();
+      }
+
+      if (hasOverdueReminder) {
         // Mark that we need to update the inbox.
         needsUpdate = true;
 
@@ -62,9 +70,12 @@ export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
           entry,
           "reminder"
         );
-        entry.reminderMessageTs = entry.reminderMessageTs
-          ? [...entry.reminderMessageTs, sentMessage.ts!]
-          : [sentMessage.ts!];
+
+        entry.lastReminder = {
+          type: 'reminder',
+          messageTs: sentMessage.ts!,
+          channelId: sentMessage.channel!,
+        };
       }
     }
 
@@ -90,67 +101,24 @@ export async function sendInboxNotification(
   entry: ReceivedInboxEntry,
   type: "new" | "reminder"
 ): Promise<ChatPostMessageResponse> {
-  let title = type == "new" ? "New Inbox Message" : "Inbox Reminder";
+  if (entry.lastReminder != null) {
+    let {text, blocks} = getReminderMessage(entry, entry.lastReminder.type, false);
 
-  let deadlineHint: AnyTextField[] = [];
-  if (entry.deadline != null) {
-    let timeLeft = asReadableDuration(
-      new Date(entry.deadline!).valueOf() - Date.now()
-    );
-
-    deadlineHint = [
-      {
-        type: "mrkdwn",
-        text: `*You have ${timeLeft}${
-          type == "new" ? "" : " left"
-        } to respond to this message.*`,
-      },
-    ];
+    await slack.client.chat.update({
+      channel: entry.lastReminder.channelId,
+      ts: entry.lastReminder.messageTs,
+      text: text,
+      blocks: blocks,
+    });
   }
+  
+  let { text, blocks } = getReminderMessage(entry, type, true);
 
   let response = await slack.client.chat.postMessage({
     channel: to,
     // Text is fallback in case client doesn't support blocks
-    text: `📬 *${title}*:\n${entry.description}`,
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `📬 *${title}*:`,
-        },
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: entry.description,
-        },
-        accessory: {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "View original message",
-            emoji: true,
-          },
-          url: entry.message.url,
-        },
-      },
-      {
-        type: "context",
-        elements: [
-          ...deadlineHint,
-          {
-            type: "mrkdwn",
-            text: "_You can mark this message as resolved by clicking one of the buttons below. This will notify the message author and remove it from your inbox._",
-          },
-        ],
-      },
-      {
-        type: "actions",
-        elements: entry.actions.map((a) => getButtonForInboxAction(a, entry)),
-      },
-    ],
+    text: text,
+    blocks: blocks,
   });
 
   return response;

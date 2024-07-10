@@ -1,6 +1,7 @@
 import { cache } from "../common/cache";
 import { slack } from "../../slack";
 import { sendInboxNotification } from "./events/check_reminders";
+import { getReminderMessage } from "./views/reminder_message";
 
 /** The base type for an inbox entry. */
 export type InboxEntry = {
@@ -11,8 +12,8 @@ export type InboxEntry = {
   };
   description: string;
   actions: InboxAction[];
-  deadline?: string; // iso timestamp
-  reminders?: string[]; // list of iso timestamps, ordered by earliest to latest
+  deadline?: number; // unix timestamp
+  reminders?: number[]; // list of unix timestamps, ordered by earliest to latest
 };
 
 /** The type of an inbox action. */
@@ -74,13 +75,19 @@ export type SentInboxEntry = InboxEntry & {
  * */
 export type InboxEntryResolution = {
   action: InboxAction;
-  timestamp: string; // iso timestamp
+  timestamp: number; // unix timestamp
 };
 
 /** The type of an inbox entry as viewed by the user that received it. */
 export type ReceivedInboxEntry = InboxEntry & {
   senderId: string;
-  reminderMessageTs?: string[];
+  lastReminder?: InboxReminder;
+};
+
+export type InboxReminder = {
+  type: "new" | "reminder";
+  messageTs: string;
+  channelId: string;
 };
 
 /** The options for creating a new inbox entry. */
@@ -92,7 +99,7 @@ export type CreateInboxEntryOptions = {
   };
   description: string;
   actions: InboxAction[];
-  deadline?: string;
+  deadline?: number; // unix timestamp
 
   notifyOnCreate: boolean;
   enableReminders: boolean;
@@ -108,22 +115,19 @@ export type CreateInboxEntryOptions = {
 export async function createInboxEntry(
   options: CreateInboxEntryOptions
 ): Promise<void> {
-  let reminders: string[] = [];
+  let reminders: number[] = [];
 
   const enableReminders = options.enableReminders && options.deadline != null;
   if (enableReminders) {
-    var deadline = Date.parse(options.deadline!);
-
     // Use a fixed schedule for now.
     const remindHoursBeforeDeadline = [1, 8, 24, 24 * 3, 24 * 7, 24 * 14];
+    const nowTimestamp = Date.now() / 1000;
 
     for (var hours of remindHoursBeforeDeadline) {
-      reminders.unshift(
-        new Date(deadline - hours * 60 * 60 * 1000).toISOString()
-      );
-    }
-    while (reminders.length > 0 && new Date(reminders[0]) < new Date()) {
-      reminders.shift();
+      const reminderTimestamp = options.deadline! - hours * 60 * 60;
+      if (reminderTimestamp > nowTimestamp) {
+        reminders.unshift(reminderTimestamp);
+      }
     }
   }
 
@@ -174,24 +178,32 @@ export async function createInboxEntry(
     ],
   });
 
-  let reminderTsArray: ReminderTsArray = {};
+  let reminderTsArray: { [key: string]: InboxReminder } = {};
   if (options.notifyOnCreate) {
     // Notify all recipients.
     for (var recipientId of recipientIds) {
-      var r = await sendInboxNotification(
+      var sentMessage = await sendInboxNotification(
         recipientId,
         { ...entry, senderId: options.message.userId },
         "new"
       );
-      console.log("Sent notification to", r.channel, r.ts!);
-      reminderTsArray[recipientId] = [r.ts!];
 
       // We need to track if we get rate-limited for this.
       // Sending out bursts of messages is allowed but the docs are not clear on the exact limits.
-      if (r.ok == false && r.error == "rate_limited") {
-        console.error("App got rate-limited while sending out messages.", r);
+      if (sentMessage.ok == false && sentMessage.error == "rate_limited") {
+        console.error(
+          "App got rate-limited while sending out messages.",
+          sentMessage
+        );
         break;
       }
+
+      console.log("Sent notification to", sentMessage.channel, sentMessage.ts!);
+      reminderTsArray[recipientId] = {
+        type: "new",
+        messageTs: sentMessage.ts!,
+        channelId: sentMessage.channel!,
+      };
     }
   }
 
@@ -200,7 +212,7 @@ export async function createInboxEntry(
     {
       ...entry,
       senderId: options.message.userId,
-      reminderMessageTs: reminderTsArray[recipientId],
+      lastReminder: reminderTsArray[recipientId],
     },
     ...inbox,
   ]);
@@ -227,15 +239,35 @@ export async function deleteSentInboxEntry(
     return;
   }
 
-  // Delete the entry for all recipients.
-  await updateRecipientsInboxes(targetEntry.recipientIds, (inbox) =>
-    inbox.filter((e) => e.message.ts != messageTs)
-  );
+  let openReminderEntries: ReceivedInboxEntry[] = [];
 
-  //Delete the entry for the sender.
+  // Delete the entry for all recipients.
+  await updateRecipientsInboxes(targetEntry.recipientIds, (inbox) => {
+    var entry = inbox.find((e) => e.message.ts == messageTs);
+
+    if (entry?.lastReminder != null) {
+      openReminderEntries.push(entry);
+    }
+
+    return inbox.filter((e) => e != entry);
+  });
+
+  // Delete the entry for the sender.
   await cache.hset<SentInboxEntry[]>("inbox:sent", {
     [userId]: oldEntries.filter((e) => e.message.ts != messageTs),
   });
+
+  // Remove buttons from all reminder messages.
+  for (let entry of openReminderEntries) {
+    let {text, blocks} = getReminderMessage(entry, entry.lastReminder!.type, false);
+
+    await slack.client.chat.update({
+      channel: entry.lastReminder!.channelId,
+      ts: entry.lastReminder!.messageTs,
+      text: text,
+      blocks: blocks,
+    });
+  }
 }
 
 /** Loads all received inbox entries for a user. */
@@ -249,14 +281,11 @@ export async function loadReceivedInboxEntries(
   return entries ?? [];
 }
 
-type ReminderTsArray = { [key: string]: string[] };
-
 async function updateRecipientsInboxes(
   recipientIds: string[],
   update: (
     inbox: ReceivedInboxEntry[],
-    recipientId: string,
-    reminderTsArray?: ReminderTsArray
+    recipientId: string
   ) => ReceivedInboxEntry[]
 ): Promise<void> {
   var inboxes =
