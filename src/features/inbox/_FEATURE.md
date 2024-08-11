@@ -7,6 +7,7 @@ This feature provides the user with a list of messages and notifications that ha
 ## Functionality
 
 - A cron job will check everyday at 11:30 am for overdue reminders and send a message to the user to remind him to anwer
+- https://calndr.link/api-docs used for creation of google calendar event
 
 ## Structure
 

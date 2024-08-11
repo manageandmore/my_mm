@@ -13,6 +13,7 @@ export type InboxEntry = {
   actions: InboxAction[];
   deadline?: string; // iso timestamp
   reminders?: string[]; // list of iso timestamps, ordered by earliest to latest
+  calendarUrl?: string;
 };
 
 /** The type of an inbox action. */
@@ -96,6 +97,7 @@ export type CreateInboxEntryOptions = {
 
   notifyOnCreate: boolean;
   enableReminders: boolean;
+  calendarUrl?: string;
 };
 
 /**
@@ -157,6 +159,7 @@ export async function createInboxEntry(
     actions: options.actions,
     deadline: options.deadline,
     reminders: reminders,
+    calendarUrl: options.calendarUrl,
   };
 
   // Get the current sent entries for the sender.

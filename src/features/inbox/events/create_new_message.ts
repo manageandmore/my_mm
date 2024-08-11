@@ -1,5 +1,8 @@
 import { slack } from "../../../slack";
-import { getNewMessageModal } from "../views/new_message_modal";
+import {
+  getNewMessageModal,
+  getCreateCalendarEventModal,
+} from "../views/new_message_modal";
 import {
   CreateInboxEntryOptions,
   InboxAction,
@@ -12,6 +15,11 @@ import { openOutboxAction } from "./open_outbox";
  * This action id can be used to call the modal to create an outbox message
  */
 export const newMessageAction = "new_outbox_message";
+
+/**
+ * This action id can be used to call the modal to add an calendar event to the message
+ */
+export const addCalendarEntryAction = "add_calendar_entry";
 
 /**
  * Opens the new message modal when the user clicks the 'New message' button.
@@ -65,9 +73,13 @@ slack.viewSubmission(
       channelId,
       messageTs,
       updateUrl,
-    }: { channelId: string; messageTs: string; updateUrl: string } = JSON.parse(
-      payload.view.private_metadata
-    );
+      calendarEventUrl,
+    }: {
+      channelId: string;
+      messageTs: string;
+      updateUrl: string;
+      calendarEventUrl: string | undefined;
+    } = JSON.parse(payload.view.private_metadata);
 
     const enable_reminders =
       values.options?.options_input_action?.selected_options?.find(
@@ -106,6 +118,9 @@ slack.viewSubmission(
       notifyOnCreate: notify_on_create != null,
       enableReminders: enable_reminders != null,
     };
+    if (calendarEventUrl) {
+      options.calendarUrl = calendarEventUrl;
+    }
 
     await createInboxEntry(options);
 
@@ -143,3 +158,72 @@ slack.viewSubmission(
     });
   }
 );
+
+/**
+ * Functions gets triggered if Add calendar event button is added
+ */
+slack.viewSubmission(
+  addCalendarEntryAction,
+  async (_) => {},
+  async (request) => {
+    const payload = request.payload;
+    const values = payload.view.state.values;
+    const { channelId, messageTs, description, updateUrl, view_id } =
+      JSON.parse(payload.view.private_metadata);
+    const eventName = encodeURIComponent(
+      values.event_name.event_name_input.value || ""
+    );
+    let startInput =
+      values.event_start_time.start_time_input.selected_date_time;
+    const startTime =
+      typeof startInput === "number"
+        ? encodeURIComponent(new Date(startInput * 1000).toISOString())
+        : undefined;
+
+    let endInput = values.event_end_time.end_time_input.selected_date_time;
+    const endTime =
+      typeof endInput === "number"
+        ? encodeURIComponent(new Date(endInput * 1000).toISOString())
+        : undefined;
+
+    console.log("starttime:", startTime);
+    console.log(endTime);
+    let timezone = encodeURIComponent("Europe/Berlin"); // replace with your desired timezone
+
+    // Create string for api webserver api call
+    let calendarUrl = `https://calndr.link/d/event/?service=google&start=${startTime}&end=${endTime}&title=${eventName}&timezone=${timezone}`;
+
+    slack.client.views.update({
+      view_id: view_id,
+      view: await getNewMessageModal(
+        channelId,
+        messageTs,
+        description,
+        updateUrl,
+        calendarUrl
+      ),
+    });
+  }
+);
+
+slack.action(addCalendarEntryAction, async (request) => {
+  const payload = request.payload;
+
+  // Get channel and message id from the payload.
+  const { channelId, messageTs, description, updateUrl } = JSON.parse(
+    (request.payload.actions[0] as ButtonAction).value
+  );
+
+  const view_id = payload.view?.id || "";
+
+  await slack.client.views.push({
+    trigger_id: payload.trigger_id,
+    view: await getCreateCalendarEventModal(
+      channelId,
+      messageTs,
+      description,
+      updateUrl,
+      view_id
+    ),
+  });
+});

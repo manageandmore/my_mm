@@ -128,6 +128,21 @@ export async function resolveInboxEntry(options: {
   const channelId = await getChannelIdForUser(options.userId);
   console.log(channelId);
 
+  // add calendar link to message if it exists and it was positive response
+  let calendarUrl = "";
+  if (
+    options.action.action_id === "message_action_done" ||
+    options.action.action_id === "message_action_accept"
+  ) {
+    if (
+      receivedInbox.find((e) => e.message.ts == options.messageTs)?.calendarUrl
+    ) {
+      calendarUrl =
+        receivedInbox.find((e) => e.message.ts == options.messageTs)
+          ?.calendarUrl || "";
+    }
+  }
+
   for (const reminderTs of reminderTsArray ?? []) {
     await slack.client.chat.update({
       channel: channelId!,
@@ -146,7 +161,7 @@ export async function resolveInboxEntry(options: {
           elements: [
             {
               type: "mrkdwn",
-              text: `*You responded with [${options.action.label}] to this message.*`,
+              text: `*You responded with [${options.action.label}] to this message. You can add the event to your calendar with this <${calendarUrl}|link>*`,
             },
           ],
         },

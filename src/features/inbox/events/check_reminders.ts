@@ -5,7 +5,6 @@ import { ReceivedInboxEntry } from "../data";
 import { asReadableDuration } from "../../common/time_utils";
 import { cache } from "../../common/cache";
 import { getButtonForInboxAction } from "../views/inbox_section";
-import { getUserById } from "../../common/id_utils";
 
 export const checkInboxRemindersTask: Task = {
   name: "check reminders",
