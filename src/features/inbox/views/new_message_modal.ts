@@ -22,6 +22,7 @@ export async function getNewMessageModal(
   calendarEventUrl?: string
 ): Promise<ModalView> {
   let calendarEntryBlock: AnyHomeTabBlock;
+  console.log("calendarEventUrl", calendarEventUrl);
   if (calendarEventUrl) {
     calendarEntryBlock = {
       type: "section",
@@ -45,7 +46,7 @@ export async function getNewMessageModal(
           text: "Add calendar url",
           emoji: true,
         },
-        action_id: "add_calendar_entry",
+        action_id: addCalendarEntryAction,
         value: JSON.stringify({ channelId, messageTs, description, updateUrl }),
 
         //open calendar entry modal + transfer all arguments needed for new message modal which need to be passed through

@@ -111,8 +111,7 @@ slack.viewSubmission(
       },
       description: description ?? "",
       actions: actions,
-      deadline: 
-        typeof deadline === "number" ? deadline : undefined,
+      deadline: typeof deadline === "number" ? deadline : undefined,
       notifyOnCreate: notify_on_create != null,
       enableReminders: enable_reminders != null,
     };
@@ -184,14 +183,13 @@ slack.viewSubmission(
         ? encodeURIComponent(new Date(endInput * 1000).toISOString())
         : undefined;
 
-    console.log("starttime:", startTime);
-    console.log(endTime);
     let timezone = encodeURIComponent("Europe/Berlin"); // replace with your desired timezone
 
     // Create string for api webserver api call
     let calendarUrl = `https://calndr.link/d/event/?service=google&start=${startTime}&end=${endTime}&title=${eventName}&timezone=${timezone}`;
+    console.log(calendarUrl);
 
-    slack.client.views.update({
+    await slack.client.views.update({
       view_id: view_id,
       view: await getNewMessageModal(
         channelId,

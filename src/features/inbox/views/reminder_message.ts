@@ -39,7 +39,7 @@ export function getReminderMessage(
   let calendarTextblock = "";
   if (action == messageAcceptAction || action == messageDoneAction) {
     if (entry.calendarUrl != null) {
-      calendarTextblock = `You can add the event to your calendar with this <${entry.calendarUrl}|link>*`;
+      calendarTextblock = `You can add the event to your calendar with this <${entry.calendarUrl}|link>`;
     }
   }
 

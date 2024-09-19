@@ -3,6 +3,8 @@ import { cache } from "../../common/cache";
 import { ButtonAction } from "slack-edge";
 import {
   InboxAction,
+  messageAcceptAction,
+  messageDoneAction,
   ReceivedInboxEntry,
   SentInboxEntry,
   allResponseActions,
@@ -104,5 +106,15 @@ export async function resolveInboxEntry(options: {
       text: text,
       blocks: blocks,
     });
+  } else if (entry.calendarUrl != null) {
+    if (
+      options.action == messageAcceptAction ||
+      options.action == messageDoneAction
+    ) {
+      await slack.client.chat.postMessage({
+        channel: options.userId,
+        text: `You can add the event to your calendar with this <${entry.calendarUrl}|link>`,
+      });
+    }
   }
 }
