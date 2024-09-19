@@ -3,19 +3,12 @@ import { anyMessage, slack } from "../../../slack";
 import { getPostCreatorModal } from "../views/post_creator_modal";
 import { addToCalendarAction } from "./add_to_calendar";
 import { PostCreatorOptions, getPostImageUrl } from "../image_utils";
-import { features } from "../../common/feature_flags";
-import { postCreatorFeatureFlag } from "..";
 
 /**
  * Shows a "Create Social Media Post" button whenever the user sends an image to the app.
  */
 anyMessage(async (request) => {
   const payload = request.payload;
-
-  const isEnabled = await features.check(postCreatorFeatureFlag, payload.user!);
-  if (!isEnabled) {
-    return;
-  }
 
   // Guard for direct messages to the app.
   if (payload.channel_type != "im") {

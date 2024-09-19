@@ -18,7 +18,6 @@ export function getContentSchedulerModal(
   info: {
     channels: string[];
     ips: string[];
-    assignees: { name: string; person: string }[];
   }
 ): ModalView {
   const previewImageUrl = getPostImageUrl({ ...options, size: 200 });
@@ -118,22 +117,6 @@ export function getContentSchedulerModal(
           options: info.channels.map((c) => ({
             text: { type: "plain_text", text: c },
             value: c,
-          })),
-        },
-      },
-      {
-        type: "section",
-        block_id: "assignee",
-        text: {
-          type: "mrkdwn",
-          text: "Assign a responsible person from IP Marketing",
-        },
-        accessory: {
-          type: "multi_static_select",
-          action_id: "assignee",
-          options: info.assignees.map((c) => ({
-            text: { type: "plain_text", text: c.name },
-            value: c.person,
           })),
         },
       },

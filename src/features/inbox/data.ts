@@ -1,31 +1,65 @@
 import { cache } from "../common/cache";
 import { slack } from "../../slack";
-import { Button, ChatPostMessageResponse } from "slack-edge";
-import { asReadableDuration } from "../common/time_utils";
+import { sendInboxNotification } from "./events/check_reminders";
+import { getReminderMessage } from "./views/reminder_message";
 
 /** The base type for an inbox entry. */
 export type InboxEntry = {
   message: {
     channel: string;
     ts: string;
+    url: string;
   };
   description: string;
   actions: InboxAction[];
-  deadline?: string; // iso timestamp
-  reminders?: string[]; // list of iso timestamps, ordered by earliest to latest
+  deadline?: number; // unix timestamp
+  reminders?: number[]; // list of unix timestamps, ordered by earliest to latest
 };
-
-export const messageDoneAction = "message_done";
-export const messageDismissedAction = "message_dismissed";
 
 /** The type of an inbox action. */
 export type InboxAction = {
   label: string;
   /** The style for the action button in slack. */
-  style: "primary" | "danger" | null;
+  style?: "primary" | "danger";
   /** The action id for the action button in slack. */
-  action_id: "message_done" | "message_dismissed";
+  action_id: string;
 };
+
+export const messageDoneAction: InboxAction = {
+  label: "✅ Done",
+  style: "primary",
+  action_id: "message_action_done",
+};
+export const messageDismissedAction: InboxAction = {
+  label: "🗑️ Dismiss",
+  action_id: "message_action_dismiss",
+};
+export const messageAcceptAction: InboxAction = {
+  label: "✅ Accept",
+  style: "primary",
+  action_id: "message_action_accept",
+};
+export const messageDeclineAction: InboxAction = {
+  label: "❌ Decline",
+  style: "danger",
+  action_id: "message_action_decline",
+};
+export const messageThumbsUpAction: InboxAction = {
+  label: "👍 Thumbs Up",
+  action_id: "message_action_thumbsup",
+};
+
+export const allResponseActions = [
+  messageDoneAction,
+  messageDismissedAction,
+  messageAcceptAction,
+  messageDeclineAction,
+  messageThumbsUpAction,
+];
+export const defaultResponseActions = [
+  messageDoneAction,
+  messageDismissedAction,
+];
 
 /** The type of a inbox entry as viewed by the user that sent it. */
 export type SentInboxEntry = InboxEntry & {
@@ -41,12 +75,19 @@ export type SentInboxEntry = InboxEntry & {
  * */
 export type InboxEntryResolution = {
   action: InboxAction;
-  time: string; // iso timestamp
+  timestamp: number; // unix timestamp
 };
 
 /** The type of an inbox entry as viewed by the user that received it. */
 export type ReceivedInboxEntry = InboxEntry & {
   senderId: string;
+  lastReminder?: InboxReminder;
+};
+
+export type InboxReminder = {
+  type: "new" | "reminder";
+  messageTs: string;
+  channelId: string;
 };
 
 /** The options for creating a new inbox entry. */
@@ -58,7 +99,7 @@ export type CreateInboxEntryOptions = {
   };
   description: string;
   actions: InboxAction[];
-  deadline?: string;
+  deadline?: number; // unix timestamp
 
   notifyOnCreate: boolean;
   enableReminders: boolean;
@@ -74,19 +115,19 @@ export type CreateInboxEntryOptions = {
 export async function createInboxEntry(
   options: CreateInboxEntryOptions
 ): Promise<void> {
-  let reminders: string[] = [];
+  let reminders: number[] = [];
 
   const enableReminders = options.enableReminders && options.deadline != null;
   if (enableReminders) {
-    var deadline = Date.parse(options.deadline!);
-
     // Use a fixed schedule for now.
     const remindHoursBeforeDeadline = [1, 8, 24, 24 * 3, 24 * 7, 24 * 14];
+    const nowTimestamp = Date.now() / 1000;
 
     for (var hours of remindHoursBeforeDeadline) {
-      reminders.unshift(
-        new Date(deadline - hours * 60 * 60 * 1000).toISOString()
-      );
+      const reminderTimestamp = options.deadline! - hours * 60 * 60;
+      if (reminderTimestamp > nowTimestamp) {
+        reminders.unshift(reminderTimestamp);
+      }
     }
   }
 
@@ -94,19 +135,27 @@ export async function createInboxEntry(
   let nextCursor: string | undefined = undefined;
 
   // Get all members (paginated).
-  do {
-    var response = await slack.client.conversations.members({
-      channel: options.message.channel,
-      cursor: nextCursor,
-    });
-    recipientIds.push(...(response.members ?? []));
-    nextCursor = response.response_metadata?.next_cursor;
-  } while (nextCursor != null);
+  if (options.message.channel != null && options.message.channel != "") {
+    do {
+      var response = await slack.client.conversations.members({
+        channel: options.message.channel,
+        cursor: nextCursor,
+      });
+      recipientIds.push(...(response.members ?? []));
+      nextCursor = response.response_metadata?.next_cursor;
+    } while (nextCursor != null && nextCursor != "");
+  }
+
+  const link = await slack.client.chat.getPermalink({
+    channel: options.message.channel,
+    message_ts: options.message.ts,
+  });
 
   const entry: InboxEntry = {
     message: {
       channel: options.message.channel,
       ts: options.message.ts,
+      url: link.permalink!,
     },
     description: options.description,
     actions: options.actions,
@@ -129,42 +178,44 @@ export async function createInboxEntry(
     ],
   });
 
-  // Get the current received entries for all recipients.
-  var inboxes =
-    (await cache.hmget<ReceivedInboxEntry[]>(
-      "inbox:received",
-      ...recipientIds
-    )) ?? {};
-
-  // Update the received entries for all recipients.
-  await cache.hset<ReceivedInboxEntry[]>(
-    "inbox:received",
-    Object.fromEntries(
-      recipientIds.map((recipientId) => {
-        return [
-          recipientId,
-          [
-            { ...entry, senderId: options.message.userId },
-            ...(inboxes[recipientId] ?? []),
-          ],
-        ];
-      })
-    )
-  );
-
+  let reminderTsArray: { [key: string]: InboxReminder } = {};
   if (options.notifyOnCreate) {
     // Notify all recipients.
     for (var recipientId of recipientIds) {
-      var r = await sendInboxNotification(recipientId, { ...entry, senderId: options.message.userId }, "new");
+      var sentMessage = await sendInboxNotification(
+        recipientId,
+        { ...entry, senderId: options.message.userId },
+        "new"
+      );
 
       // We need to track if we get rate-limited for this.
       // Sending out bursts of messages is allowed but the docs are not clear on the exact limits.
-      if (r.ok == false && r.error == "rate_limited") {
-        console.error("App got rate-limited while sending out messages.", r);
+      if (sentMessage.ok == false && sentMessage.error == "rate_limited") {
+        console.error(
+          "App got rate-limited while sending out messages.",
+          sentMessage
+        );
         break;
       }
+
+      console.log("Sent notification to", sentMessage.channel, sentMessage.ts!);
+      reminderTsArray[recipientId] = {
+        type: "new",
+        messageTs: sentMessage.ts!,
+        channelId: sentMessage.channel!,
+      };
     }
   }
+
+  // Add the entry for all recipients.
+  await updateRecipientsInboxes(recipientIds, (inbox, recipientId) => [
+    {
+      ...entry,
+      senderId: options.message.userId,
+      lastReminder: reminderTsArray[recipientId],
+    },
+    ...inbox,
+  ]);
 }
 
 /** Loads all sent inbox entries for a user. */
@@ -173,6 +224,50 @@ export async function loadSentInboxEntries(
 ): Promise<SentInboxEntry[]> {
   var entries = await cache.hget<SentInboxEntry[]>("inbox:sent", userId);
   return entries ?? [];
+}
+
+/** Deletes a sent inbox entry for a user. */
+export async function deleteSentInboxEntry(
+  userId: string,
+  messageTs: string
+): Promise<void> {
+  //Delete the entry for the sender.
+  const oldEntries = await loadSentInboxEntries(userId);
+  const targetEntry = oldEntries.find((e) => e.message.ts == messageTs);
+
+  if (!targetEntry) {
+    return;
+  }
+
+  let openReminderEntries: ReceivedInboxEntry[] = [];
+
+  // Delete the entry for all recipients.
+  await updateRecipientsInboxes(targetEntry.recipientIds, (inbox) => {
+    var entry = inbox.find((e) => e.message.ts == messageTs);
+
+    if (entry?.lastReminder != null) {
+      openReminderEntries.push(entry);
+    }
+
+    return inbox.filter((e) => e != entry);
+  });
+
+  // Delete the entry for the sender.
+  await cache.hset<SentInboxEntry[]>("inbox:sent", {
+    [userId]: oldEntries.filter((e) => e.message.ts != messageTs),
+  });
+
+  // Remove buttons from all reminder messages.
+  for (let entry of openReminderEntries) {
+    let {text, blocks} = getReminderMessage(entry, entry.lastReminder!.type, false);
+
+    await slack.client.chat.update({
+      channel: entry.lastReminder!.channelId,
+      ts: entry.lastReminder!.messageTs,
+      text: text,
+      blocks: blocks,
+    });
+  }
 }
 
 /** Loads all received inbox entries for a user. */
@@ -186,166 +281,26 @@ export async function loadReceivedInboxEntries(
   return entries ?? [];
 }
 
-/**
- * Checks all active inbox entries for overdue reminders and sends the notifications.
- *
- * This function is idempotent as long as its not called in parallel.
- */
-export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
-  var now = new Date().toISOString();
+async function updateRecipientsInboxes(
+  recipientIds: string[],
+  update: (
+    inbox: ReceivedInboxEntry[],
+    recipientId: string
+  ) => ReceivedInboxEntry[]
+): Promise<void> {
   var inboxes =
-    (await cache.hgetall<ReceivedInboxEntry[]>("inbox:received")) ?? {};
-  //generate test inbox data; TODO: remove this
-  let newEntry = {
-    message: {
-      channel: "U06020CBKFH", //channel id for SJ at the moment
-      ts: "1631134811.000100",
-    },
-    description: "test",
-    actions: [
-      {
-        label: "✅  Done",
-        style: "primary" as "primary" | "danger" | null,
-        action_id: "message_done" as "message_done" | "message_dismissed",
-      },
-      {
-        label: "🗑️ Dismiss",
-        style: "danger" as "primary" | "danger" | null,
-        action_id: "message_dismissed" as "message_done" | "message_dismissed",
-      },
-    ],
-    deadline: "2024-05-29T03:05:00.000Z",
-    reminders: ["2024-05-23T02:47:00.000Z"],
-    senderId: "U06020CBKFH",
-  };
+    (await cache.hmget<ReceivedInboxEntry[]>(
+      "inbox:received",
+      ...recipientIds
+    )) ?? {};
 
-  if (inboxes["U06020CBKFH"]) {
-    inboxes["U06020CBKFH"].push(newEntry);
-  } else {
-    inboxes["U06020CBKFH"] = [newEntry];
-  }
-  //end of test data
-
-  for (var userId in inboxes) {
-    var entries = inboxes[userId];
-    var needsUpdate = false;
-
-    for (var entry of entries) {
-      console.log(entry);
-      var nextReminder = entry.reminders?.at(0);
-      if (nextReminder != undefined && nextReminder < now) {
-        // Remove this reminder so its not triggering again.
-        entry.reminders?.shift();
-        // Mark that we need to update the inbox.
-        needsUpdate = true;
-
-        await sendInboxNotification(userId, entry, "reminder");
-      }
-    }
-
-    // Only update the inbox if we actually triggered a reminder.
-    if (needsUpdate) {
-      await cache.hset<ReceivedInboxEntry[]>("inbox:received", {
-        [userId]: entries,
-      });
-    }
-  }
-}
-
-/**
- * Sends an inbox notification to a user.
- *
- * @param to The user id of the target user.
- * @param entry The inbox entry to notify about.
- * @param type "new" for a newly created entry, or "reminder" for an inbox reminder.
- * @returns The response from slack.
- */
-async function sendInboxNotification(
-  to: string,
-  entry: ReceivedInboxEntry,
-  type: "new" | "reminder"
-): Promise<ChatPostMessageResponse> {
-  var title = type == "new" ? "New Inbox Message" : "Inbox Reminder";
-
-  var note = "";
-  if (entry.deadline != null) {
-    var timeLeft = asReadableDuration(
-      new Date(entry.deadline!).valueOf() - Date.now()
-    );
-
-    //TODO: deadline is not correctly inserted based on the test data
-    note =
-      type == "new"
-        ? `You have *${timeLeft}* to respond`
-        : `You have *${timeLeft}* to respond to this message`;
-  }
-
-  let actionBlocks = [];
-  for (let action of entry.actions) {
-    const button: Button = {
-      type: "button",
-      text: {
-        emoji: true,
-        type: "plain_text",
-        text: action.label,
-      },
-      action_id: action.action_id,
-      value: JSON.stringify({
-        ts: entry.message.ts,
-        senderId: entry.senderId,
-        userId: to,
-        action: action,
-      }),
-    };
-    actionBlocks.push(button);
-  }
-
-  var response = await slack.client.chat.postMessage({
-    channel: to,
-    //text is fallback in case client doesn't support blocks
-    text: `📬 ${title}${note.length > 0 ? ` | ${note}` : ""}:\n${
-      entry.description
-    }`,
-
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text:
-            `📬 ${title}${note.length > 0 ? ` | ${note}` : ""}:\n` +
-            `<${entry.message.ts}|original message>`,
-        },
-      },
-      {
-        type: "divider",
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: entry.description,
-        },
-      },
-
-      {
-        type: "divider",
-      },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: "_You can mark this message as resolved by clicking one of the buttons below. The message will be deleted from your inbox once you do._",
-          },
-        ],
-      },
-      {
-        type: "actions",
-        elements: actionBlocks,
-      },
-    ],
-  });
-
-  return response;
+  await cache.hset<ReceivedInboxEntry[]>(
+    "inbox:received",
+    Object.fromEntries(
+      recipientIds.map((recipientId) => {
+        let updatedInbox = update(inboxes[recipientId] ?? [], recipientId);
+        return [recipientId, updatedInbox];
+      })
+    )
+  );
 }

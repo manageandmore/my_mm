@@ -1,14 +1,13 @@
 import { slack } from "../src/slack";
 import { RequestContext } from "@vercel/edge";
 
-import { features } from "../src/features/common/feature_flags";
-
 // Import all features that register events, shortcuts or actions
 import "../src/features/assistant/index";
 import "../src/features/community_credits/index";
 import "../src/features/home/index";
 import "../src/features/post_creator/index";
 import "../src/features/wishlist/index";
+import "../src/features/inbox/index";
 
 /**
  * Configures the vercel deployment to use the edge runtime.
@@ -26,6 +25,5 @@ export default async function events(
   request: Request,
   context: RequestContext
 ) {
-  await features.initialize(context.waitUntil.bind(context));
   return await slack.run(request, context);
 }

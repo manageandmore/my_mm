@@ -6,12 +6,7 @@ import {
 import { notion } from "../../../notion";
 import { currentUrl, notionEnv } from "../../../constants";
 import { Prop } from "../../../utils";
-import {
-  getScholarIdFromUserId,
-  getUserIdForEmail,
-} from "../../common/id_utils";
-import { features } from "../../common/feature_flags";
-import { postCreatorFeatureFlag } from "..";
+import { getScholarIdFromUserId } from "../../common/id_utils";
 import { queryScholarProfile } from "../../home/data/query_profile";
 
 const contentCalendarDatabaseId =
@@ -43,33 +38,9 @@ export async function getContentCalendarInfo() {
   const channelProp = response.properties.Channel as MultiSelectPropertyConfig;
   const ipProp = response.properties.IP as MultiSelectPropertyConfig;
 
-  const responsiblePersonsTag = features.read(postCreatorFeatureFlag).tags
-    .ResponsiblePerson;
-
-  const assignees = responsiblePersonsTag
-    ? (
-        await Promise.all(
-          responsiblePersonsTag.split(";").map(async (p) => {
-            try {
-              var userId = await getUserIdForEmail(p);
-              var scholarId = await getScholarIdFromUserId(userId);
-              var profile = await queryScholarProfile(scholarId);
-
-              return profile.person
-                ? { name: profile.name, person: profile.person! }
-                : null;
-            } catch (e) {
-              return null;
-            }
-          })
-        )
-      ).filter((id): id is { name: string; person: string } => id != null)
-    : [];
-
   return {
     channels: channelProp.multi_select.options.map((o) => o.name),
     ips: ipProp.multi_select.options.map((o) => o.name),
-    assignees: assignees,
   };
 }
 

@@ -6,30 +6,28 @@ import {
   SlackRequestWithOptionalRespond,
 } from "slack-edge";
 import { slack } from "../../slack";
-import { features } from "../common/feature_flags";
-import { refreshRoles } from "../common/role_utils";
-import { checkForRemindersAction } from "../inbox/events/message_response";
+import { getRolesForUser, refreshRoles } from "../common/role_utils";
 import { openTaskModal, performTask, triggerTask } from "../common/task_utils";
-import { assistantFeatureFlag } from "../assistant";
 import { createAnnouncementAction } from "../announcement/events/announcement";
 import { syncNotionTask } from "../assistant/loaders/load_pages";
 import { syncSlackTask } from "../assistant/loaders/load_channels";
 import { syncWebsiteTask } from "../assistant/loaders/load_website";
+import { indexedChannels } from "../../constants";
+import {
+  checkForRemindersAction,
+  deleteAllMessagesAction,
+} from "../inbox/events/check_reminders";
 
 export type AdminActionRequest = SlackRequestWithOptionalRespond<
   SlackAppEnv,
   BlockAction<BlockElementAction>
 >;
 
-const adminFeatureFlag = features.register({
-  label: "Admin",
-  description: "Enables the admin control settings on the home view.",
-});
-
 export async function getAdminSection(
   userId: string
 ): Promise<AnyHomeTabBlock[]> {
-  if (!(await features.check(adminFeatureFlag, userId))) {
+  var roles = await getRolesForUser(userId);
+  if (!roles.includes("Admin")) {
     return [];
   }
 
@@ -59,15 +57,6 @@ export async function getAdminSection(
     {
       type: "actions",
       elements: [
-        {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "⛳️ Refresh Feature Flags",
-            emoji: true,
-          },
-          action_id: refreshFeatureFlagsAction,
-        },
         {
           type: "button",
           text: {
@@ -108,10 +97,19 @@ export async function getAdminSection(
           type: "button",
           text: {
             type: "plain_text",
-            text: "⏰ Check Reminders",
+            text: "📬 Trigger Inbox Reminders",
             emoji: true,
           },
           action_id: checkForRemindersAction,
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "🗑️ Delete Inbox Messages",
+            emoji: true,
+          },
+          action_id: deleteAllMessagesAction,
         },
       ],
     },
@@ -120,35 +118,6 @@ export async function getAdminSection(
     },
   ];
 }
-
-const refreshFeatureFlagsAction = "refresh_feature_flags_action";
-
-slack.action(
-  refreshFeatureFlagsAction,
-  async (_) => {},
-  async (request) => {
-    var viewId = await openTaskModal(request.payload.trigger_id);
-    await performTask(
-      {
-        name: "refresh feature flags",
-        run: async (_, log) => {
-          await features.refresh();
-          await log("done");
-        },
-        display: (_) => [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: "⛳️ Successfully refreshed all feature flags.",
-            },
-          },
-        ],
-      },
-      { viewId }
-    );
-  }
-);
 
 const refreshUserRolesAction = "refresh_user_roles_action";
 
@@ -186,7 +155,7 @@ slack.action(
   async (_) => {},
   async (request) => {
     const viewId = await openTaskModal(request.payload.trigger_id);
-    await triggerTask(syncNotionTask, {viewId});
+    await triggerTask(syncNotionTask, { viewId });
   }
 );
 
@@ -196,10 +165,6 @@ slack.action(
   syncSlackMessagesAction,
   async (_) => {},
   async (request) => {
-    const channelsTag =
-      features.read(assistantFeatureFlag).tags.IndexedChannels;
-    const indexedChannels = channelsTag ? channelsTag.split(";") : [];
-
     var viewId = await openTaskModal(request.payload.trigger_id);
     await triggerTask(syncSlackTask, {
       viewId: viewId,

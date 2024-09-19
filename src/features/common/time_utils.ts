@@ -57,11 +57,10 @@ export function timeDisplay(date: string): string {
 
 /**
  * Transforms a duration in milliseconds into a human readable string.
- * 
+ *
  * E.g. "less than one hour", "3 hours", "one day", "2 weeks"
  */
 export function asReadableDuration(millis: number): string {
-
   var seconds = millis / 1000;
   var minutes = seconds / 60;
   var hours = minutes / 60;

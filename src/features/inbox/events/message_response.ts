@@ -1,26 +1,41 @@
 import { slack } from "../../../slack";
 import { cache } from "../../common/cache";
+import { ButtonAction } from "slack-edge";
 import {
   InboxAction,
   ReceivedInboxEntry,
   SentInboxEntry,
-  checkAndTriggerOverdueInboxReminders,
-  messageDismissedAction,
-  messageDoneAction,
+  allResponseActions,
 } from "../data";
+import { updateHomeViewForUser } from "../../home/event";
+import { getReminderMessage } from "../views/reminder_message";
 
-slack.event(messageDoneAction, async (request) => {
-  const payload: { actions: [{ value: string }] } = request.payload;
-  const action = payload.actions[0]; // assuming the button is the first action
-  const actionData = JSON.parse(action.value);
+registerActions();
 
-  await resolveInboxEntry({
-    messageTs: actionData.ts,
-    senderId: actionData.senderId,
-    userId: actionData.userId,
-    action: actionData.action,
-  });
-});
+function registerActions() {
+  for (let action of allResponseActions) {
+    slack.action(
+      action.action_id,
+      async (request) => {},
+      async (request) => {
+        const payload = request.payload;
+        const actionData = JSON.parse(
+          (payload.actions[0] as ButtonAction).value
+        );
+
+        await resolveInboxEntry({
+          messageTs: actionData.messageTs,
+          senderId: actionData.senderId,
+          userId: request.payload.user.id,
+          action: action,
+        });
+
+        // Update the home page.
+        await updateHomeViewForUser(request.payload.user.id);
+      }
+    );
+  }
+}
 
 /**
  * Resolves one inbox entry for a user with the chosen [action].
@@ -35,17 +50,19 @@ export async function resolveInboxEntry(options: {
   action: InboxAction;
 }): Promise<void> {
   // Get the current received entries for the user.
-  var receivedInbox =
+  let receivedInbox =
     (await cache.hget<ReceivedInboxEntry[]>(
       "inbox:received",
       options.userId
     )) ?? [];
 
-  // Remove the target entry based on the message id.
+  // Find the target entry
+  const entry = receivedInbox.find((e) => e.message.ts == options.messageTs);
+  if (entry == undefined) return;
+
+  // Remove the target entry from the inbox.
   await cache.hset("inbox:received", {
-    [options.userId]: receivedInbox.filter(
-      (e) => e.message.ts != options.messageTs
-    ),
+    [options.userId]: receivedInbox.filter((e) => e != entry),
   });
 
   // Get the current sent entries for the sender.
@@ -63,7 +80,7 @@ export async function resolveInboxEntry(options: {
             // Sets the resolution for [userId] with the [action] and current [time].
             [options.userId]: {
               action: options.action,
-              time: new Date().toISOString(),
+              timestamp: Math.round(Date.now() / 1000),
             },
           },
         };
@@ -72,10 +89,15 @@ export async function resolveInboxEntry(options: {
       }
     }),
   });
+
+  if (entry.lastReminder != null) {
+    let {text, blocks} = getReminderMessage(entry, entry.lastReminder.type, false, options.action);
+
+    await slack.client.chat.update({
+      channel: entry.lastReminder.channelId,
+      ts: entry.lastReminder.messageTs,
+      text: text,
+      blocks: blocks,
+    });
+  }
 }
-
-export const checkForRemindersAction = "check_for_reminders";
-
-slack.action(checkForRemindersAction, async (request) => {
-  await checkAndTriggerOverdueInboxReminders();
-});

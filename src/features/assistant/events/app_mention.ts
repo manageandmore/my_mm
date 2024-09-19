@@ -2,12 +2,9 @@ import {
   AnyMessageBlock,
   AnyTextField,
   AppMentionEvent,
-  ChatPostMessageResponse,
   GenericMessageEvent,
 } from "slack-edge";
 import { anyMessage, slack } from "../../../slack";
-import { features } from "../../common/feature_flags";
-import { assistantFeatureFlag } from "..";
 import { promptAssistant } from "../ai/chain";
 
 /**
@@ -43,27 +40,13 @@ slack.event("app_mention", async (request) => {
 
 /**
  * Shared message for triggering the assistant and generating a response.
- * 
+ *
  * This is executed for both direct messages to the app and mentions of the app in channels.
  */
 async function triggerAssistant(
   event: GenericMessageEvent | AppMentionEvent,
   botUserId: string | undefined
 ) {
-  const isEnabled = await features.check(assistantFeatureFlag, event.user!);
-  if (!isEnabled) {
-    let message = features.read(assistantFeatureFlag).tags.DisabledHint;
-    if (message) {
-      await slack.client.chat.postEphemeral({
-        channel: event.channel,
-        thread_ts: event.thread_ts,
-        user: event.user!,
-        text: message,
-      });
-    }
-    return;
-  }
-
   const message = event.text.replaceAll(`<@${botUserId}>`, "");
 
   // Display animating dots ('...') while the response is loading.
@@ -77,7 +60,7 @@ async function triggerAssistant(
         elements: [{ type: "plain_text", text: "." }],
       },
     ],
-  });;
+  });
 
   let n = 0;
   const interval = setInterval(() => {
@@ -126,6 +109,7 @@ async function triggerAssistant(
   clearInterval(interval);
 
   // Send the response.
+
   await slack.client.chat.update({
     channel: msg.channel!,
     ts: msg.ts!,

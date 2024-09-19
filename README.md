@@ -49,8 +49,8 @@ The following table gives an overview of the high-level system components the ap
 - `api/`: Top level api routes. Each file defines a `/api/<filename>` route.
   - `events.ts`: Entrypoint for slack events, messages and shortcuts.
   - `social.ts`: Generates an image in a specific layout, used by the social media post generator.
-  - `sync.ts`: Syncs the notion ai index to the vector database, triggered by a daily cron job.
-  - `checkReminders.ts`: Checks what overdue reminders are in inboxes and sends them to the users. Triggered daily by a cron job.
+  - `cron.ts`: Performs tasks like syncing the ai index or sending reminders, riggered by a daily cron job.
+  - `task.ts`: Performs long-running background tasks.
 - `src/`: Contains the source code.
   - `features/`: The features of the application in separate folders.
     - `<featurename>/`
