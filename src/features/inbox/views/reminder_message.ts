@@ -1,5 +1,10 @@
 import { AnyMessageBlock, AnyTextField } from "slack-edge";
-import { InboxAction, ReceivedInboxEntry } from "../data";
+import {
+  InboxAction,
+  messageAcceptAction,
+  messageDoneAction,
+  ReceivedInboxEntry,
+} from "../data";
 import { asReadableDuration } from "../../common/time_utils";
 import { getButtonForInboxAction } from "./inbox_section";
 
@@ -28,6 +33,14 @@ export function getReminderMessage(
         ],
       },
     ];
+  }
+
+  //if the message is a positive response to a resolution, add calendar event url
+  let calendarTextblock = "";
+  if (action == messageAcceptAction || action == messageDoneAction) {
+    if (entry.calendarUrl != null) {
+      calendarTextblock = `You can add the event to your calendar with this <${entry.calendarUrl}|link>`;
+    }
   }
 
   return {
@@ -82,7 +95,7 @@ export function getReminderMessage(
               elements: [
                 {
                   type: "mrkdwn",
-                  text: `*You responded with [${action.label}] to this message.*`,
+                  text: `*You responded with [${action.label}] to this message. ${calendarTextblock}*`,
                 },
               ],
             },
