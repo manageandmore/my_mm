@@ -15,9 +15,6 @@ import { cache } from "../common/cache";
  */
 slack.event("app_home_opened", async (request) => {
   const event = request.payload;
-  await cache.hset<string>("directChannels", {
-    [event.user]: event.channel,
-  });
 
   try {
     await updateHomeViewForUser(event.user);

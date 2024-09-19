@@ -8,91 +8,60 @@ import { has } from "cheerio/lib/api/traversing";
  * Constructs the inbox section.
  */
 export function getInboxSection(
-  entries: ReceivedInboxEntry[],
-  hasOutbox: boolean
+  entries: ReceivedInboxEntry[]
 ): AnyHomeTabBlock[] {
-  const header: HeaderBlock = {
-    type: "header",
-    text: {
-      type: "plain_text",
-      text: (entries.length == 0 ? "📪" : "📬") + " Your Inbox",
+  const header: AnyHomeTabBlock[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: (entries.length == 0 ? "📪" : "📬") + " Your Inbox",
+      },
     },
-  };
-
-  let tooManyEntriesSection: AnyHomeTabBlock[] = [];
-  const outboxSection: AnyHomeTabBlock[] = hasOutbox
-    ? [
+    {
+      type: "context",
+      elements: [
         {
-          type: "divider",
+          type: "mrkdwn",
+          text: "The Inbox contains important messages from #general or #active that require a response from you. Some may have a deadline and you will be sent reminders until you respond to them.",
         },
-        {
-          type: "header",
-          text: {
-            type: "plain_text",
-            text: "📤 Your Outbox",
-          },
-        },
-        {
-          type: "context",
-          elements: [
-            {
-              type: "mrkdwn",
-              text: "The Outbox shows all messages you sent to others and how they responded.",
-            },
-          ],
-        },
-        {
-          type: "actions",
-          elements: [
-            {
-              type: "button",
-              text: {
-                type: "plain_text",
-                text: "Open Outbox",
-                emoji: true,
-              },
-              action_id: openOutboxAction,
-            },
-          ],
-        },
-      ]
-    : [];
+      ],
+    },
+  ];
 
   if (entries.length == 0) {
     return [
-      header,
+      ...header,
       {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: "All done. Check back later.",
-          },
-        ],
-      },
-      ...outboxSection,
-    ];
-  } else if (entries.length > 15) {
-    tooManyEntriesSection = [
-      {
-        type: "divider",
-      },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: "⚠️ *You have more than 15 messages in your inbox. Please resolve some messages first and reload the home screen.*",
-          },
-        ],
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "All done. Check back later.",
+        },
       },
     ];
   }
-  //Slicing entries to less than 15 so not more than 100 blocks are sent
-  entries = entries.slice(0, 15);
+
+  let tooManyEntriesSection: AnyHomeTabBlock[] = [];
+  if (entries.length > 15) {
+    tooManyEntriesSection = [
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "⚠️ *You have more than 15 messages in your inbox. Please resolve some messages and reload the home screen to see more.*",
+          },
+        ],
+      },
+    ];
+
+    //Slicing entries to less than 15 so not more than 100 blocks are sent
+    entries = entries.slice(0, 15);
+  }
 
   return [
-    header,
+    ...header,
     {
       type: "context",
       elements: [
@@ -106,9 +75,7 @@ export function getInboxSection(
     ...entries.flatMap<AnyHomeTabBlock>((e) => {
       let deadlineHint: AnyHomeTabBlock[] = [];
       if (e.deadline != null) {
-        let timeLeft = asReadableDuration(
-          new Date(e.deadline!).valueOf() - Date.now()
-        );
+        let timeLeft = asReadableDuration(e.deadline * 1000 - Date.now());
         deadlineHint = [
           {
             type: "context",
@@ -149,7 +116,6 @@ export function getInboxSection(
         },
       ];
     }),
-    ...outboxSection,
   ];
 }
 
@@ -172,4 +138,42 @@ export function getButtonForInboxAction(
       action: action,
     }),
   };
+}
+
+export function getOutboxSection(): AnyHomeTabBlock[] {
+  return [
+    {
+      type: "divider",
+    },
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "📤 Your Outbox",
+      },
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "The Outbox shows all messages you sent to other inboxes and the responses you got.",
+        },
+      ],
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Open Outbox",
+            emoji: true,
+          },
+          action_id: openOutboxAction,
+        },
+      ],
+    },
+  ];
 }

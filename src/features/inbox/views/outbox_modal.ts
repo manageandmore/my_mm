@@ -64,6 +64,24 @@ export function getOutboxModal(
                 },
                 style: "danger",
                 action_id: deleteExpiredOutboxMessagesAction,
+                confirm: {
+                  title: {
+                    type: "plain_text",
+                    text: "Are you sure?",
+                  },
+                  text: {
+                    type: "mrkdwn",
+                    text: `Are you sure you want to remove ${expired} expired messages?`,
+                  },
+                  confirm: {
+                    type: "plain_text",
+                    text: "Yes",
+                  },
+                  deny: {
+                    type: "plain_text",
+                    text: "No",
+                  },
+                }
               },
             },
           ]
@@ -129,21 +147,6 @@ export function getOutboxModal(
 export async function getViewSentMessageModal(
   entry: SentInboxEntry
 ): Promise<ModalView> {
-  let nextReminderBlock: AnyModalBlock[] = [];
-  if (entry.reminders && entry.reminders.length > 0) {
-    const nextReminder = entry.reminders[0];
-    nextReminderBlock = [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `*Next reminder:* ${new Date(nextReminder).toLocaleString(
-            "de-DE"
-          )}`,
-        },
-      },
-    ];
-  }
   let blocks: AnyModalBlock[] = [
     {
       type: "section",
@@ -171,13 +174,36 @@ export async function getViewSentMessageModal(
         type: "mrkdwn",
         text: `*Deadline:* ${
           entry.deadline
-            ? new Date(entry.deadline).toLocaleString("de-DE")
+            ? `<!date^${entry.deadline}^{date_short} {time}|${new Date(
+                entry.deadline * 1000
+              ).toLocaleString("de-DE")} UTC>`
             : "No deadline"
         }`,
       },
     },
-    ...nextReminderBlock,
   ];
+
+  if (entry.reminders && entry.reminders.length > 0) {
+    const now = Date.now() / 1000;
+    let nextReminder: number | null = null;
+    for (let i = 0; i < entry.reminders.length; i++) {
+      if (entry.reminders[i] < now) continue;
+      nextReminder = entry.reminders[i];
+      break;
+    }
+
+    if (nextReminder != null) {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*Next reminder:* <!date^${nextReminder}^{date_short} {time}|${new Date(
+            nextReminder * 1000
+          ).toLocaleString("de-DE")} UTC>`,
+        },
+      });
+    }
+  }
 
   const actionCounts: { [action: string]: number } = {};
 
