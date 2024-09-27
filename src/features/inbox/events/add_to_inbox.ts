@@ -8,8 +8,6 @@ import { newMessageAction } from "./create_new_message";
 anyMessage(async (request) => {
   const payload = request.payload;
 
-  // TODO: Remove when releasing inbox
-  return;
 
   if (payload.subtype === "bot_message") {
     return;
