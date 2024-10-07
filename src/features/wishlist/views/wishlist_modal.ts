@@ -86,7 +86,6 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
       emoji: true,
     },
     blocks: blocks,
-    private_metadata: JSON.stringify(options.items ?? []),
   };
 }
 
