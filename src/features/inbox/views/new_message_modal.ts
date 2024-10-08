@@ -1,5 +1,8 @@
-import { ModalView, PlainTextOption } from "slack-edge";
-import { newMessageAction } from "../events/create_new_message";
+import { AnyHomeTabBlock, ModalView, PlainTextOption } from "slack-edge";
+import {
+  newMessageAction,
+  addCalendarEntryAction,
+} from "../events/create_new_message";
 import {
   InboxAction,
   allResponseActions,
@@ -15,8 +18,42 @@ export async function getNewMessageModal(
   channelId: string,
   messageTs: string,
   description: string,
-  updateUrl: string
+  updateUrl: string,
+  calendarEventUrl?: string
 ): Promise<ModalView> {
+  let calendarEntryBlock: AnyHomeTabBlock;
+  console.log("calendarEventUrl", calendarEventUrl);
+  if (calendarEventUrl) {
+    calendarEntryBlock = {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Calendar Event URL:* <${calendarEventUrl}|Google calendar link>`,
+        //text: `*Calendar Event URL:* ${calendarEventUrl}`,
+      },
+    };
+  } else {
+    calendarEntryBlock = {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: "No Calendar Event URL provided.",
+      },
+      accessory: {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "Add calendar url",
+          emoji: true,
+        },
+        action_id: addCalendarEntryAction,
+        value: JSON.stringify({ channelId, messageTs, description, updateUrl }),
+
+        //open calendar entry modal + transfer all arguments needed for new message modal which need to be passed through
+      },
+    };
+  }
+
   return {
     type: "modal",
     callback_id: newMessageAction,
@@ -38,6 +75,7 @@ export async function getNewMessageModal(
       channelId,
       messageTs,
       updateUrl,
+      calendarEventUrl,
     }),
     blocks: [
       {
@@ -119,6 +157,7 @@ export async function getNewMessageModal(
         },
         optional: true,
       },
+      calendarEntryBlock,
       {
         type: "input",
         block_id: "multi_select_menu",
@@ -151,5 +190,85 @@ function getOptionForAction(action: InboxAction): PlainTextOption {
       emoji: true,
     },
     value: JSON.stringify(action),
+  };
+}
+
+/**
+ * Construct the create calendar event modal
+ *
+ * @returns The create calendar event modal view.
+ */
+export async function getCreateCalendarEventModal(
+  channelId: string,
+  messageTs: string,
+  description: string,
+  updateUrl: string,
+  view_id: string
+): Promise<ModalView> {
+  return {
+    type: "modal",
+    callback_id: addCalendarEntryAction,
+    title: {
+      type: "plain_text",
+      text: "Create Calendar Event",
+      emoji: false,
+    },
+    submit: {
+      type: "plain_text",
+      text: "Submit",
+      emoji: true,
+    },
+    private_metadata: JSON.stringify({
+      channelId,
+      messageTs,
+      description,
+      updateUrl,
+      view_id,
+    }),
+    close: {
+      type: "plain_text",
+      text: "Cancel",
+    },
+    blocks: [
+      {
+        type: "input",
+        block_id: "event_name",
+        label: {
+          type: "plain_text",
+          text: "Event Name",
+          emoji: true,
+        },
+        element: {
+          type: "plain_text_input",
+          action_id: "event_name_input",
+        },
+      },
+      {
+        type: "input",
+        block_id: "event_start_time",
+        label: {
+          type: "plain_text",
+          text: "Event Start Time",
+          emoji: true,
+        },
+        element: {
+          type: "datetimepicker",
+          action_id: "start_time_input",
+        },
+      },
+      {
+        type: "input",
+        block_id: "event_end_time",
+        label: {
+          type: "plain_text",
+          text: "Event End Time",
+          emoji: true,
+        },
+        element: {
+          type: "datetimepicker",
+          action_id: "end_time_input",
+        },
+      },
+    ],
   };
 }

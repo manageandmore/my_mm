@@ -12,8 +12,9 @@ export type InboxEntry = {
   };
   description: string;
   actions: InboxAction[];
-  deadline?: number; // unix timestamp
-  reminders?: number[]; // list of unix timestamps, ordered by earliest to latest
+  deadline?: string; // iso timestamp
+  reminders?: string[]; // list of unix timestamps, ordered by earliest to latest
+  calendarUrl?: string;
 };
 
 /** The type of an inbox action. */
@@ -103,6 +104,7 @@ export type CreateInboxEntryOptions = {
 
   notifyOnCreate: boolean;
   enableReminders: boolean;
+  calendarUrl?: string;
 };
 
 /**
@@ -161,6 +163,7 @@ export async function createInboxEntry(
     actions: options.actions,
     deadline: options.deadline,
     reminders: reminders,
+    calendarUrl: options.calendarUrl,
   };
 
   // Get the current sent entries for the sender.
@@ -259,7 +262,11 @@ export async function deleteSentInboxEntry(
 
   // Remove buttons from all reminder messages.
   for (let entry of openReminderEntries) {
-    let {text, blocks} = getReminderMessage(entry, entry.lastReminder!.type, false);
+    let { text, blocks } = getReminderMessage(
+      entry,
+      entry.lastReminder!.type,
+      false
+    );
 
     await slack.client.chat.update({
       channel: entry.lastReminder!.channelId,

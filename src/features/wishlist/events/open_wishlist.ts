@@ -24,7 +24,7 @@ slack.action(
 
     console.time("Wishlist Query");
 
-    var items = await queryWishlistItems(payload.user.id);
+    const items = await queryWishlistItems(payload.user.id);
 
     console.timeEnd("Wishlist Query");
 

@@ -3,7 +3,7 @@ import { notion } from "../../../notion";
 import { slack } from "../../../slack";
 import { getScholarIdFromUserId } from "../../common/id_utils";
 import { getWishlistModal } from "../views/wishlist_modal";
-import { WishlistItem } from "../data/query_items";
+import {queryWishlistItems, WishlistItem} from "../data/query_items";
 import { getVoterById } from "../data/get_voter";
 
 export const voteWishlistItemAction = "vote_wishlist_item";
@@ -22,10 +22,11 @@ slack.action(
     const currentUserId = payload.user.id;
     const action = payload.actions[0] as ButtonAction;
 
-    var view = payload.view!;
-    // Retrieve the current items from the json payload of the view.
-    // This is faster than re-querying the data from the database.
-    const items = JSON.parse(view.private_metadata) as WishlistItem[];
+    const view = payload.view!;
+
+    // Query wishlist items from Notion.
+    // We re-fetch because private metadata of the view cannot hold JSON objects larger than 3k characters.
+    const items = await queryWishlistItems(payload.user.id) as WishlistItem[];
 
     for (var item of items) {
       // Find the item that the user voted on.
@@ -53,9 +54,10 @@ slack.action(
     const voted = action.value == "true";
 
     const view = payload.view!;
-    // Retrieve the current items from the json payload of the view.
-    // This is faster than re-querying the data from the database.
-    const items = JSON.parse(view.private_metadata) as WishlistItem[];
+
+    // Query wishlist items from Notion.
+    // We re-fetch because private metadata of the view cannot hold JSON objects larger than 3k characters.
+    const items = await queryWishlistItems(payload.user.id) as WishlistItem[];
 
     // Find the item that the user voted on.
     let selectedItem: WishlistItem | null = null;

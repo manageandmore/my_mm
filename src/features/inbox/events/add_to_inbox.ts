@@ -8,7 +8,6 @@ import { newMessageAction } from "./create_new_message";
 anyMessage(async (request) => {
   const payload = request.payload;
 
-
   if (payload.subtype === "bot_message") {
     return;
   }
@@ -43,19 +42,24 @@ anyMessage(async (request) => {
       },
       {
         type: "context",
-        elements: [{
-          type: "mrkdwn",
-          text: "By adding a message to a users inbox it is easier for them to keep track and respond to that message without it getting lost.",
-        }, {
-          type: "mrkdwn",
-          text: "Additionally you can see easily who already responded to a message.",
-        }, {
-          type: "mrkdwn",
-          text: "When setting a deadline users will also get automatic reminders until they respond.",
-        }, {
-          type: "mrkdwn",
-          text: "Press the button below to start creating a new inbox message.",
-        }],
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "By adding a message to a users inbox it is easier for them to keep track and respond to that message without it getting lost.",
+          },
+          {
+            type: "mrkdwn",
+            text: "Additionally you can see easily who already responded to a message.",
+          },
+          {
+            type: "mrkdwn",
+            text: "When setting a deadline users will also get automatic reminders until they respond.",
+          },
+          {
+            type: "mrkdwn",
+            text: "Press the button below to start creating a new inbox message.",
+          },
+        ],
       },
       {
         type: "actions",

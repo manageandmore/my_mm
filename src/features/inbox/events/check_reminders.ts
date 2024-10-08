@@ -72,7 +72,7 @@ export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
         );
 
         entry.lastReminder = {
-          type: 'reminder',
+          type: "reminder",
           messageTs: sentMessage.ts!,
           channelId: sentMessage.channel!,
         };
@@ -102,7 +102,11 @@ export async function sendInboxNotification(
   type: "new" | "reminder"
 ): Promise<ChatPostMessageResponse> {
   if (entry.lastReminder != null) {
-    let {text, blocks} = getReminderMessage(entry, entry.lastReminder.type, false);
+    let { text, blocks } = getReminderMessage(
+      entry,
+      entry.lastReminder.type,
+      false
+    );
 
     await slack.client.chat.update({
       channel: entry.lastReminder.channelId,
@@ -111,7 +115,7 @@ export async function sendInboxNotification(
       blocks: blocks,
     });
   }
-  
+
   let { text, blocks } = getReminderMessage(entry, type, true);
 
   let response = await slack.client.chat.postMessage({
