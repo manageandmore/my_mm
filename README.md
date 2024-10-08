@@ -134,7 +134,7 @@ You need the following prerequisites:
 For starters clone the git repository into a new directory called `mm_app`:
 
 ```shell
-git clone https://github.com/schultek/mm_app mm_app
+git clone https://github.com/manageandmore/my_mm mm_app
 cd mm_app
 ```
 
