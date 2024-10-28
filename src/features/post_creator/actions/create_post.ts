@@ -3,6 +3,7 @@ import { anyMessage, slack } from "../../../slack";
 import { getPostCreatorModal } from "../views/post_creator_modal";
 import { addToCalendarAction } from "./add_to_calendar";
 import { PostCreatorOptions, getPostImageUrl } from "../image_utils";
+import { forwardToChannelAction } from "./create_post_action";
 
 /**
  * Shows a "Create Social Media Post" button whenever the user sends an image to the app.
@@ -43,7 +44,8 @@ anyMessage(async (request) => {
         },
         accessory: {
           type: "button",
-          action_id: createSocialPostAction,
+          //action_id: createSocialPostAction,
+          action_id: forwardToChannelAction,
           text: {
             type: "plain_text",
             text: "Create Social Media Post",
