@@ -44,8 +44,7 @@ anyMessage(async (request) => {
         },
         accessory: {
           type: "button",
-          //action_id: createSocialPostAction,
-          action_id: forwardToChannelAction,
+          action_id: createSocialPostAction,
           text: {
             type: "plain_text",
             text: "Create Social Media Post",
