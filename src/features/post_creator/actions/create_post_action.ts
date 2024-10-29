@@ -2,7 +2,11 @@ import { Button } from "slack-edge";
 import { slack } from "../../../slack";
 import { sendGetStartedMessage } from "./shortcut";
 import { currentUrl } from "../../../constants";
-import { socialMediaChannelId } from "../../../constants";
+import { notionEnv } from "../../../constants";
+
+/** The id of the channel where social media posts are discussed. */
+export const socialMediaChannelId =
+  notionEnv == "production" ? "C0704C5B3SQ" : "C0694MW7XJN";
 
 const createPostAction = "create_post_button_action";
 // Alternative action: Responds to the user pushing the create post button on home view to use the content channel regarding any social media posts instead of using feature. Change action id in getCreatePostButton and in anymessage in ./create_post.ts to function that you want to use.

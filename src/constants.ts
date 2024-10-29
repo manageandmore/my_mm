@@ -19,6 +19,3 @@ export const cachePrefix = process.env.CACHE_PREFIX;
 
 /** List of automatically indexed channels for the ai assistant. */
 export const indexedChannels = ["general", "active"];
-
-/** Channel id for social media post creation from main slack space*/
-export const socialMediaChannelId = "C0704C5B3SQ";
