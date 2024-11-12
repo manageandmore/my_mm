@@ -125,7 +125,7 @@ export async function createInboxEntry(
     const remindHoursBeforeDeadline = [1, 8, 24, 24 * 3, 24 * 7, 24 * 14];
     const nowTimestamp = Date.now() / 1000;
 
-    for (var hours of remindHoursBeforeDeadline) {
+    for (let hours of remindHoursBeforeDeadline) {
       const reminderTimestamp = options.deadline! - hours * 60 * 60;
       if (reminderTimestamp > nowTimestamp) {
         reminders.unshift(reminderTimestamp);
@@ -139,7 +139,7 @@ export async function createInboxEntry(
   // Get all members (paginated).
   if (options.message.channel != null && options.message.channel != "") {
     do {
-      var response = await slack.client.conversations.members({
+      let response = await slack.client.conversations.members({
         channel: options.message.channel,
         cursor: nextCursor,
       });
@@ -183,30 +183,11 @@ export async function createInboxEntry(
 
   let reminderTsArray: { [key: string]: InboxReminder } = {};
   if (options.notifyOnCreate) {
-    // Notify all recipients.
-    for (var recipientId of recipientIds) {
-      var sentMessage = await sendInboxNotification(
-        recipientId,
-        { ...entry, senderId: options.message.userId },
-        "new"
-      );
-
-      // We need to track if we get rate-limited for this.
-      // Sending out bursts of messages is allowed but the docs are not clear on the exact limits.
-      if (sentMessage.ok == false && sentMessage.error == "rate_limited") {
-        console.error(
-          "App got rate-limited while sending out messages.",
-          sentMessage
-        );
-        break;
-      }
-
-      console.log("Sent notification to", sentMessage.channel, sentMessage.ts!);
-      reminderTsArray[recipientId] = {
-        type: "new",
-        messageTs: sentMessage.ts!,
-        channelId: sentMessage.channel!,
-      };
+    // Batch notifications
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < recipientIds.length; i += BATCH_SIZE) {
+      const batch = recipientIds.slice(i, i + BATCH_SIZE);
+      await sendNotificationsBatch(batch, entry, options.message.userId, reminderTsArray);
     }
   }
 
@@ -219,6 +200,50 @@ export async function createInboxEntry(
     },
     ...inbox,
   ]);
+}
+
+async function sendNotificationsBatch(recipientIds: string[], entry: InboxEntry, senderId: string, reminderTsArray: {[key:string]: InboxReminder}) {
+  const sendPromises = recipientIds.map(async (recipientId) => {
+    let sentMessage;
+    let retries = 3; // Number of retry attempts
+    let delay = 1000; // Delay between retries (ms)
+
+    do {
+      try {
+        sentMessage = await sendInboxNotification(
+            recipientId,
+            { ...entry, senderId: senderId },
+            "new"
+        );
+        if (sentMessage.ok) {
+          console.log("Sent notification to", sentMessage.channel, sentMessage.ts!);
+          reminderTsArray[recipientId] = {
+            type: "new",
+            messageTs: sentMessage.ts!,
+            channelId: sentMessage.channel!,
+          };
+          return;
+        } else {
+          console.error("Error sending notification:", sentMessage.error);
+        }
+
+      } catch (error) {
+        console.error("Error sending notification:", error);
+      }
+      retries--;
+      if (retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff
+      }
+    } while (retries > 0 && !sentMessage?.ok);
+
+
+    if(!sentMessage?.ok) {
+      console.error(`Failed to send notification to ${recipientId} after multiple retries.`);
+    }
+  });
+
+  await Promise.all(sendPromises);
 }
 
 /** Loads all sent inbox entries for a user. */
