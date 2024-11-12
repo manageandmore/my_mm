@@ -33,6 +33,6 @@ export function getOpenHelpButton(): Button {
             text: "🤔 Open Help Docs",
             emoji: true,
         },
-        url: "https://www.notion.so/manageandmore/My-MM-Slack-App-10c02ddfbf4e80da95dac9b29543acfa?pvs=4#10e02ddfbf4e801bb6d3e406931587d2",
+        url: "https://www.notion.so/manageandmore/My-MM-Slack-App-10c02ddfbf4e80da95dac9b29543acfa",
     };
 }
