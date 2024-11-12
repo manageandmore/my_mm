@@ -29,7 +29,6 @@ export async function getNewMessageModal(
       text: {
         type: "mrkdwn",
         text: `*Calendar Event URL:* <${calendarEventUrl}|Google calendar link>`,
-        //text: `*Calendar Event URL:* ${calendarEventUrl}`,
       },
     };
   } else {
@@ -43,12 +42,11 @@ export async function getNewMessageModal(
         type: "button",
         text: {
           type: "plain_text",
-          text: "Add calendar url",
+          text: "Add Calendar URL",
           emoji: true,
         },
         action_id: addCalendarEntryAction,
         value: JSON.stringify({ channelId, messageTs, description, updateUrl }),
-
         //open calendar entry modal + transfer all arguments needed for new message modal which need to be passed through
       },
     };
@@ -86,6 +84,23 @@ export async function getNewMessageModal(
             text: "Write a short subject text for this inbox message including things like a summary, who it is relevant for and how they should respond. Additionally recipients will always see the original message.",
           },
         ],
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "See this doc for a short introduction on this feature: ",
+        },
+        accessory: {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Inbox & Outbox",
+            emoji: true,
+          },
+          style: "primary",
+          url: "https://www.notion.so/manageandmore/My-MM-Slack-App-10c02ddfbf4e80da95dac9b29543acfa?pvs=4#10e02ddfbf4e801bb6d3e406931587d2",
+        }
       },
       {
         type: "divider",
