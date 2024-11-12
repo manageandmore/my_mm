@@ -1,4 +1,4 @@
-import { indexedChannels } from "../../../constants";
+import { inboxableChannels } from "../../../constants";
 import { anyMessage, getPublicChannels, slack } from "../../../slack";
 import { newMessageAction } from "./create_new_message";
 
@@ -22,7 +22,7 @@ anyMessage(async (request) => {
   if (channelName == null) {
     return;
   }
-  const isIndexed = indexedChannels.includes(channelName);
+  const isIndexed = inboxableChannels.includes(channelName);
   if (!isIndexed) {
     return;
   }

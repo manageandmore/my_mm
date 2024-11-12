@@ -17,6 +17,9 @@ export const currentUrl = process.env.VERCEL_URL;
 /** Prefix for all cache keys. Used to avoid clashes between environments. */
 export const cachePrefix = process.env.CACHE_PREFIX;
 
-
 /** List of automatically indexed channels for the ai assistant. */
 export const indexedChannels = ["general", "active"];
+
+/** Bot will ask senders in these channels of they want to add the sent
+ * message to all recipients' inboxes */
+export const inboxableChannels = ["general", "active", "niclas-test"];
