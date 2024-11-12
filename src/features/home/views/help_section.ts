@@ -13,7 +13,7 @@ export function getHelpSection(): AnyHomeTabBlock[] {
             type: "context",
             elements: [{
                 type: "mrkdwn",
-                text: "If you need help using MyMM, please refer to the MyMM documentation on Notion or contact a member of IP Infrastructure",
+                text: "If you need help using MyMM, please refer to the MyMM documentation on Notion or contact a member of Area Infrastructure",
             }]
         },
         {
