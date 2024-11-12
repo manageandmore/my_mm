@@ -227,11 +227,32 @@ export async function getViewSentMessageModal(
     },
     {
       type: "section",
-      fields: entry.actions.map<AnyTextField>((a) => ({
-        type: "mrkdwn",
-        text: `*${a.label}*:  ${actionCounts[a.action_id] ?? 0}`,
-      })),
+      fields:
+        entry.actions.map<AnyTextField>((a) => {
+          const respondents = Object.keys(entry.resolutions).filter(
+            (userId) =>
+              entry.resolutions[userId].action.action_id === a.action_id
+          );
+
+          const respondentList =
+            respondents.length > 0
+              ? respondents.map((userId) => `<@${userId}>`).join(",\n")
+              : "";
+          const nonRespondents = entry.recipientIds.filter(
+            (id) => !respondents.includes(id)
+          );
+          return {
+            type: "mrkdwn",
+            text: `*${a.label}*:\n${respondentList},`,
+          };
+        }) +
+        (nonRespondents.length > 0
+          ? `\n\n*Not responded:*\n${nonRespondents
+              .map((id) => `<@${id}>`)
+              .join(",\n")}`
+          : ""),
     },
+
     {
       type: "divider",
     },
@@ -242,7 +263,7 @@ export async function getViewSentMessageModal(
           type: "button",
           text: {
             type: "plain_text",
-            text: "View all",
+            text: "Back",
           },
           action_id: openOutboxAction,
         },

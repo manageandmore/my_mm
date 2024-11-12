@@ -43,7 +43,7 @@ export async function getNewMessageModal(
         type: "button",
         text: {
           type: "plain_text",
-          text: "Add calendar url",
+          text: "Add calendar url. When users respond positively they will be sent this google calendar link to add the event to their calendar.",
           emoji: true,
         },
         action_id: addCalendarEntryAction,
