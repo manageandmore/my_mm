@@ -22,4 +22,4 @@ export const indexedChannels = ["general", "active"];
 
 /** Bot will ask senders in these channels of they want to add the sent
  * message to all recipients' inboxes */
-export const inboxableChannels = ["general", "active", "niclas-test"];
+export const inboxableChannels = ["general", "active"];
