@@ -37,13 +37,13 @@ export async function getNewMessageModal(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: "No Calendar Event URL provided.",
+        text: "No Calendar Event URL provided. This google calendar link will be sent to respondents.",
       },
       accessory: {
         type: "button",
         text: {
           type: "plain_text",
-          text: "Add calendar url. When users respond positively they will be sent this google calendar link to add the event to their calendar.",
+          text: "Add calendar url",
           emoji: true,
         },
         action_id: addCalendarEntryAction,
