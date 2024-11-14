@@ -81,7 +81,7 @@ export function getOutboxModal(
                     type: "plain_text",
                     text: "No",
                   },
-                }
+                },
               },
             },
           ]
@@ -122,7 +122,7 @@ export function getOutboxModal(
             {
               type: "mrkdwn",
               text: `Responses: ${Object.keys(entry.resolutions).length} / ${
-                entry.recipientIds.length
+                entry.recipientIds.length - 1
               }`,
             },
           ],

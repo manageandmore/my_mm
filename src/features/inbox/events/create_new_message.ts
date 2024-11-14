@@ -44,6 +44,14 @@ slack.action(newMessageAction, async (request) => {
     return;
   }
 
+  // Get bot user id
+  const botUserId = (await slack.client.auth.test()).user_id;
+  // remove app mention and command from message
+  message = message
+    .replace(`<@${botUserId}>`, "")
+    .replace(/-add to inbox/, "")
+    .replace(/-Add to inbox/, "");
+
   if (message.length > 200) {
     message = message.substring(0, 197) + "...";
   }
