@@ -212,6 +212,38 @@ export async function getViewSentMessageModal(
     actionCounts[id] = (actionCounts[id] ?? 0) + 1;
   }
 
+  // Generate the respondent lists for each action
+  const actionFields = entry.actions.map<AnyTextField>((a) => {
+    const respondents = Object.keys(entry.resolutions).filter(
+      (userId) => entry.resolutions[userId].action.action_id === a.action_id
+    );
+
+    const respondentList =
+      respondents.length > 0
+        ? respondents.map((userId) => `<@${userId}>`).join(",\n")
+        : "...";
+
+    return {
+      type: "mrkdwn",
+      text: `*${a.label}*:\n${respondentList}\n*Total: ${respondents.length}*`,
+    };
+  });
+
+  // Create a list of non-respondents based on the IDs that have not responded with any action
+  const nonRespondents = entry.recipientIds.filter(
+    (id) => !Object.keys(entry.resolutions).includes(id)
+  );
+
+  const nonRespondentList =
+    nonRespondents.length > 0
+      ? nonRespondents.map((id) => `<@${id}>`).join(",\n")
+      : "...";
+
+  actionFields.push({
+    type: "mrkdwn",
+    text: `*Non-respondents:*\n${nonRespondentList}\n*Total: ${nonRespondents.length}*`,
+  });
+
   blocks = blocks.concat([
     {
       type: "divider",
@@ -227,32 +259,8 @@ export async function getViewSentMessageModal(
     },
     {
       type: "section",
-      fields:
-        entry.actions.map<AnyTextField>((a) => {
-          const respondents = Object.keys(entry.resolutions).filter(
-            (userId) =>
-              entry.resolutions[userId].action.action_id === a.action_id
-          );
-
-          const respondentList =
-            respondents.length > 0
-              ? respondents.map((userId) => `<@${userId}>`).join(",\n")
-              : "";
-          const nonRespondents = entry.recipientIds.filter(
-            (id) => !respondents.includes(id)
-          );
-          return {
-            type: "mrkdwn",
-            text: `*${a.label}*:\n${respondentList},`,
-          };
-        }) +
-        (nonRespondents.length > 0
-          ? `\n\n*Not responded:*\n${nonRespondents
-              .map((id) => `<@${id}>`)
-              .join(",\n")}`
-          : ""),
+      fields: actionFields,
     },
-
     {
       type: "divider",
     },
