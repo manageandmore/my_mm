@@ -152,9 +152,9 @@ Select `N` when asked to link an existing project and enter the details for a ne
 
 ---
 
-Next go to `vercel.com` and open your project dashboard. Go to the `Storage` tab and add two databases:
+Next go to `vercel.com` and open your project dashboard. Go to the `Storage` tab and add and connect two databases:
 
-- **KV** for caching.
+- **Upstash KV** for caching.
 - **Postgres** for vector embeddings.
 
 ---
@@ -172,6 +172,7 @@ Next create your own custom slack app like this:
   - Change `display_information.name` to a custom name
   - Change `features.bot_user.display_name` to the same name
   - Change `settings.event_subscriptions.request_url` to `https://<your-domain.vercel.app>/api/events` using your vercel project domain you noted down earlier.
+(Make sure that it says verified once you enter the url)
   - Change `settings.interactivity.request_url` to the same url.
 - Click **Create**
 
