@@ -127,8 +127,6 @@ slack.viewSubmission(
       options.calendarUrl = calendarEventUrl;
     }
 
-    await createInboxEntry(options);
-
     // Update the original ephemeral message.
     await fetch(updateUrl, {
       method: "POST",
@@ -161,6 +159,8 @@ slack.viewSubmission(
         ],
       }),
     });
+
+    await createInboxEntry(options);
   }
 );
 
