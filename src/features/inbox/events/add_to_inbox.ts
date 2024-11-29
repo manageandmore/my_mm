@@ -24,7 +24,25 @@ anyMessage(async (request) => {
   }
   const isIndexed = inboxableChannels.includes(channelName);
   if (!isIndexed) {
-    return;
+    // Guard for inbox add
+    if (payload.text.toLowerCase().includes("-add to inbox")) {
+      console.log("add to inbox");
+      if (payload.blocks) {
+        for (const blockType of payload.blocks) {
+          if (blockType.type !== "rich_text") {
+            console.log("block type not rich text");
+            return;
+          }
+        }
+        // Check that message has user
+        if (payload.user) {
+          await responseEmphemeral(payload.channel, payload.user, payload.ts);
+          return;
+        }
+      }
+    } else {
+      return;
+    }
   }
   await responseEmphemeral(payload.channel, payload.user, payload.ts);
 });
@@ -86,31 +104,21 @@ async function responseEmphemeral(channel: string, user: string, ts: string) {
   });
 }
 
-/**
- * Handle the app_mention event by prompting chatgpt to respond to the users message.
- *
- * The event fires each time a user mentions the slack app in a message.
- * The handler will prompt chatgpt with the users message and post its response as a new message in the same channel.
- */
+const addToInboxShortcut = "add_to_inbox";
 
-slack.event("app_mention", async (request) => {
+slack.messageShortcut(addToInboxShortcut, async (request) => {
   const payload = request.payload;
-  console.log("app_mention", payload);
-
-  // Guard for inbox add
-  if (payload.text.toLowerCase().includes("-add to inbox")) {
-    console.log("add to inbox");
-    if (payload.blocks) {
-      for (const blockType of payload.blocks) {
-        if (blockType.type !== "rich_text") {
-          console.log("block type not rich text");
-          return;
-        }
-      }
-      // Check that message has user
-      if (payload.user) {
-        await responseEmphemeral(payload.channel, payload.user, payload.ts);
-      }
-    }
+  try {
+    const response = await slack.client.conversations.info({
+      channel: payload.channel.id,
+    });
+    const channel = response.channel?.id as string;
+    const ts = payload.message.ts;
+    await responseEmphemeral(channel, payload.user.id, ts);
+  } catch (error) {
+    await request.context.respond({
+      response_type: "ephemeral",
+      text: "Failed to add to inbox.\nERROR: " + error + " ",
+    });
   }
 });

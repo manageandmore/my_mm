@@ -8,7 +8,7 @@ This feature provides the user with a list of messages and notifications that ha
 
 - A cron job will check everyday at 11:30 am for overdue reminders and send a message to the user to remind him to anwer
 - https://calndr.link/api-docs used for creation of google calendar event
-- The assistant can be called upon to answer any message by tagging @MyMM and adding an "-add to inbox" (case insensitive)
+- A message can be added to the inbox by adding an "-add to inbox" (case insensitive) to any message in a channel the app is part of or by using message shortcuts vs the options on any message.
 
 ## Structure
 
