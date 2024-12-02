@@ -34,8 +34,9 @@ anyMessage(async (request) => {
  */
 slack.event("app_mention", async (request) => {
   const payload = request.payload;
-
-  await triggerAssistant(payload, request.context.botUserId);
+  if (payload.text.toLowerCase().includes("-ai")) {
+    await triggerAssistant(payload, request.context.botUserId);
+  }
 });
 
 /**

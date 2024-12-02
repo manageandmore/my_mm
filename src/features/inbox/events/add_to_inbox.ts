@@ -1,4 +1,4 @@
-import { indexedChannels } from "../../../constants";
+import { inboxableChannels } from "../../../constants";
 import { anyMessage, getPublicChannels, slack } from "../../../slack";
 import { newMessageAction } from "./create_new_message";
 
@@ -22,15 +22,36 @@ anyMessage(async (request) => {
   if (channelName == null) {
     return;
   }
-  const isIndexed = indexedChannels.includes(channelName);
+  const isIndexed = inboxableChannels.includes(channelName);
   if (!isIndexed) {
-    return;
+    // Guard for inbox add
+    if (payload.text.toLowerCase().includes("-add to inbox")) {
+      console.log("add to inbox");
+      if (payload.blocks) {
+        for (const blockType of payload.blocks) {
+          if (blockType.type !== "rich_text") {
+            console.log("block type not rich text");
+            return;
+          }
+        }
+        // Check that message has user
+        if (payload.user) {
+          await responseEmphemeral(payload.channel, payload.user, payload.ts);
+          return;
+        }
+      }
+    } else {
+      return;
+    }
   }
+  await responseEmphemeral(payload.channel, payload.user, payload.ts);
+});
 
+async function responseEmphemeral(channel: string, user: string, ts: string) {
   // Send an ephemeral message with an interactive button
   await slack.client.chat.postEphemeral({
-    channel: payload.channel,
-    user: payload.user,
+    channel: channel,
+    user: user,
     text: "📬 Would you like to add this message to the *Inbox* of all users in this channel?", // Fallback text for notifications
     blocks: [
       {
@@ -72,8 +93,8 @@ anyMessage(async (request) => {
               emoji: true,
             },
             value: JSON.stringify({
-              channelId: payload.channel,
-              messageTs: payload.ts,
+              channelId: channel,
+              messageTs: ts,
             }),
             action_id: newMessageAction,
           },
@@ -81,4 +102,23 @@ anyMessage(async (request) => {
       },
     ],
   });
+}
+
+const addToInboxShortcut = "add_to_inbox";
+
+slack.messageShortcut(addToInboxShortcut, async (request) => {
+  const payload = request.payload;
+  try {
+    const response = await slack.client.conversations.info({
+      channel: payload.channel.id,
+    });
+    const channel = response.channel?.id as string;
+    const ts = payload.message.ts;
+    await responseEmphemeral(channel, payload.user.id, ts);
+  } catch (error) {
+    await request.context.respond({
+      response_type: "ephemeral",
+      text: "Failed to add to inbox.\nERROR: " + error + " ",
+    });
+  }
 });

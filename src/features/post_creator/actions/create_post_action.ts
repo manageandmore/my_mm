@@ -2,9 +2,15 @@ import { Button } from "slack-edge";
 import { slack } from "../../../slack";
 import { sendGetStartedMessage } from "./shortcut";
 import { currentUrl } from "../../../constants";
-import { postCreatorFeatureFlag } from "..";
+import { notionEnv } from "../../../constants";
+
+/** The id of the channel where social media posts are discussed. */
+export const socialMediaChannelId =
+  notionEnv == "production" ? "C0704C5B3SQ" : "C0694MW7XJN";
 
 const createPostAction = "create_post_button_action";
+// Alternative action: Responds to the user pushing the create post button on home view to use the content channel regarding any social media posts instead of using feature. Change action id in getCreatePostButton and in anymessage in ./create_post.ts to function that you want to use.
+export const forwardToChannelAction = "forward_to_channel_action";
 
 slack.action(createPostAction, async (request) => {
   await slack.client.views.open({
@@ -68,9 +74,17 @@ slack.viewSubmission(createPostCallback, async (request) => {
   await sendGetStartedMessage(payload.user.id);
 });
 
-export async function getCreatePostButton(
-  userId: string
-): Promise<Button> {
+/**
+ * Responds to the user pushing the create post button on home view to use the content channel regarding any social media posts
+ */
+slack.action(forwardToChannelAction, async (request) => {
+  await slack.client.chat.postMessage({
+    channel: request.payload.user.id,
+    text: `Hi 👋,\n\nfor any ideas regarding Social Media Posts, please use the <#${socialMediaChannelId}> channel.\nIf you have a picture and specific text in mind please post them and a quick explanation also in the channel.\n\n Thank you!`,
+  });
+});
+
+export async function getCreatePostButton(userId: string): Promise<Button> {
   return {
     type: "button",
     text: {
@@ -78,6 +92,7 @@ export async function getCreatePostButton(
       text: "📸 Create Social Media Post",
       emoji: true,
     },
-    action_id: createPostAction,
+    //action_id: createPostAction,
+    action_id: forwardToChannelAction,
   };
 }

@@ -9,8 +9,12 @@ import { getAskAIButton } from "../../assistant/events/ask_ai_action";
 import { getCreatePostButton } from "../../post_creator/actions/create_post_action";
 import { getAdminSection } from "../admin";
 import { ProfileOptions, getProfileSection } from "./profile_section";
-import { getInboxSection, getOutboxSection } from "../../inbox/views/inbox_section";
+import {
+  getInboxSection,
+  getOutboxSection,
+} from "../../inbox/views/inbox_section";
 import { ReceivedInboxEntry } from "../../inbox/data";
+import { getHelpSection } from "./help_section";
 
 /** Interface for the data used to hydrate the home view. */
 export type HomeOptions = ProfileOptions & {
@@ -71,6 +75,10 @@ export async function getHomeView(
         type: "divider",
       },
       ...getWishlistSection(),
+      {
+        type: "divider",
+      },
+      ...getHelpSection(),
       {
         type: "divider",
       },
@@ -151,8 +159,7 @@ export function getHomeErrorView(errorMsg: string): HomeTabView {
         elements: [
           {
             type: "mrkdwn",
-            text:
-              "If you can't identify the problem, report this to your Area Infrastructure by messaging us on slack!",
+            text: "If you can't identify the problem, report this to your Area Infrastructure by messaging us on slack!",
           },
         ],
       },
