@@ -8,7 +8,7 @@ import { addWishlistItem } from "../data/add_item";
 export const newWishlistItemAction = "new_wishlist_item";
 
 /**
- * Opens a the modal for adding a new suggestion when the user clicks the 'Add Suggestion' button.
+ * Opens the modal for adding a new suggestion when the user clicks the 'Add Suggestion' button.
  */
 slack.action(newWishlistItemAction, async (request) => {
   const payload = request.payload;
@@ -41,7 +41,7 @@ slack.viewSubmission(
     });
 
     // TODO Optimize this to add the item locally instead of querying the whole table again.
-    var items = await queryWishlistItems(payload.user.id);
+    const items = await queryWishlistItems(payload.user.id);
 
     await slack.client.views.update({
       view_id: payload.view.root_view_id!,
