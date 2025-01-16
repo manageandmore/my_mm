@@ -1,6 +1,7 @@
 import { AnyHomeTabBlock, Button, HomeTabView } from "slack-edge";
 import { CreditsLeaderboardItem } from "../../community_credits/data/query_leaderboard";
 import { getWishlistSection } from "../../wishlist/views/open_wishlist_button";
+import { getJobBoardSection } from "../../job_board/views/open_job_board_button";
 import { getSkillsSection } from "../../skill_interface/views/skills_section";
 import { getCreditsLeaderboardSection } from "../../community_credits/views/leaderboard_section";
 import { SkillListPerLevel } from "../../skill_interface/data/query_skills";
@@ -9,10 +10,7 @@ import { getAskAIButton } from "../../assistant/events/ask_ai_action";
 import { getCreatePostButton } from "../../post_creator/actions/create_post_action";
 import { getAdminSection } from "../admin";
 import { ProfileOptions, getProfileSection } from "./profile_section";
-import {
-  getInboxSection,
-  getOutboxSection,
-} from "../../inbox/views/inbox_section";
+import { getInboxSection, getOutboxSection } from "../../inbox/views/inbox_section";
 import { ReceivedInboxEntry } from "../../inbox/data";
 import { getHelpSection } from "./help_section";
 
@@ -71,6 +69,10 @@ export async function getHomeView(
           },
         ].filter((b): b is Button => b != null),
       },
+      {
+        type: "divider",
+      },
+      ...getJobBoardSection(),
       {
         type: "divider",
       },
@@ -159,7 +161,8 @@ export function getHomeErrorView(errorMsg: string): HomeTabView {
         elements: [
           {
             type: "mrkdwn",
-            text: "If you can't identify the problem, report this to your Area Infrastructure by messaging us on slack!",
+            text:
+              "If you can't identify the problem, report this to your Area Infrastructure by messaging us on slack!",
           },
         ],
       },

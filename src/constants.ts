@@ -20,6 +20,10 @@ export const cachePrefix = process.env.CACHE_PREFIX;
 /** List of automatically indexed channels for the ai assistant. */
 export const indexedChannels = ["general", "active"];
 
-/** Bot will ask senders in these channels of they want to add the sent
+/** Bot will ask senders in these channels if they want to add the sent
  * message to all recipients' inboxes */
 export const inboxableChannels = ["general", "active"];
+
+/** Bot will ask senders in these channels of they want to add their job offer
+ * to the job board on the MyMM homepage */
+export const jobOfferChannels = ["careerboost"];
