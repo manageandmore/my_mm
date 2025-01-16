@@ -27,6 +27,10 @@ features:
       type: global
       callback_id: add_to_inbox
       description: Add message to inbox of all channel members.
+    - name: Create job offer
+      type: global
+      callback_id: create_job_offer
+      description: Creates a job offer on MyMM homepage
 oauth_config:
   scopes:
     bot:
