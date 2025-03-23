@@ -20,7 +20,7 @@ anyMessage(async (request) => {
     return;
   }
 
-  // Check if its a public channel (we don't want to index private messages).
+  // Check if it's a public channel (we don't want to index private messages).
   const channels = await getPublicChannels();
   const channelName = channels.get(payload.channel)?.name;
 

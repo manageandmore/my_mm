@@ -29,7 +29,7 @@ slack.anyMessage(async (request) => {
 });
 
 /**
- * Fetches the list of all public slack channels.
+ * Fetches the list of all public Slack channels.
  */
 export async function getPublicChannels() {
   let channels = new Map<string, Channel>();

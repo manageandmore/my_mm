@@ -62,7 +62,7 @@ export const defaultResponseActions = [
   messageDismissedAction,
 ];
 
-/** The type of a inbox entry as viewed by the user that sent it. */
+/** The type of inbox entry as viewed by the user that sent it. */
 export type SentInboxEntry = InboxEntry & {
   recipientIds: string[];
   resolutions: { [userId: string]: InboxEntryResolution };

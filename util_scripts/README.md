@@ -1,9 +1,9 @@
 
-**Scripts to transfer data from google sheets to notion**
+**Scripts to transfer data from Google sheets to notion**
 
 **HOW TO USE** (should never be necessary unless all entries have been deleted on notion
 
-1. Follow the instructions here: https://developers.google.com/sheets/api/quickstart/python until have installed the google client library
+1. Follow the instructions here: https://developers.google.com/sheets/api/quickstart/python until have installed the Google client library
 2. Create a .env file in your clone of the repository with this structure:
 
 ```env
@@ -14,7 +14,7 @@ SLACK_BOT_TOKEN="<slack_bot_token>"
 SLACK_SIGNING_SECRET="<slack_signing_secret>"
 ```
 
-3. Make sure you have generated a credentials.json file with your google credentials and placed it in the util_scripts folder
+3. Make sure you have generated a credentials.json file with your Google credentials and placed it in the util_scripts folder
 4. Run scholarsToNotion.py
 2. Run creditEntriesToNotion.py
 

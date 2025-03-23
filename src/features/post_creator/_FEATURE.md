@@ -2,7 +2,7 @@
 
 ## Description
 
-With this feature, users can create social media posts in just a few clicks right from inside slack. The post images are created in the new MM social post style that is used the create a consistent look across the MM social media channels. The user can configure the content, like title and background image, as well as some limited predefined theming options.
+With this feature, users can create social media posts in just a few clicks right from inside slack. The post images are created in the new MM social post style that is used to create a consistent look across the MM social media channels. The user can configure the content, like title and background image, as well as some limited predefined theming options.
 
 ## Functionality
 

@@ -56,7 +56,7 @@ export function timeDisplay(date: string): string {
 }
 
 /**
- * Transforms a duration in milliseconds into a human readable string.
+ * Transforms a duration in milliseconds into a human-readable string.
  *
  * E.g. "less than one hour", "3 hours", "one day", "2 weeks"
  */

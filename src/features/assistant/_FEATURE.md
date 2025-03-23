@@ -2,7 +2,7 @@
 
 ## Description
 
-This feature provides an ai assistant for scholars to ask questions about information regarding the program.
+This feature provides an AI assistant for scholars to ask questions about information regarding the program.
 
 ## Functionality
 
@@ -10,7 +10,7 @@ This feature provides an ai assistant for scholars to ask questions about inform
 - A vector database to store data from notion and slack.
   - For slack, a few selected channels are automatically indexed, where each new message is added to the vector db.
   - For notion, some selected pages and databased are indexed. This is controlled by the "Assistant Index" notion database. Pages are split in chunks, Databases are added by each row.
-- The assistant can be called upon to answer any message by tagging @MyMM and adding an "-AI" (case insensitive)
+- The assistant can be called upon to answer any message by tagging @MyMM and adding an "-AI" (case-insensitive)
 
 ## Structure
 

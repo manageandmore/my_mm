@@ -29,7 +29,7 @@ anyMessage(async (request) => {
 /**
  * Handle the app_mention event by prompting chatgpt to respond to the users message.
  *
- * The event fires each time a user mentions the slack app in a message.
+ * The event fires each time a user mentions the Slack app in a message.
  * The handler will prompt chatgpt with the users message and post its response as a new message in the same channel.
  */
 slack.event("app_mention", async (request) => {
