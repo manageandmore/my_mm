@@ -17,7 +17,7 @@ export type InboxEntry = {
   calendarUrl?: string;
 };
 
-/** The type of an inbox action. */
+/** The type of inbox action. */
 export type InboxAction = {
   label: string;
   /** The style for the action button in slack. */
@@ -62,16 +62,16 @@ export const defaultResponseActions = [
   messageDismissedAction,
 ];
 
-/** The type of a inbox entry as viewed by the user that sent it. */
+/** The type of inbox entry as viewed by the user that sent it. */
 export type SentInboxEntry = InboxEntry & {
   recipientIds: string[];
   resolutions: { [userId: string]: InboxEntryResolution };
 };
 
 /**
- * The type of a single users resolution of an inbox entry.
+ * The type of single users resolution of an inbox entry.
  *
- * A resolution is created when a user choses an action for an received inbox entry, which is
+ * A resolution is created when a user choses an action for a received inbox entry, which is
  * then written back to the sent inbox entry.
  * */
 export type InboxEntryResolution = {
@@ -79,7 +79,7 @@ export type InboxEntryResolution = {
   timestamp: number; // unix timestamp
 };
 
-/** The type of an inbox entry as viewed by the user that received it. */
+/** The type of inbox entry as viewed by the user that received it. */
 export type ReceivedInboxEntry = InboxEntry & {
   senderId: string;
   lastReminder?: InboxReminder;

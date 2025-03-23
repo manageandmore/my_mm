@@ -69,7 +69,7 @@ export function getProfileSection(options: ProfileOptions): AnyHomeTabBlock[] {
       fields: [
         {
           type: "mrkdwn",
-          text: `*⭐️ Community Credits* · ${options.credits}/6`,
+          text: `*🪙 Community Credits* · ${options.credits}/12`,
         },
         {
           type: "mrkdwn",

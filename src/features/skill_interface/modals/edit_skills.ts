@@ -23,7 +23,7 @@ export function getEditSkillsModal(
           {
             type: "plain_text",
             emoji: true,
-            text: "No skills found... Ufff, thats gotta hurt! Luckily you can add some new skills below.",
+            text: "No skills found... Uff, that's gotta hurt! Luckily you can add some new skills below.",
           },
         ],
       },

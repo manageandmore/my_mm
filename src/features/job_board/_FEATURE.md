@@ -21,7 +21,7 @@ offers for company and job type.
 - `events/` contains all event handlers for the actions and modal submissions.
   - `create_job_offer_ephemeral.ts` contains the action handler for posting into careerboost channel and responding with create job offer ephemeral message
   - `new_job.ts` contains the action handler and modal submission handler for the `New Job Offer` modal.
-  - `open_job_board.ts` contains the action hander for opening the job board.
+  - `open_job_board.ts` contains the action handler for opening the job board.
 - `data/` contains logic for querying and updating data in notion.
   - `add_job.ts` contains the logic for adding a new job board item to notion.
   - `query_jobs.ts` contains the logic for querying the job board.

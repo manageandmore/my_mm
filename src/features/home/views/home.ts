@@ -1,6 +1,6 @@
 import { AnyHomeTabBlock, Button, HomeTabView } from "slack-edge";
 import { CreditsLeaderboardItem } from "../../community_credits/data/query_leaderboard";
-import { getWishlistSection } from "../../wishlist/views/open_wishlist_button";
+import { getIdeaFactorySection } from "../../idea_factory/views/open_idea_factory_button";
 import { getJobBoardSection } from "../../job_board/views/open_job_board_button";
 import { getSkillsSection } from "../../skill_interface/views/skills_section";
 import { getCreditsLeaderboardSection } from "../../community_credits/views/leaderboard_section";
@@ -40,6 +40,10 @@ export async function getHomeView(
       {
         type: "divider",
       },
+      ...getIdeaFactorySection(),
+      {
+        type: "divider",
+      },
       ...getInboxSection(options.inbox),
       ...(options.hasOutbox ? getOutboxSection() : []),
       {
@@ -76,10 +80,6 @@ export async function getHomeView(
       {
         type: "divider",
       },
-      ...getWishlistSection(),
-      {
-        type: "divider",
-      },
       ...getHelpSection(),
       {
         type: "divider",
@@ -98,7 +98,7 @@ function getHomeFooter(): AnyHomeTabBlock[] {
       elements: [
         {
           type: "mrkdwn",
-          text: "Made with ❤️ and 🍕 by your *Infrastructure Area*",
+          text: "Made with ❤️ and 🍕 by your *Area Digital Innovation*",
         },
       ],
     },
@@ -162,7 +162,7 @@ export function getHomeErrorView(errorMsg: string): HomeTabView {
           {
             type: "mrkdwn",
             text:
-              "If you can't identify the problem, report this to your Area Infrastructure by messaging us on slack!",
+              "If you can't identify the problem, report this to your Area Digital Innovation by messaging us on slack!",
           },
         ],
       },

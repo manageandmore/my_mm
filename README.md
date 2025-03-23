@@ -8,7 +8,7 @@
 
 # <img src="./assets/icon-small.png" width="25"/> My MM
 
-This repository holds the code and resources for the internal slack app of Manage and More.
+This repository holds the code and resources for the internal Slack app of Manage and More.
 
 # Outline
 
@@ -33,7 +33,7 @@ The app is built in a modular way to encompass several independent use-cases. It
 
 ## Components
 
-The following table gives an overview of the high-level system components the app consists of and what producs or services we use for each.
+The following table gives an overview of the high-level system components the app consists of and what products or services we use for each.
 
 | Component       | Product or Service    | Link                                               | Pricing              |
 | --------------- | --------------------- | -------------------------------------------------- | -------------------- |
@@ -49,7 +49,7 @@ The following table gives an overview of the high-level system components the ap
 - `api/`: Top level api routes. Each file defines a `/api/<filename>` route.
   - `events.ts`: Entrypoint for slack events, messages and shortcuts.
   - `social.ts`: Generates an image in a specific layout, used by the social media post generator.
-  - `cron.ts`: Performs tasks like syncing the ai index or sending reminders, riggered by a daily cron job.
+  - `cron.ts`: Performs tasks like syncing the AI index or sending reminders, riggered by a daily cron job.
   - `task.ts`: Performs long-running background tasks.
 - `src/`: Contains the source code.
   - `features/`: The features of the application in separate folders.
@@ -59,27 +59,28 @@ The following table gives an overview of the high-level system components the ap
   - `constants.ts`: Constant environment variables, like tokens for slack and notion.
   - `notion.ts`: The notion api client.
   - `slack.ts`: The slack api client.
-- `manifest.yaml`: Stores the current config for the production slack app, used as a template for all other apps.
+- `manifest.yaml`: Stores the current config for the production Slack app, used as a template for all other apps.
 
 ## Features
 
 Below is the table of all existing features and their documentation:
 
 | Feature           | Description                                        | Documentation                                              |
-| ----------------- | -------------------------------------------------- | ---------------------------------------------------------- |
+|-------------------|----------------------------------------------------|------------------------------------------------------------|
 | Common            | Common functionality shared across other features. | [FEATURE.md](./src/features/common/_FEATURE.md)            |
 | Home              | The apps home screen.                              | [FEATURE.md](./src/features/home/_FEATURE.md)              |
 | Assistant         | The ai assistant for asking questions.             | [FEATURE.md](./src/features/assistant/_FEATURE.md)         |
 | Skill Interface   | Managing the skills of a user.                     | [FEATURE.md](./src/features/skill_interface/_FEATURE.md)   |
 | Community Credits | Credit leaderboard and channel management.         | [FEATURE.md](./src/features/community_credits/_FEATURE.md) |
-| Wishlist          | New feature suggestions.                           | [FEATURE.md](./src/features/wishlist/_FEATURE.md)          |
+| Idea Factory      | Suggestions for improving the program.             | [FEATURE.md](src/features/idea_factory/_FEATURE.md)        |
+| Job Board         | Collection of job postings available to MM scholars| [FEATURE.md](./src/features/job_board/_FEATURE.md)         |
 | Post Creator      | Social media post creation.                        | [FEATURE.md](./src/features/post_creator/_FEATURE.md)      |
 | Announcements     | App announcements.                                 | [FEATURE.md](./src/features/announcement/_FEATURE.md)      |
 | Inbox             | Inbox and RSVP management.                         | [FEATURE.md](./src/features/inbox/_FEATURE.md)             |
 
 # Development
 
-We use Github for managing the development process. The repository is hosted here: https://github.com/manageandmore/my_mm. Every change has to be made in a Pull Request to either the `staging` or `main` branch.
+We use GitHub for managing the development process. The repository is hosted here: https://github.com/manageandmore/my_mm. Every change has to be made in a Pull Request to either the `staging` or `main` branch.
 
 ## Ground Rules
 
@@ -89,7 +90,7 @@ Below are a few ground rules and best practices to follow when developing this a
 
 - **Document everything**: Documentation is vital for the maintainability of this app, since team members are expected to change frequently. We document both on a code level and on a feature level.
 
-  - In the code, use jsdoc comments (\/\*\* ... \*/) on **every** top-level element, like event handlers, functions, constants or classes. Additionally use normal comments (// ...) throughout your implementation to explain key logic.
+  - In the code, use jsdoc comments (\/\*\* ... \*/) on **every** top-level element, like event handlers, functions, constants or classes. Additionally, use normal comments (// ...) throughout your implementation to explain key logic.
     - Read the jsdoc guides here: https://jsdoc.app/
     - Also refer to this on how to use clear and effective language in comments: https://dart.dev/effective-dart/documentation. Some good rules include:
       - Write all comments as sentences (Capitalize first word, end with ‘.’).
@@ -100,18 +101,18 @@ Below are a few ground rules and best practices to follow when developing this a
 
 - **Use well-defined typing**: Typescript allows us to be clear about the types of our objects and catch potential errors already when writing the code. We want to leverage this ability the best we can. Both the slack and notion packages we use come with well-defined types. We also added additional type structures for notion queries and feature flags that should be used.
 
-- **Name consistently**: We use prettier as our code formatter. Additionally we want to use a consistent naming for our files, variables and methods across the codebase. For files use **snake_case**, for variables and methods use **camelCase**, for types and interfaces use **PascalCase**.
+- **Name consistently**: We use prettier as our code formatter. Additionally, we want to use a consistent naming for our files, variables and methods across the codebase. For files use **snake_case**, for variables and methods use **camelCase**, for types and interfaces use **PascalCase**.
 
-- **Reduce notion api calls**: Compared to a normal database, fetching data from notion is really slow. Therefore we aim to reduce the number of api calls to notion. This is not only needed for a smooth user experience, but also since slack expects responses to an incoming event in less than 3 seconds. There are two main ways to improve the performance of data-fetching tasks:
+- **Reduce notion api calls**: Compared to a normal database, fetching data from notion is really slow. Therefore, we aim to reduce the number of api calls to notion. This is not only needed for a smooth user experience, but also since slack expects responses to an incoming event in less than 3 seconds. There are two main ways to improve the performance of data-fetching tasks:
   - Cache appropriate data using the redis store. We use redis as a key-value store to cache data that is expected to change very rarely, such as the mapping of user ids between slack and notion.
   - Use relations and rollups in notion. When relying on related data from multiple notion databases, using rollup properties is much faster, since you reduce the number of databases you need to query.
 
 ## Development Setup
 
-For development, you will create a personal slack app and api application. The slack app will be added
+For development, you will create a personal Slack app and api application. The Slack app will be added
 to the **ManageAndMore Test** Workspace. For hosting the api, we use vercel (because its easy and free). For data storage, we use notion with the **ManageAndMore Test** notion workspace.
 
-Running the api locally is currently not supported, since the slack app, even your personal one, needs to access the api from the internet. You need to deploy your code to a personal vercel project in order to test it in slack. However deployments are rather quick. This does not affect the production or staging apps.
+Running the api locally is currently not supported, since the Slack app, even your personal one, needs to access the api from the internet. You need to deploy your code to a personal vercel project in order to test it in slack. However deployments are rather quick. This does not affect the production or staging apps.
 
 ---
 
@@ -119,7 +120,7 @@ Running the api locally is currently not supported, since the slack app, even yo
 
 You need the following prerequisites:
 
-- Installed **NodeJS** and **npm**
+- Installed **Node.js** and **npm**
 - Installed and setup **vercel** cli (https://vercel.com/docs/cli)
 - Setup code linting (optional):
   - Install `Prettier` extension on VS Code: https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode
@@ -146,7 +147,7 @@ Inside the `mm_app` folder, initialize a new vercel project through the vercel c
 vercel
 ```
 
-Answer the prompts so that you setup your project for your private vercel account.
+Answer the prompts so that you set up your project for your private vercel account.
 You might need to login to the cli when prompted.
 Select `N` when asked to link an existing project and enter the details for a new project.
 
@@ -163,10 +164,10 @@ Go to `Settings` -> `Domains` and note down your projects domain for production 
 
 ### 3. Slack App Setup
 
-Next create your own custom slack app like this:
+Next create your own custom Slack app like this:
 
 - Go to `https://api.slack.com/apps/` and signin with your MM account
-- Create a new slack app -> From an app manifest
+- Create a new Slack app -> From an app manifest
 - Select the **ManageAndMore Test** Workspace
 - Copy the content of `manifest.yaml` into the text area and adjust the following:
   - Change `display_information.name` to a custom name
