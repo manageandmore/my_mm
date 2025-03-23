@@ -1,25 +1,25 @@
 import { notion } from "../../../notion";
-import { wishlistDatabaseId } from "./query_items";
+import { ideaFactoryDatabaseId } from "./query_items";
 
 /**
- * Interface for a new wishlist item.
+ * Interface for a new idea factory item.
  */
-interface NewWishlistItem {
+interface NewIdeaItem {
   title: string;
   description: string;
   createdBy: string;
 }
 
 /**
- * Creates a new entry in the wishlist database.
+ * Creates a new entry in the idea factory database.
  *
  * @param item The data for the new entry.
  */
-export async function addWishlistItem(item: NewWishlistItem) {
+export async function addIdea(item: NewIdeaItem) {
   await notion.pages.create({
     parent: {
       type: "database_id",
-      database_id: wishlistDatabaseId,
+      database_id: ideaFactoryDatabaseId,
     },
     properties: {
       Title: {

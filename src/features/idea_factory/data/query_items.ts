@@ -3,8 +3,8 @@ import { DatabaseRow, notion, Property, RollupProperty } from "../../../notion";
 import { timeSince } from "../../common/time_utils";
 import { getVoterByScholarId, Voter } from "./get_voter";
 
-/** The id of the wishlist database in notion. */
-export const wishlistDatabaseId =
+/** The id of the idea_factory database in notion. */
+export const ideaFactoryDatabaseId =
   notionEnv == "production"
     ? "96cd6950e18544318f98ee86a1886deb"
     : "a18536c8d58f4cfe97419700fd5c2d82";
@@ -20,9 +20,9 @@ type WishlistRow = DatabaseRow<{
 }>;
 
 /**
- * Interface for a wishlist item.
+ * Interface for an idea.
  */
-export interface WishlistItem {
+export interface IdeaFactoryItem {
   id: string;
   title: string;
   description: string;
@@ -32,17 +32,17 @@ export interface WishlistItem {
 }
 
 /**
- * Queries all items from the wishlist database sorted by votes and creation time.
+ * Queries all items from the idea factory database sorted by votes and creation time.
  * For each item it additionally retrieves the list of voters including name and profile image.
  *
  * @param currentUserId The id of the current user.
- * @returns A list of wishlist items.
+ * @returns A list of idea factory items.
  */
-export async function queryWishlistItems(
+export async function queryIdeaFactoryItems(
   currentUserId: string
-): Promise<WishlistItem[]> {
+): Promise<IdeaFactoryItem[]> {
   const response = await notion.databases.query({
-    database_id: wishlistDatabaseId,
+    database_id: ideaFactoryDatabaseId,
     sorts: [
       {
         property: "Votes",
@@ -55,7 +55,7 @@ export async function queryWishlistItems(
     ],
   });
 
-  let items: WishlistItem[] = [];
+  let items: IdeaFactoryItem[] = [];
 
   // Keep track of voters across different items, to not fetch a voter twice.
   let allVoters: Record<string, Voter> = {};

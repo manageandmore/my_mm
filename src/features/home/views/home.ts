@@ -1,6 +1,6 @@
 import { AnyHomeTabBlock, Button, HomeTabView } from "slack-edge";
 import { CreditsLeaderboardItem } from "../../community_credits/data/query_leaderboard";
-import { getWishlistSection } from "../../wishlist/views/open_wishlist_button";
+import { getIdeaFactorySection } from "../../idea_factory/views/open_idea_factory_button";
 import { getJobBoardSection } from "../../job_board/views/open_job_board_button";
 import { getSkillsSection } from "../../skill_interface/views/skills_section";
 import { getCreditsLeaderboardSection } from "../../community_credits/views/leaderboard_section";
@@ -76,7 +76,7 @@ export async function getHomeView(
       {
         type: "divider",
       },
-      ...getWishlistSection(),
+      ...getIdeaFactorySection(),
       {
         type: "divider",
       },

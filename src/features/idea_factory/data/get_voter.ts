@@ -8,7 +8,7 @@ import { ONE_WEEK } from "../../common/time_utils";
 import { cache } from "../../common/cache";
 
 /**
- * The interface for a voter on a wishlist item.
+ * The interface for a voter on an idea.
  *
  * This holds both the voters scholarId and userId for later consumption by the app.
  */

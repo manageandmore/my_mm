@@ -6,7 +6,7 @@ import "../src/features/assistant/index";
 import "../src/features/community_credits/index";
 import "../src/features/home/index";
 import "../src/features/post_creator/index";
-import "../src/features/wishlist/index";
+import "../src/features/idea_factory/index";
 import "../src/features/job_board/index";
 import "../src/features/inbox/index";
 

@@ -1,18 +1,18 @@
 import { ModalView } from "slack-edge";
-import { newWishlistItemCallback } from "../events/new_suggestion";
+import { newIdeaFactoryItemCallback } from "../events/new_suggestion";
 
 /**
- * Constructs the modal for adding a new suggestion to the wishlist.
+ * Constructs the modal for adding a new suggestion to the idea_factory.
  *
  * @returns The modal view.
  */
-export function getNewSuggestionModal(): ModalView {
+export function getNewIdeaModal(): ModalView {
   return {
     type: "modal",
-    callback_id: newWishlistItemCallback,
+    callback_id: newIdeaFactoryItemCallback,
     title: {
       type: "plain_text",
-      text: "🎁 New Suggestion",
+      text: "Add New Idea 💡",
       emoji: true,
     },
     submit: {
@@ -30,7 +30,7 @@ export function getNewSuggestionModal(): ModalView {
         elements: [
           {
             type: "mrkdwn",
-            text: "Add a new suggestion for *My MM*. Try to be concise and specific, so others can vote on your idea.",
+            text: "Add a new idea for improving the program. Try to be concise and specific, so others can vote on your idea.",
           },
         ],
       },

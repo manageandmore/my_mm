@@ -72,7 +72,7 @@ Below is the table of all existing features and their documentation:
 | Assistant         | The ai assistant for asking questions.             | [FEATURE.md](./src/features/assistant/_FEATURE.md)         |
 | Skill Interface   | Managing the skills of a user.                     | [FEATURE.md](./src/features/skill_interface/_FEATURE.md)   |
 | Community Credits | Credit leaderboard and channel management.         | [FEATURE.md](./src/features/community_credits/_FEATURE.md) |
-| Idea Factory      | Suggestions for improving the program.             | [FEATURE.md](./src/features/wishlist/_FEATURE.md)          |
+| Idea Factory      | Suggestions for improving the program.             | [FEATURE.md](src/features/idea_factory/_FEATURE.md)          |
 | Post Creator      | Social media post creation.                        | [FEATURE.md](./src/features/post_creator/_FEATURE.md)      |
 | Announcements     | App announcements.                                 | [FEATURE.md](./src/features/announcement/_FEATURE.md)      |
 | Inbox             | Inbox and RSVP management.                         | [FEATURE.md](./src/features/inbox/_FEATURE.md)             |
