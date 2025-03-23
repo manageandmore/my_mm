@@ -17,7 +17,7 @@ import { openOutboxAction } from "./open_outbox";
 export const newMessageAction = "new_outbox_message";
 
 /**
- * This action id can be used to call the modal to add an calendar event to the message
+ * This action id can be used to call the modal to add a calendar event to the message
  */
 export const addCalendarEntryAction = "add_calendar_entry";
 

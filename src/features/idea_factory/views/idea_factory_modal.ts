@@ -1,24 +1,24 @@
 import { AnyModalBlock, Button, ImageElement, ModalView } from "slack-edge";
-import { newWishlistItemAction } from "../events/new_suggestion";
-import { viewWishlistInNotionAction } from "../events/open_wishlist";
-import { voteWishlistItemAction } from "../events/vote_suggestion";
-import { wishlistDatabaseId, WishlistItem } from "../data/query_items";
+import { newIdeaFactoryItemAction } from "../events/new_idea";
+import { viewIdeaFactoryInNotionAction } from "../events/open_idea_factory";
+import { voteIdeaFactoryItemAction } from "../events/vote_idea";
+import { ideaFactoryDatabaseId, IdeaFactoryItem } from "../data/query_items";
 
-/** Interface for the data used to hydrate the wishlist modal. */
-export interface WishlistOptions {
-  items?: WishlistItem[];
+/** Interface for the data used to hydrate the idea factory modal. */
+export interface IdeaFactoryOptions {
+  items?: IdeaFactoryItem[];
 }
 
 /**
- * Constructs the modal view for the wishlist.
+ * Constructs the modal view for the idea factory.
  *
  * @param options The options for hydrating the modal.
  * @returns The modal view.
  */
-export function getWishlistModal(options: WishlistOptions): ModalView {
+export function getIdeaFactoryModal(options: { items: IdeaFactoryItem[]}): ModalView {
   let blocks: AnyModalBlock[];
 
-  if (options.items == null) {
+  if (options.items == null || options.items.length === 0) {
     blocks = [
       {
         type: "context",
@@ -26,7 +26,7 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
           {
             type: "plain_text",
             emoji: true,
-            text: "⏳ Loading all your awesome suggestions...",
+            text: "⏳ Loading all your awesome ideas...",
           },
         ],
       },
@@ -38,7 +38,7 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
         elements: [
           {
             type: "mrkdwn",
-            text: "Vote on suggestions for *My MM* made by the community, or add your own suggestion. This helps us to prioritize new features and improve *My MM*.",
+            text: "Vote on ideas to improve the Manage and More program - or even add your own ideas!",
           },
         ],
       },
@@ -47,7 +47,7 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
       },
     ];
     for (let item of options.items) {
-      blocks = blocks.concat(getWishlistItem(item));
+      blocks = blocks.concat(getIdeaFactoryItem(item));
     }
     blocks = blocks.concat([
       {
@@ -57,11 +57,11 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
             type: "button",
             text: {
               type: "plain_text",
-              text: "Add Suggestion",
+              text: "Add Idea",
               emoji: true,
             },
             style: "primary",
-            action_id: newWishlistItemAction,
+            action_id: newIdeaFactoryItemAction,
           },
           {
             type: "button",
@@ -70,8 +70,8 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
               text: "View in Notion",
               emoji: true,
             },
-            url: `https://www.notion.so/${wishlistDatabaseId}`,
-            action_id: viewWishlistInNotionAction,
+            url: `https://www.notion.so/${ideaFactoryDatabaseId}`,
+            action_id: viewIdeaFactoryInNotionAction,
           },
         ],
       },
@@ -82,21 +82,21 @@ export function getWishlistModal(options: WishlistOptions): ModalView {
     type: "modal",
     title: {
       type: "plain_text",
-      text: "🎁 Wishlist",
+      text: "Idea Factory 🏭",
       emoji: true,
     },
     blocks: blocks,
   };
 }
 
-function getWishlistItem(item: WishlistItem): AnyModalBlock[] {
+function getIdeaFactoryItem(item: IdeaFactoryItem): AnyModalBlock[] {
   return [
     {
       type: "section",
       block_id: item.id,
       text: {
         type: "mrkdwn",
-        text: `*${item.title}*\n${item.description}`,
+        text: `*${item.title}*\n${item.pitch}`,
       },
       accessory: getVoteButton(item.votedByUser),
     },
@@ -145,7 +145,7 @@ function getVoteButton(voted: boolean): Button {
       text: voted ? "✅ You Voted" : "🗳️ Vote",
     },
     style: voted ? "primary" : undefined,
-    action_id: voteWishlistItemAction,
+    action_id: voteIdeaFactoryItemAction,
     value: `${voted}`,
   };
 }

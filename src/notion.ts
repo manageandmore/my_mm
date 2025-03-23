@@ -38,7 +38,7 @@ type AnyArrayRollupProperty = Prop<
 >[any];
 /** All available types for an item in the array value of a rollup database property. */
 export type RollupArrayType = Prop<AnyArrayRollupProperty, "type">;
-/** A array rollup database property of a specific array type. */
+/** An array rollup database property of a specific array type. */
 export type ArrayRollupProperty<T extends RollupArrayType> =
   RollupProperty<"array"> & {
     rollup: { array: Extract<AnyArrayRollupProperty, { type: T }>[] };

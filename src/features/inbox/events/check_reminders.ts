@@ -38,7 +38,7 @@ slack.action(deleteAllMessagesAction, async (request) => {
 /**
  * Checks all active inbox entries for overdue reminders and sends the notifications.
  *
- * This function is idempotent as long as its not called in parallel.
+ * This function is idempotent as long as it's not called in parallel.
  */
 export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
   var now = Date.now() / 1000;
@@ -57,7 +57,7 @@ export async function checkAndTriggerOverdueInboxReminders(): Promise<void> {
         if (entry.reminders[0] > now) break;
 
         hasOverdueReminder = true;
-        // Remove this reminder so its not triggering again.
+        // Remove this reminder so it's not triggering again.
         entry.reminders.shift();
       }
 

@@ -36,7 +36,7 @@ anyMessage(async (request) => {
         }
         // Check that message has user
         if (payload.user) {
-          await responseEmphemeral(payload.channel, payload.user, payload.ts);
+          await responseEphemeral(payload.channel, payload.user, payload.ts);
           return;
         }
       }
@@ -44,10 +44,10 @@ anyMessage(async (request) => {
       return;
     }
   }
-  await responseEmphemeral(payload.channel, payload.user, payload.ts);
+  await responseEphemeral(payload.channel, payload.user, payload.ts);
 });
 
-async function responseEmphemeral(channel: string, user: string, ts: string) {
+async function responseEphemeral(channel: string, user: string, ts: string) {
   // Send an ephemeral message with an interactive button
   await slack.client.chat.postEphemeral({
     channel: channel,
@@ -114,7 +114,7 @@ slack.messageShortcut(addToInboxShortcut, async (request) => {
     });
     const channel = response.channel?.id as string;
     const ts = payload.message.ts;
-    await responseEmphemeral(channel, payload.user.id, ts);
+    await responseEphemeral(channel, payload.user.id, ts);
   } catch (error) {
     await request.context.respond({
       response_type: "ephemeral",

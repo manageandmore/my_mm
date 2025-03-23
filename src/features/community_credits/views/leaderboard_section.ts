@@ -20,7 +20,7 @@ export function getCreditsLeaderboardSection(
   if (rank > 4) {
     rows.push([null, '...', 0]);
   }
-  // Show the users entry.
+  // Show the users' entry.
   if (rank > 3) {
     rows.push([rank, userName, userCredits]);
   }

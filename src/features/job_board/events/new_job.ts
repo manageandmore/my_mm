@@ -25,7 +25,7 @@ slack.action(newJobBoardItemAction, async (request) => {
  * from the ephemeral message.
  *
  * This is different from the method above as this *opens* the modal instead of pushing it onto
- * the current open modal, as we cannot push a modal from a ephemeral message.
+ * the current open modal, as we cannot push a modal from an ephemeral message.
  */
 slack.action(newJobBoardItemFromEphemeralAction, async (request) => {
     const payload = request.payload;

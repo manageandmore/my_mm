@@ -9,7 +9,7 @@ export const skillDatabaseId =
     ? "38bb222d07234f50ba5b6d94fc742e85"
     : "76dca6588e9544fbbc6a763159b8c1c9";
 
-/** Interface definition with all skill names sorted per level in string arrayy */
+/** Interface definition with all skill names sorted per level in string array */
 export interface SkillListPerLevel {
   beginner: string[];
   intermediate: string[];

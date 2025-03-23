@@ -2,7 +2,7 @@
 
 ## Description
 
-With this feature, users can create social media posts in just a few clicks right from inside slack. The post images are created in the new MM social post style that is used the create a consistent look across the MM social media channels. The user can configure the content, like title and background image, as well as some limited predefined theming options.
+With this feature, users can create social media posts in just a few clicks right from inside slack. The post images are created in the new MM social post style that is used to create a consistent look across the MM social media channels. The user can configure the content, like title and background image, as well as some limited predefined theming options.
 
 ## Functionality
 
@@ -15,7 +15,7 @@ The user interacts with this feature through both messaging with the app and a m
   - (This can also be done directly without step 0)
 2. App detects the image message and sends a response, containing an action button labeled "Create Social Media Post".
 3. User presses the button.
-4. App openes a modal with the post preview and a form for the post configuration.
+4. App opens a modal with the post preview and a form for the post configuration.
 5. Whenever the user updates the values in the modal, it updates to render the new post preview.
 6. User submits the modal.
 7. App sends a final message to the user with the full-resolution post image, which the user can then download.
