@@ -33,7 +33,7 @@ The app is built in a modular way to encompass several independent use-cases. It
 
 ## Components
 
-The following table gives an overview of the high-level system components the app consists of and what producs or services we use for each.
+The following table gives an overview of the high-level system components the app consists of and what products or services we use for each.
 
 | Component       | Product or Service    | Link                                               | Pricing              |
 | --------------- | --------------------- | -------------------------------------------------- | -------------------- |

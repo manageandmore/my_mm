@@ -19,10 +19,10 @@ SLACK_SIGNING_SECRET="<slack_signing_secret>"
 2. Run creditEntriesToNotion.py
 
 **creditEntriesToNotion.py**
-Tranfers all credit entries from all sheets into a notion database entry, where each entry represents a one credit entry.
+Transfers all credit entries from all sheets into a notion database entry, where each entry represents a one credit entry.
 
 **scholarsToNotion.py**
-Tranfers all scholars found based on entries from the credit google sheets into a scholar entry on the notion scholars database. (Email is auto-generated based on first and last name)
+Transfers all scholars found based on entries from the credit google sheets into a scholar entry on the notion scholars database. (Email is auto-generated based on first and last name)
 
 
 

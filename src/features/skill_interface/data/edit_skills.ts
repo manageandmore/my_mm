@@ -6,7 +6,7 @@ import { skillDatabaseId } from "./query_skills";
 import { SkillItem, SkillItems } from "./skill_stack";
 
 /**
- * Wrapper funtion that updates the notion skill database with the new skill list.
+ * Wrapper function that updates the notion skill database with the new skill list.
  * if the skill item is marked as removed, it will be removed from the database.
  * if the skill item is marked as new, it will be added to the database.
  */

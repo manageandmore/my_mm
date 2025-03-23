@@ -72,10 +72,10 @@ slack.messageShortcut(addToAssistantShortcut, async (request) => {
       channel: payload.channel.id,
     });
 
-    // Check that its a public channel.
+    // Check that it's a public channel.
     const channel = response.channel!;
     if (!channel.is_channel || channel.is_archived || channel.is_private) {
-      throw new Error("Unallowed channel");
+      throw new Error("Forbidden channel");
     }
 
     if (!channel.is_member) {
