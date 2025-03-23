@@ -50,6 +50,13 @@ export async function queryIdeaFactoryItems(
 ): Promise<IdeaFactoryItem[]> {
   const response = await notion.databases.query({
     database_id: ideaFactoryDatabaseId,
+    filter: {
+      type: "status",
+      property: "Status",
+      status: {
+        equals: "New",
+      },
+    },
     sorts: [
       {
         property: "Votes",

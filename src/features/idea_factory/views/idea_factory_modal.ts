@@ -130,9 +130,6 @@ function getIdeaFactoryItem(item: IdeaFactoryItem): AnyModalBlock[] {
         },
       ],
     },
-    {
-      type: "divider",
-    },
   ];
 }
 
