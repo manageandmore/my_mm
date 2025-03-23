@@ -98,7 +98,7 @@ function getHomeFooter(): AnyHomeTabBlock[] {
       elements: [
         {
           type: "mrkdwn",
-          text: "Made with ❤️ and 🍕 by your *Infrastructure Area*",
+          text: "Made with ❤️ and 🍕 by your *Area Digital Innovation*",
         },
       ],
     },
@@ -162,7 +162,7 @@ export function getHomeErrorView(errorMsg: string): HomeTabView {
           {
             type: "mrkdwn",
             text:
-              "If you can't identify the problem, report this to your Area Infrastructure by messaging us on slack!",
+              "If you can't identify the problem, report this to your Area Digital Innovation by messaging us on slack!",
           },
         ],
       },
