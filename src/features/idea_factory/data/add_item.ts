@@ -6,8 +6,10 @@ import { ideaFactoryDatabaseId } from "./query_items";
  */
 interface NewIdeaItem {
   title: string;
+  pitch: string;
   description: string;
   createdBy: string;
+  categoryId: string;
 }
 
 /**
@@ -26,15 +28,33 @@ export async function addIdea(item: NewIdeaItem) {
         type: "title",
         title: [{ type: "text", text: { content: item.title } }],
       },
+      "Reason Final Decision": {
+        type: "rich_text",
+        rich_text: [{ type: "text", text: { content: "" } }],
+      },
+      Pitch: {
+        type: "rich_text",
+        rich_text: [{ type: "text", text: { content: item.pitch } }],
+      },
       Description: {
         type: "rich_text",
         rich_text: [{ type: "text", text: { content: item.description } }],
+      },
+      "Initiated by": {
+        type: "people",
+        people: [{id: item.createdBy}]
       },
       // Set the creating user as the first voter on this entry.
       Voted: {
         type: "relation",
         relation: [{ id: item.createdBy }],
       },
+      Category: {
+        type: "select",
+        select: {
+          id: item.categoryId,
+        }
+      }
     },
   });
 }

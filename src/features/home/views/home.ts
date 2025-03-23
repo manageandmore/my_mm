@@ -40,6 +40,10 @@ export async function getHomeView(
       {
         type: "divider",
       },
+      ...getIdeaFactorySection(),
+      {
+        type: "divider",
+      },
       ...getInboxSection(options.inbox),
       ...(options.hasOutbox ? getOutboxSection() : []),
       {
@@ -73,10 +77,6 @@ export async function getHomeView(
         type: "divider",
       },
       ...getJobBoardSection(),
-      {
-        type: "divider",
-      },
-      ...getIdeaFactorySection(),
       {
         type: "divider",
       },

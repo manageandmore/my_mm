@@ -31,7 +31,7 @@ export function getOpenIdeaFactoryButton(): Button {
     type: "button",
     text: {
       type: "plain_text",
-      text: "Open Idea Factory 🏭",
+      text: "🏭 Open Idea Factory",
       emoji: true,
     },
     action_id: openIdeaFactoryAction,

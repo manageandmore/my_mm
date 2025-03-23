@@ -4,6 +4,7 @@ import { getNewIdeaModal } from "../views/new_idea_modal";
 import { getIdeaFactoryModal } from "../views/idea_factory_modal";
 import { queryIdeaFactoryItems } from "../data/query_items";
 import { addIdea } from "../data/add_item";
+import { getCategoryOptions } from "../data/get_categories";
 
 export const newIdeaFactoryItemAction = "new_idea_factory_item";
 
@@ -15,7 +16,7 @@ slack.action(newIdeaFactoryItemAction, async (request) => {
 
   await slack.client.views.push({
     trigger_id: payload.trigger_id,
-    view: getNewIdeaModal(),
+    view: getNewIdeaModal(await getCategoryOptions()),
   });
 });
 
@@ -34,14 +35,21 @@ slack.viewSubmission(
 
     const scholarId = await getScholarIdFromUserId(payload.user.id);
 
+      const selectedOption = values.category_select.category_selection.selected_option;
+      const pickedValue = selectedOption!.value;
+
     await addIdea({
-      title: values.title.title.value!,
-      description: values.description.description.value!,
-      createdBy: scholarId,
+        title: values.title.title.value!,
+        pitch: values.pitch.pitch.value!,
+        description: values.description.description.value ?? "",
+        createdBy: scholarId,
+        categoryId: pickedValue,
     });
 
     // TODO Optimize this to add the item locally instead of querying the whole table again.
-    const items = await queryIdeaFactoryItems(payload.user.id);
+      const [items] = await Promise.all([
+          queryIdeaFactoryItems(payload.user.id)
+      ]);
 
     await slack.client.views.update({
       view_id: payload.view.root_view_id!,

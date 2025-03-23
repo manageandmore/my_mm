@@ -7,16 +7,23 @@ import { getVoterByScholarId, Voter } from "./get_voter";
 export const ideaFactoryDatabaseId =
   notionEnv == "production"
     ? "96cd6950e18544318f98ee86a1886deb"
-    : "a18536c8d58f4cfe97419700fd5c2d82";
+    : "19164f4c334080cf8920f8ebacc94599";
 
 /**
- * Type definition for a row in the Wishlist database.
+ * Type definition for a row in the Idea Factory database.
  */
-type WishlistRow = DatabaseRow<{
+type IdeaRow = DatabaseRow<{
   Title: Property<"title">;
+  Status: Property<"status">;
+  "Reason Final Decision": Property<"rich_text">;
+  Pitch: Property<"rich_text">;
+  "Initiated by": Property<"people">;
   Description: Property<"rich_text">;
   Votes: RollupProperty<"number">;
   Voted: Property<"relation">;
+  "Responsible Person": Property<"people">;
+  Created: Property<"created_time">;
+  Category: Property<"select">;
 }>;
 
 /**
@@ -25,7 +32,7 @@ type WishlistRow = DatabaseRow<{
 export interface IdeaFactoryItem {
   id: string;
   title: string;
-  description: string;
+  pitch: string;
   voters: Voter[];
   votedByUser: boolean;
   timeSinceCreated: string;
@@ -60,7 +67,7 @@ export async function queryIdeaFactoryItems(
   // Keep track of voters across different items, to not fetch a voter twice.
   let allVoters: Record<string, Voter> = {};
 
-  for (let row of response.results as WishlistRow[]) {
+  for (let row of response.results as IdeaRow[]) {
     let voters: Voter[] = [];
     let votedByUser = false;
 
@@ -83,7 +90,7 @@ export async function queryIdeaFactoryItems(
     items.push({
       id: row.id,
       title: row.properties.Title.title[0].plain_text,
-      description: row.properties.Description.rich_text[0].plain_text,
+      pitch: row.properties.Pitch.rich_text[0]?.plain_text ?? "",
       voters: voters,
       votedByUser: votedByUser,
       timeSinceCreated: timeSince(row.created_time),

@@ -14,12 +14,13 @@ This feature provides a list of ideas made by the users regarding the future of 
 ## Structure
 
 - `events/` contains all event handlers for the actions and modal submissions.
-  - `new_suggestion.ts` contains the action handler and modal submission handler for the `New Idea` modal.
+  - `new_idea.ts` contains the action handler and modal submission handler for the `New Idea` modal.
   - `open_idea_factory.ts` contains the action handler for opening the idea factory.
-  - `vote_suggestion.ts` contains the action handler for voting an idea.
+  - `vote_idea.ts` contains the action handler for voting an idea.
 - `data/` contains logic for querying and updating data in notion.
   - `add_item.ts` contains the logic for adding a new idea to notion.
   - `get_voter.ts` contains the logic for retrieving a voter entity for a scholar/user.
+  - `get_categories.ts` contains the logic for retrieving the selection options for idea categories.
   - `query_items.ts` contains the logic for querying the idea factory.
 - `views/` contains layout code for the used modals.
   - `new_idea_modal.ts` contains the modal code for adding a new idea.

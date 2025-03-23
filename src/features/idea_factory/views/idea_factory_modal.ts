@@ -1,7 +1,7 @@
 import { AnyModalBlock, Button, ImageElement, ModalView } from "slack-edge";
-import { newIdeaFactoryItemAction } from "../events/new_suggestion";
+import { newIdeaFactoryItemAction } from "../events/new_idea";
 import { viewIdeaFactoryInNotionAction } from "../events/open_idea_factory";
-import { voteIdeaFactoryItemAction } from "../events/vote_suggestion";
+import { voteIdeaFactoryItemAction } from "../events/vote_idea";
 import { ideaFactoryDatabaseId, IdeaFactoryItem } from "../data/query_items";
 
 /** Interface for the data used to hydrate the idea factory modal. */
@@ -15,10 +15,10 @@ export interface IdeaFactoryOptions {
  * @param options The options for hydrating the modal.
  * @returns The modal view.
  */
-export function getIdeaFactoryModal(options: IdeaFactoryOptions): ModalView {
+export function getIdeaFactoryModal(options: { items: IdeaFactoryItem[]}): ModalView {
   let blocks: AnyModalBlock[];
 
-  if (options.items == null) {
+  if (options.items == null || options.items.length === 0) {
     blocks = [
       {
         type: "context",
@@ -96,7 +96,7 @@ function getIdeaFactoryItem(item: IdeaFactoryItem): AnyModalBlock[] {
       block_id: item.id,
       text: {
         type: "mrkdwn",
-        text: `*${item.title}*\n${item.description}`,
+        text: `*${item.title}*\n${item.pitch}`,
       },
       accessory: getVoteButton(item.votedByUser),
     },
