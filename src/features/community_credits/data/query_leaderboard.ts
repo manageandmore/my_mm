@@ -38,7 +38,7 @@ export async function queryCreditsLeaderboard(
     for (let i = 0; i < scholars.length; i++) {
       if (i < 3) {
         top3Scholars.push({
-          name: scholars[i].properties.Name.title[0].plain_text,
+          name: `${scholars[i].properties.Name.title[0].plain_text} (G${scholars[i].properties.Generation.number})`,
           credits:
             scholars[i].properties["Community Credits"].rollup.number ?? 0,
         });
