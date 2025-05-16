@@ -25,5 +25,6 @@ export const indexedChannels = ["general", "active"];
 export const inboxableChannels = ["general", "active"];
 
 /** Bot will ask senders in these channels of they want to add their job offer
- * to the job board on the MyMM homepage */
-export const jobOfferChannels = ["careerboost"];
+ * to the job board on the MyMM homepage - CURRENTLY DISABLED */
+//export const jobOfferChannels = ["careerboost"];
+export const jobOfferChannels = [];
