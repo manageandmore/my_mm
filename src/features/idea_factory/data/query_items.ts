@@ -48,61 +48,93 @@ export interface IdeaFactoryItem {
 export async function queryIdeaFactoryItems(
   currentUserId: string
 ): Promise<IdeaFactoryItem[]> {
-  const response = await notion.databases.query({
-    database_id: ideaFactoryDatabaseId,
-    filter: {
-      type: "status",
-      property: "Status",
-      status: {
-        equals: "New",
+  // Execute both queries in parallel
+  const [recentResponse, topVotedResponse] = await Promise.all([
+    // Fetch recent ideas (last 15)
+    notion.databases.query({
+      database_id: ideaFactoryDatabaseId,
+      filter: {
+        type: "status",
+        property: "Status",
+        status: {
+          equals: "New",
+        },
       },
-    },
-    sorts: [
-      {
-        property: "Votes",
-        direction: "descending",
+      sorts: [
+        {
+          timestamp: "created_time",
+          direction: "descending",
+        },
+      ],
+      page_size: 15,
+    }),
+    // Fetch top voted ideas (top 10)
+    notion.databases.query({
+      database_id: ideaFactoryDatabaseId,
+      filter: {
+        type: "status",
+        property: "Status",
+        status: {
+          equals: "New",
+        },
       },
-      {
-        timestamp: "created_time",
-        direction: "descending",
-      },
-    ],
-  });
+      sorts: [
+        {
+          property: "Votes",
+          direction: "descending",
+        },
+      ],
+      page_size: 10,
+    }),
+  ]);
 
-  let items: IdeaFactoryItem[] = [];
+  // Combine and deduplicate results
+  const allRows = [...recentResponse.results, ...topVotedResponse.results];
+  const uniqueRows = Array.from(
+    new Map(allRows.map((row) => [row.id, row])).values()
+  ) as IdeaRow[];
 
-  // Keep track of voters across different items, to not fetch a voter twice.
-  let allVoters: Record<string, Voter> = {};
+  // Collect all unique voter IDs first
+  const uniqueVoterIds = new Set<string>();
+  for (const row of uniqueRows) {
+    for (const voted of row.properties.Voted.relation) {
+      uniqueVoterIds.add(voted.id);
+    }
+  }
 
-  for (let row of response.results as IdeaRow[]) {
-    let voters: Voter[] = [];
+  // Fetch all voters in parallel
+  const voterPromises = Array.from(uniqueVoterIds).map((scholarId) =>
+    getVoterByScholarId(scholarId)
+  );
+  const voters = await Promise.all(voterPromises);
+  
+  // Create a map for quick voter lookup
+  const voterMap = new Map(voters.map((voter) => [voter.scholarId, voter]));
+
+  // Process ideas with the cached voter information
+  const items: IdeaFactoryItem[] = uniqueRows.map((row) => {
+    const voters: Voter[] = [];
     let votedByUser = false;
 
     for (const voted of row.properties.Voted.relation) {
-      const scholarId = voted.id;
-
-      if (allVoters[scholarId] == null) {
-        allVoters[scholarId] = await getVoterByScholarId(scholarId);
-      }
-
-      const voter = allVoters[scholarId];
-      voters.push(voter);
-
-      // Check if the current user is part of the voters.
-      if (voter.userId == currentUserId) {
-        votedByUser = true;
+      const voter = voterMap.get(voted.id);
+      if (voter) {
+        voters.push(voter);
+        if (voter.userId === currentUserId) {
+          votedByUser = true;
+        }
       }
     }
 
-    items.push({
+    return {
       id: row.id,
       title: row.properties.Title.title[0].plain_text,
       pitch: row.properties.Pitch.rich_text[0]?.plain_text ?? "",
-      voters: voters,
-      votedByUser: votedByUser,
+      voters,
+      votedByUser,
       timeSinceCreated: timeSince(row.created_time),
-    });
-  }
+    };
+  });
 
   return items;
 }
