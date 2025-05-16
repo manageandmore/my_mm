@@ -1,5 +1,8 @@
 # Job Board
 
+## Update as of 16.05.2025
+The Job Board feature has been disabled indefinitely as we couldn't validate an actual user need
+
 ## Description
 
 The Job Board serves as a place for scholars to look for current job offerings available to them. The board can be accessed
