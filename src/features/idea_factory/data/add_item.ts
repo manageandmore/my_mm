@@ -1,4 +1,6 @@
 import { notion } from "../../../notion";
+import { getUserIdFromScholarId } from "../../common/id_utils";
+import { queryScholarProfile } from "../../home/data/query_profile";
 import { ideaFactoryDatabaseId } from "./query_items";
 
 /**
@@ -18,6 +20,7 @@ interface NewIdeaItem {
  * @param item The data for the new entry.
  */
 export async function addIdea(item: NewIdeaItem) {
+  const notionUserId = await queryScholarProfile(item.createdBy);
   await notion.pages.create({
     parent: {
       type: "database_id",
@@ -42,7 +45,7 @@ export async function addIdea(item: NewIdeaItem) {
       },
       "Initiated by": {
         type: "people",
-        people: [{ id: item.createdBy }]
+        people: [{ id: notionUserId.person ?? "" }]
       },
       // Set the creating user as the first voter on this entry.
       Voted: {
