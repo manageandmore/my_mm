@@ -26,7 +26,7 @@ export function getIdeaFactoryModal(options: { items: IdeaFactoryItem[]}): Modal
           {
             type: "plain_text",
             emoji: true,
-            text: "⏳ Loading all your awesome ideas...",
+            text: "⏳ Loading all your awesome ideas... This might take a few seconds!",
           },
         ],
       },
