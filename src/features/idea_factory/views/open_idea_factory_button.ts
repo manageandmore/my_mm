@@ -1,5 +1,6 @@
 import { AnyHomeTabBlock, Button } from "slack-edge";
-import { openIdeaFactoryAction } from "../events/open_idea_factory";
+import { openIdeaFactoryAction, viewIdeaFactoryInNotionAction } from "../events/open_idea_factory";
+import { ideaFactoryDatabaseId } from "../data/query_items";
 
 export function getIdeaFactorySection(): AnyHomeTabBlock[] {
   return [
@@ -21,6 +22,7 @@ export function getIdeaFactorySection(): AnyHomeTabBlock[] {
       type: "actions",
       elements: [
         getOpenIdeaFactoryButton(),
+        getOpenIdeaFactoryInNotionButton(),
       ],
     },
   ]
@@ -35,5 +37,18 @@ export function getOpenIdeaFactoryButton(): Button {
       emoji: true,
     },
     action_id: openIdeaFactoryAction,
+  };
+}
+
+export function getOpenIdeaFactoryInNotionButton(): Button {
+  return {
+    type: "button",
+    text: {
+      type: "plain_text",
+      text: "Open All Ideas in Notion",
+      emoji: true,
+    },
+    url: `https://www.notion.so/${ideaFactoryDatabaseId}`,
+    action_id: viewIdeaFactoryInNotionAction,
   };
 }

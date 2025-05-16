@@ -73,7 +73,7 @@ export function getProfileSection(options: ProfileOptions): AnyHomeTabBlock[] {
         },
         {
           type: "mrkdwn",
-          text: `*${rank_medal} Rank* · ${options.rank}`,
+          text: `*${rank_medal} Community Credit Rank* · ${options.rank}`,
         },
       ],
     },
