@@ -1,5 +1,6 @@
 import { notion } from "../../../notion";
 import { ideaFactoryDatabaseId } from "./query_items";
+import { getUserIdFromScholarId } from "../../common/id_utils";
 
 /**
  * Interface for a new idea factory item.
@@ -18,6 +19,9 @@ interface NewIdeaItem {
  * @param item The data for the new entry.
  */
 export async function addIdea(item: NewIdeaItem) {
+  // Get the Notion user ID from the scholar ID
+  const notionUserId = await getUserIdFromScholarId(item.createdBy);
+
   await notion.pages.create({
     parent: {
       type: "database_id",
@@ -42,12 +46,12 @@ export async function addIdea(item: NewIdeaItem) {
       },
       "Initiated by": {
         type: "people",
-        people: [{id: item.createdBy}]
+        people: [{ id: notionUserId }]
       },
       // Set the creating user as the first voter on this entry.
       Voted: {
         type: "relation",
-        relation: [{ id: item.createdBy }],
+        relation: [{ id: notionUserId }],
       },
       Category: {
         type: "select",
