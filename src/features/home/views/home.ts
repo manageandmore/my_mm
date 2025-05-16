@@ -76,10 +76,6 @@ export async function getHomeView(
       {
         type: "divider",
       },
-      ...getJobBoardSection(),
-      {
-        type: "divider",
-      },
       ...getHelpSection(),
       {
         type: "divider",

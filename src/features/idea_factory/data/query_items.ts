@@ -89,7 +89,7 @@ export async function queryIdeaFactoryItems(
   ]);
 
   // Combine and deduplicate results
-  const allRows = [...recentResponse.results, ...topVotedResponse.results];
+  const allRows = [...topVotedResponse.results, ...recentResponse.results];
   const uniqueRows = Array.from(
     new Map(allRows.map((row) => [row.id, row])).values()
   ) as IdeaRow[];
