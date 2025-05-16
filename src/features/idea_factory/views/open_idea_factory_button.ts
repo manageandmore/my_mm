@@ -15,7 +15,7 @@ export function getIdeaFactorySection(): AnyHomeTabBlock[] {
       type: "context",
       elements: [{
         type: "mrkdwn",
-        text: "Vote on ideas to improve the Manage and More program - or even add your own ideas!"
+        text: "What should we tackle next? Vote on ideas to improve the Manage and More program - or even add your own ideas!"
       }]
     },
     {
