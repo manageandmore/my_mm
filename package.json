@@ -1,12 +1,15 @@
 {
   "name": "mm_app",
   "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "tunnel": "env-cmd -x ngrok http --domain=\\$NGROK_DOMAIN 3000"
   },
   "dependencies": {
-    "@langchain/community": "^0.3.17",
-    "@langchain/core": "^0.2.4",
+    "@langchain/community": "^0.3.57",
+    "@langchain/core": "^0.3.58",
     "@langchain/openai": "^0.0.34",
     "@notionhq/client": "^2.2.13",
     "@vercel/edge": "^1.1.0",
